@@ -29,7 +29,22 @@
     .announcement-dialog-footer{display:flex;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--line);}
     .announcement-dialog-footer button{padding:8px 16px;border:0;border-radius:8px;background:var(--navy);color:#fff;font-size:13px;font-weight:700;}
     body.announcement-modal-open{overflow:hidden;}
-    @media(max-width:700px){.announcement-dialog{width:100%;max-height:85vh;}}
+    /* The ID beats the shared .ck-content / .rich-content rules, which were
+       stripping the padding so text ran into the dialog edges. Body text is
+       justified; an alignment set in the editor (inline style) still wins. */
+    .announcement-dialog:focus{outline:none;}
+    #announcement-dialog-content{padding:22px 24px;font-size:15px;line-height:1.7;text-align:justify;text-justify:inter-word;hyphens:auto;overflow-wrap:break-word;}
+    #announcement-dialog-content p,#announcement-dialog-content li,#announcement-dialog-content blockquote{text-align:justify;}
+    #announcement-dialog-content h1,#announcement-dialog-content h2,#announcement-dialog-content h3,#announcement-dialog-content h4{text-align:left;}
+    #announcement-dialog-content figure,#announcement-dialog-content img{display:block;max-width:100%;height:auto;margin:0 auto 14px;}
+    @media(max-width:700px){
+        .announcement-modal{padding:14px;}
+        .announcement-dialog{width:100%;max-height:85vh;}
+        .announcement-dialog-head{padding:16px 18px;}
+        .announcement-dialog-head h3{font-size:18px;}
+        #announcement-dialog-content{padding:18px 20px;font-size:14.5px;}
+        .announcement-dialog-footer{padding:12px 18px;}
+    }
 </style>
 
 <script>

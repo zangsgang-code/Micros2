@@ -1081,22 +1081,42 @@
             text-align: center;
         }
 
-        /* The 3-card carousel left a 200px-wide card on a phone. */
+        /* Phones: a fixed carousel height clipped the card's title and
+           "View course" link. All cards now share one grid cell, so the
+           carousel grows to fit the tallest card and every card matches that
+           height, with no page jump when swiping between courses. */
         .hero__carousel {
-            min-height: 360px;
+            display: grid;
+            min-height: 0;
             aspect-ratio: auto;
         }
 
         .hero__slide {
+            position: relative;
+            grid-area: 1 / 1;
+            top: auto;
+            bottom: auto;
+            left: auto;
+            right: auto;
             width: 78%;
+            margin: 9px 0;
+            justify-self: center;
+            grid-template-rows: 150px auto;
+            transform: scale(.78);
+        }
+
+        .hero__slide.is-active {
+            transform: translateZ(30px) scale(1);
         }
 
         .hero__slide.is-prev {
-            left: 0;
+            left: auto;
+            justify-self: start;
         }
 
         .hero__slide.is-next {
-            right: 0;
+            right: auto;
+            justify-self: end;
         }
 
         .hero-course-visual {
@@ -1105,6 +1125,19 @@
 
         .hero-course-content {
             padding: 1rem 1.1rem 1.1rem;
+        }
+
+        .hero-course-tags {
+            gap: .2rem .65rem;
+            margin-bottom: .55rem;
+        }
+
+        .hero-course-title {
+            font-size: 1.3rem;
+        }
+
+        .hero-course-footer {
+            padding-top: .85rem;
         }
 
         .hero-course-footer {

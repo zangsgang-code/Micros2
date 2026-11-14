@@ -316,6 +316,21 @@ body.page-course-player .quiz-instructions {
     border-radius: 12px; background: var(--course-player-color-hex-fff);
     color: var(--course-player-ink); line-height: 1.7;
 }
+/* Quiz header: the score message used to sit beside the title and squeeze it
+   into a one-letter-wide column on phones. The title now keeps whole words
+   and the score always drops onto its own full-width row underneath. */
+body.page-course-player #view-quiz .lesson-header-btn {
+    display: flex; flex-wrap: wrap; align-items: center; row-gap: 14px;
+}
+body.page-course-player #view-quiz #qh-title {
+    flex: 1 1 12rem; min-width: 0;
+    word-break: normal; overflow-wrap: break-word; hyphens: manual;
+}
+body.page-course-player #view-quiz #qh-timer { flex: 0 0 auto; }
+body.page-course-player #view-quiz .quiz-score-result {
+    flex: 1 1 100%; width: 100%; max-width: 100%; margin: 0;
+    white-space: normal; text-align: left; box-sizing: border-box;
+}
 </style>
 
 <script>

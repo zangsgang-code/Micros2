@@ -23,6 +23,8 @@
     .announcement-modal__close { flex: 0 0 auto; width: 38px; height: 38px; border: 0; border-radius: 50%; background: #f1f3f8; color: #142b75; font-size: 1.6rem; line-height: 1; cursor: pointer; }
     .announcement-modal__body { padding-top: 1.25rem; color: #43547f; font-size: 1rem; line-height: 1.75; overflow-wrap: anywhere; }
     .announcement-modal__body > :first-child { margin-top: 0; }
+    /* Same justified reading layout as the signed-in announcement pop-up. */
+    #announcement-modal-body p, #announcement-modal-body li, #announcement-modal-body blockquote { text-align: justify; text-justify: inter-word; hyphens: auto; }
     .announcement-modal__body img { max-width: 100%; height: auto; border-radius: 12px; }
     .announcement-modal__body figure { margin: 1rem 0; }
     .announcement-modal__body figcaption { color: #687694; font-size: .85rem; text-align: center; }
