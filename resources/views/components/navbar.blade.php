@@ -1,10 +1,3 @@
-@if (request()->routeIs('Homepage', 'students.index'))
-    <div class="landing-announcement-bar" role="region" aria-label="UpSkill announcement">
-        <p>UpSkill microcredentials: focused learning for what’s next</p>
-        <a href="{{ route('explore') }}">Explore microcredentials</a>
-    </div>
-@endif
-
 <nav class="navbar navbar--public" id="navbar">
     <div class="container navbar__inner">
 
@@ -45,7 +38,7 @@
             <li><a href="{{ url('/students') }}"          class="navbar__link {{ request()->is('students') ? 'active' : '' }}">Verify</a></li>
         </ul><div class="navbar__panel-divider"></div><div class="navbar__actions" id="navActions">
             <a href="{{ url('/login') }}"    class="navbar__action-link">Login</a>
-            <a href="{{ url('/register') }}" class="btn btn-gold navbar__enroll-btn">Enroll Now</a>
+            <a href="{{ url('/register') }}" class="btn btn-gold navbar__enroll-btn">Sign Up</a>
         </div></div>
 
         {{-- Hamburger (mobile) --}}
@@ -57,25 +50,6 @@
 </nav>
 
 <style>
-/* Landing page announcement strip */
-.landing-announcement-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    min-height: 30px;
-    padding: 0.35rem 1rem;
-    background: #000;
-    color: #fff;
-    text-align: center;
-    font-size: 0.72rem;
-    font-weight: 600;
-    line-height: 1.35;
-}
-.landing-announcement-bar p { margin: 0; }
-.landing-announcement-bar a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
-.landing-announcement-bar a:hover { color: var(--landing-gold, #f6cb3b); }
-
 /* ── Navbar ── */
 .navbar {
     --gold: #f6cb3b;
@@ -307,7 +281,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50px;
+    border-radius: 10px;
     background: var(--gold);
     color: var(--navy);
     font-size: 0.95rem;
@@ -355,7 +329,6 @@
 }
 
 @media (max-width: 960px) {
-    .landing-announcement-bar { flex-wrap: wrap; gap: 0.1rem 0.35rem; padding: 0.4rem 0.75rem; }
     .navbar__links   { display: none; }
     .navbar__actions { display: none; }
     .navbar__hamburger { display: flex; }
@@ -452,13 +425,12 @@
 @media (max-width: 380px) {
     .navbar .container { padding-left: 12px; padding-right: 12px; }
     .navbar__brand-tagline { display: none; }
-    .landing-announcement-bar { font-size: 0.68rem; }
 }
 
 /* ── Mobile menu layout ──
    Each item is a full-width, left-aligned row. The closed Microcredentials
    list takes no space (it used to leave a large empty gap), and Login and
-   Enroll Now sit side by side as two equal buttons. */
+   Sign Up sit side by side as two equal buttons. */
 @media (max-width: 960px) {
     .navbar__mobile-panel {
         padding: 0.75rem;

@@ -40,6 +40,7 @@
 
     /* ── Global safety (all sizes) ─────────────────────────────────── */
     img, video { max-width: 100%; height: auto; }
+    body.app-shell.page-dashboard .student-dashboard .course-card > .thumb img { width: 100%; max-width: none; height: 100%; object-fit: cover; }
 
     /* Grid and flex children default to min-width:auto, so they refuse to
        shrink below their content and push the page wider than the screen.

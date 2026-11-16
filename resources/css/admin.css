@@ -1576,7 +1576,7 @@
     :where(body[data-admin-page="admin-pathways"]) .pathway-table th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#71809a;background:#f8faff;}
     :where(body[data-admin-page="admin-pathways"]) .pathway-table tr:last-child td{border-bottom:0;}
     :where(body[data-admin-page="admin-pathways"]) .pathway-name{font-weight:800;font-size:14px;color:var(--text);display:block;}
-    :where(body[data-admin-page="admin-pathways"]) .pathway-description{display:block;max-width:340px;margin-top:4px;font-size:12px;line-height:1.45;color:var(--muted);overflow:hidden;text-overflow:ellipsis;}
+    :where(body[data-admin-page="admin-pathways"]) .pathway-description{display:-webkit-box;max-width:340px;margin-top:4px;overflow:hidden;color:var(--muted);font-size:12px;line-height:1.45;text-overflow:ellipsis;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;}
     :where(body[data-admin-page="admin-pathways"]) .pathway-status{display:inline-flex;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;}
     :where(body[data-admin-page="admin-pathways"]) .pathway-status.is-active{background:#ecfdf3;color:#067647;}
     :where(body[data-admin-page="admin-pathways"]) .pathway-status.is-inactive{background:#f1f3f8;color:#667085;}

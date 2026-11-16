@@ -56,7 +56,7 @@
     }
 
     .student-breadcrumbs--detail {
-        padding: 22px 0 16px;
+        padding: 0 0 16px;
     }
 
     .faculty-breadcrumbs {
@@ -74,7 +74,7 @@
         }
 
         .student-breadcrumbs--detail {
-            padding: 16px 0 12px;
+            padding: 0 0 12px;
         }
     }
 </style>

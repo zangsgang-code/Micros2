@@ -2,7 +2,12 @@
         <div class="pathways-page">
             <header class="page-header ui-page-header student-page-heading">
                 <div class="ui-page-header__content">
-                    <h1 class="ui-page-title">My Pathways</h1>
+                    <div class="pathways-heading-row">
+                        <h1 class="ui-page-title">My Pathways</h1>
+                        @if($selectedPathway)
+                            <button type="button" class="outline-button ui-button ui-button--secondary" data-open-pathway-picker>Change pathway</button>
+                        @endif
+                    </div>
                     <p class="ui-page-subtitle">{{ $selectedPathway ? 'Your learning journey to '.($pathwayDestination ?: $selectedPathway->name).'.' : 'Choose a learning pathway when you are ready.' }}</p>
                 </div>
             </header>
@@ -20,7 +25,6 @@
             @else
                 <div class="selected-pathway-head">
                     <div><p class="eyebrow">Your selected pathway</p><h2 class="ui-section-title">{{ $selectedPathway->name }}</h2><p>{{ $selectedPathway->description ?: 'Follow the courses in this pathway at your own pace.' }}</p></div>
-                    <button type="button" class="outline-button ui-button ui-button--secondary" data-open-pathway-picker>Change pathway</button>
                 </div>
 
                 <section class="panel pathway-panel ui-card-surface" aria-label="Pathway journey timeline">
@@ -47,11 +51,12 @@
                                         <span class="goal-state">{{ $step['status'] === 'completed' ? 'Completed' : ($step['status'] === 'current' ? 'In progress' : 'Locked') }}</span>
                                     </div>
                                 @endforeach
-                                <div class="journey-destination">
-                                    <div class="goal-node"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.75 6.15 6.7.62-5.05 4.43 1.47 6.56L12 16.3l-5.87 3.46 1.47-6.56L2.55 8.77l6.7-.62L12 2Z"/></svg></div>
-                                    <span class="goal-label">Destination</span>
+                                @php($pathwayCompleted = count($pathwaySteps) > 0 && collect($pathwaySteps)->every(fn ($step) => $step['status'] === 'completed'))
+                                <div class="journey-destination {{ $pathwayCompleted ? 'is-completed' : '' }}">
+                                    <div class="goal-node {{ $pathwayCompleted ? 'is-completed' : '' }}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.75 6.15 6.7.62-5.05 4.43 1.47 6.56L12 16.3l-5.87 3.46 1.47-6.56L2.55 8.77l6.7-.62L12 2Z"/></svg></div>
+                                    <span class="goal-label">{{ $pathwayCompleted ? 'Pathway complete' : 'Destination' }}</span>
                                     <span class="goal-title">{{ $pathwayDestination ?: $selectedPathway->name }}</span>
-                                    <span class="goal-state">Final goal</span>
+                                    <span class="goal-state">{{ $pathwayCompleted ? 'All goals completed' : 'Final goal' }}</span>
                                 </div>
                             </div>
                         </div>
