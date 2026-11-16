@@ -5,14 +5,10 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Phase 2 — academic credit recognition workflow record.
- *
- * Completely separate object from `user_stacking_progress`. Nothing in the
- * completion or stacking code path (Phase 2 or later phases) is permitted
- * to write to this table automatically. A row here is only ever created by
- * an explicit action in the future academic-recognition workflow (Phase 7),
- * which does not exist yet. `stacking_status = requirements_met` must never
- * by itself create or advance a row in this table.
+ * Persistent student request records, separate from `user_stacking_progress`.
+ * Framework completion never creates a request automatically. Legacy status
+ * fields remain for historical records; the current workflow records only
+ * internal UPSKILL review and report-generation statuses.
  */
 return new class extends Migration
 {
@@ -23,7 +19,7 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
                 $table->foreignId('stacking_framework_id')->constrained('stacking_frameworks')->cascadeOnDelete();
-                // pending | unit_recommended | dean_endorsed | registrar_recorded | denied
+                // Legacy records retain their original status; new requests use internal statuses.
                 $table->string('status')->default('pending');
                 $table->foreignId('unit_reviewed_by')->nullable()->constrained('users')->nullOnDelete();
                 $table->timestamp('unit_reviewed_at')->nullable();

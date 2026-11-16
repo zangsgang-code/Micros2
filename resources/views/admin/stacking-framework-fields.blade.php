@@ -1,288 +1,243 @@
 @php
-    $completionMode = old('completion_mode', $framework?->completion_mode ?? 'all_required');
-    $outcomes = old(
-        'cumulative_outcomes',
-        is_array($framework?->cumulative_outcomes ?? null)
-            ? implode("\n", $framework->cumulative_outcomes)
-            : ($framework?->cumulative_outcomes ?? '')
-    );
-    $requiredCount = old('required_count', $framework?->required_count ?? 1);
-    $recognitionTargetType = old(
-        'recognition_target_type',
-        $framework?->recognition_target_type
-            ?? (($framework?->equivalent_course || $framework?->equivalent_units !== null || $framework?->credit_equivalency) ? 'course_equivalency' : '')
-    );
+    $formContext = $framework ? 'edit-framework-modal-'.$framework->id : 'create-framework-modal';
+    $restoreOldInput = old('form_context') === $formContext;
+    $recognitionTargetType = $restoreOldInput
+        ? old('recognition_target_type')
+        : ($framework?->recognition_target_type ?? '');
+    $outcomes = $restoreOldInput
+        ? old('cumulative_outcomes', [])
+        : ($framework?->cumulative_outcomes ?? []);
+    $outcomes = is_array($outcomes) ? array_values($outcomes) : [];
+    if ($outcomes === []) {
+        $outcomes = [''];
+    }
+    $selectedRequirements = $restoreOldInput
+        ? old('requirements', [])
+        : ($framework?->requirements ?? []);
+    $selectedRequirements = is_array($selectedRequirements) || $selectedRequirements instanceof \Illuminate\Support\Collection
+        ? $selectedRequirements
+        : [];
+    $courseRecognitionTypes = ['course_requirement', 'elective_requirement', 'course_equivalency'];
+    $legacyRecognitionTypes = ['degree_requirement', 'other_institutional_recognition'];
 @endphp
 
-<div class="form-grid">
-    <div class="field">
-        <label for="name-{{ $formId }}">Framework name</label>
-        <input id="name-{{ $formId }}" name="name" value="{{ old('name', $framework?->name) }}" required maxlength="150">
-        <small>Official name of the stack, not the name of an individual microcredential.</small>
-        @error('name')<span class="field-error">{{ $message }}</span>@enderror
-    </div>
-
-    <div class="field">
-        <label for="pqf-{{ $formId }}">PQF level</label>
-        <select id="pqf-{{ $formId }}" name="pqf_level">
-            <option value="">Select level</option>
-            @for($level = 5; $level <= 8; $level++)
-                <option value="{{ $level }}" @selected((string) old('pqf_level', $framework?->pqf_level) === (string) $level)>Level {{ $level }}</option>
-            @endfor
-        </select>
-        <small>Use the PQF level applicable to the combined recognition target.</small>
-    </div>
-
-    <div class="field field-wide">
-        <label for="description-{{ $formId }}">Framework description / rationale</label>
-        <textarea id="description-{{ $formId }}" name="description" maxlength="2000">{{ old('description', $framework?->description) }}</textarea>
-        <small>Explain why these microcredentials are grouped together and what the completed stack is intended to recognize.</small>
-    </div>
-
-    <div class="field field-wide">
-        <label for="outcomes-{{ $formId }}">Cumulative learning outcomes</label>
-        <textarea id="outcomes-{{ $formId }}" name="cumulative_outcomes" maxlength="4000" placeholder="One learning outcome per line">{{ $outcomes }}</textarea>
-        <small>Enter the combined competencies demonstrated when the stack is completed. Enter one outcome per line.</small>
-    </div>
-
-    <div class="field field-wide form-section-label">
-        <strong>Academic recognition target</strong>
-        <span>Completion satisfies framework requirements only; academic credit or recognition remains subject to institutional evaluation and approval.</span>
-    </div>
-
-    <div class="field field-wide">
-        <label for="recognition-type-{{ $formId }}">Recognition target type</label>
-        <select id="recognition-type-{{ $formId }}" name="recognition_target_type" data-recognition-target-type required>
-            <option value="">Select recognition target</option>
-            <option value="course_equivalency" @selected($recognitionTargetType === 'course_equivalency')>Course equivalency</option>
-            <option value="certificate" @selected($recognitionTargetType === 'certificate')>Certificate</option>
-            <option value="specialization" @selected($recognitionTargetType === 'specialization')>Specialization</option>
-            <option value="degree_requirement" @selected($recognitionTargetType === 'degree_requirement')>Degree requirement</option>
-            <option value="other_institutional_recognition" @selected($recognitionTargetType === 'other_institutional_recognition')>Other institutional recognition</option>
-        </select>
-        <small>Identify what the completed stack is intended to satisfy.</small>
-        @error('recognition_target_type')<span class="field-error">{{ $message }}</span>@enderror
-    </div>
-
-    <div class="field">
-        <label for="target-{{ $formId }}">Intended recognition</label>
-        <input id="target-{{ $formId }}" name="target_recognition" value="{{ old('target_recognition', $framework?->target_recognition) }}" maxlength="255" placeholder="e.g. Web Development elective recognition">
-        <small>Describe the intended academic or institutional recognition.</small>
-    </div>
-
-    <div class="field" data-credit-field @if($recognitionTargetType !== 'course_equivalency') hidden @endif>
-        <label for="equivalent-course-{{ $formId }}">Equivalent course</label>
-        <input id="equivalent-course-{{ $formId }}" name="equivalent_course" value="{{ old('equivalent_course', $framework?->equivalent_course) }}" maxlength="255" placeholder="e.g. IT 4xx – Web Development">
-        <small>Specify the course the completed stack may be evaluated as equivalent to, if applicable.</small>
-    </div>
-
-    <div class="field" data-credit-field @if($recognitionTargetType !== 'course_equivalency') hidden @endif>
-        <label for="equivalent-units-{{ $formId }}">Equivalent academic units</label>
-        <input id="equivalent-units-{{ $formId }}" name="equivalent_units" type="number" min="0" step="0.01" value="{{ old('equivalent_units', $framework?->equivalent_units) }}" placeholder="e.g. 3">
-        <small>Enter the units associated with the intended course equivalency, if applicable.</small>
-    </div>
-
-    <div class="field" data-credit-field @if($recognitionTargetType !== 'course_equivalency') hidden @endif>
-        <label for="credit-equivalency-{{ $formId }}">Credit equivalency statement</label>
-        <input id="credit-equivalency-{{ $formId }}" name="credit_equivalency" value="{{ old('credit_equivalency', $framework?->credit_equivalency) }}" maxlength="1000" placeholder="e.g. May be recognized as 3 academic units">
-        <small>State the proposed credit equivalency for institutional evaluation and approval.</small>
-    </div>
-
-    <div class="field">
-        <label for="approving-unit-{{ $formId }}">Approving academic unit</label>
-        <input id="approving-unit-{{ $formId }}" name="approving_academic_unit" value="{{ old('approving_academic_unit', $framework?->approving_academic_unit) }}" maxlength="255" placeholder="e.g. College of Computing Sciences">
-        <small>Enter the academic unit responsible for evaluating the combined competencies and recommending recognition.</small>
-    </div>
-
-    <div class="field">
-        <label for="conditions-{{ $formId }}">Academic recognition conditions</label>
-        <textarea id="conditions-{{ $formId }}" name="credit_recognition_conditions" maxlength="2000" placeholder="Additional institutional conditions for recognition">{{ old('credit_recognition_conditions', $framework?->credit_recognition_conditions) }}</textarea>
-        <small>Specify additional conditions that must be satisfied before academic recognition may be granted.</small>
-    </div>
-
-    <div class="field field-wide form-section-label">
-        <strong>Completion rule</strong>
-        <span>Choose whether every required microcredential must be completed or only a minimum number of them.</span>
-    </div>
-
-    <div class="field">
-        <label for="completion-mode-{{ $formId }}">Completion model</label>
-        <select id="completion-mode-{{ $formId }}" name="completion_mode" data-completion-mode>
-            <option value="all_required" @selected($completionMode === 'all_required')>Complete all required microcredentials</option>
-            <option value="minimum_required" @selected($completionMode === 'minimum_required')>Complete a minimum number of required microcredentials</option>
-        </select>
-        <small>For example, “2 of 3” requires all three to be marked Required and sets the minimum to 2.</small>
-        @error('completion_mode')<span class="field-error">{{ $message }}</span>@enderror
-    </div>
-
-    <div class="field" data-minimum-count-field>
-        <label for="required-count-{{ $formId }}">Minimum required microcredentials</label>
-        <input id="required-count-{{ $formId }}" name="required_count" type="number" min="1" step="1" value="{{ $requiredCount }}">
-        <small data-required-count-help>The count is derived from required microcredentials when “Complete all” is selected.</small>
-        @error('required_count')<span class="field-error">{{ $message }}</span>@enderror
-    </div>
-
-    <div class="field">
-        <label for="sequence-{{ $formId }}">Completion order</label>
-        <input type="hidden" name="sequence_required" value="0">
-        <select id="sequence-{{ $formId }}" name="sequence_required">
-            <option value="0" @selected(! old('sequence_required', $framework?->sequence_required))>No fixed order</option>
-            <option value="1" @selected((bool) old('sequence_required', $framework?->sequence_required))>Follow configured order</option>
-        </select>
-        <small>If enabled, the required microcredentials must be completed in the configured order.</small>
-    </div>
-</div>
-
-<div class="completion-rule-summary" data-completion-summary data-form-id="{{ $formId }}"></div>
-<div class="framework-config-summary" data-config-summary data-form-id="{{ $formId }}" aria-live="polite"></div>
-
-<div class="requirement-header">
-    <div>
-        <h3>Microcredential requirements</h3>
-        <p>Mark a microcredential as <strong>Required</strong> if it counts toward the framework's completion target. Unmarked items are optional.</p>
-    </div>
-    <button class="btn-action btn-secondary" type="button" onclick="addRequirementRow('{{ $formId }}')">Add requirement</button>
-</div>
-
-<div class="requirement-table-head" aria-hidden="true">
-    <span>Microcredential</span>
-    <span>Required</span>
-    <span>Order</span>
-    <span>Action</span>
-</div>
-
-<div id="requirements-{{ $formId }}" data-next-index="{{ $framework?->requirements?->count() ?? 0 }}">
-    @foreach(($framework?->requirements ?? []) as $index => $requirement)
-        <div class="requirement-row">
-            <input type="hidden" name="requirements[{{ $index }}][id]" value="{{ $requirement->id }}">
-            <select name="requirements[{{ $index }}][course_id]" required>
-                <option value="">Select microcredential</option>
-                @foreach($courses as $course)
-                    <option value="{{ $course->id }}" @selected($requirement->course_id === $course->id)>{{ $course->title }}</option>
-                @endforeach
-            </select>
-            <label class="requirement-required"><input name="requirements[{{ $index }}][is_required]" type="checkbox" value="1" @checked($requirement->is_required)> Required</label>
-            <input name="requirements[{{ $index }}][order]" type="number" min="1" step="1" value="{{ $requirement->order }}" required aria-label="Requirement order">
-            <button class="remove-row" type="button" aria-label="Remove requirement" onclick="this.closest('.requirement-row').remove(); updateCompletionRule('{{ $formId }}')">×</button>
+<div class="framework-form-sections">
+    <section class="framework-form-section">
+        <div class="framework-form-section-heading">
+            <span>01</span>
+            <div><h3>Framework information</h3><p>Identify the approved combination and its purpose.</p></div>
         </div>
-    @endforeach
+        <div class="form-grid">
+            <div class="field field-wide">
+                <label for="name-{{ $formId }}">Framework name</label>
+                <input id="name-{{ $formId }}" name="name" value="{{ $restoreOldInput ? old('name') : $framework?->name }}" required maxlength="150">
+                @error('name')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field field-wide">
+                <label for="description-{{ $formId }}">Description</label>
+                <textarea id="description-{{ $formId }}" name="description" rows="3" maxlength="2000" required>{{ $restoreOldInput ? old('description') : $framework?->description }}</textarea>
+                @error('description')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field">
+                <label for="pqf-{{ $formId }}">PQF level</label>
+                <select id="pqf-{{ $formId }}" name="pqf_level">
+                    <option value="">Select level (optional)</option>
+                    @for($level = 5; $level <= 8; $level++)
+                        <option value="{{ $level }}" @selected((string) ($restoreOldInput ? old('pqf_level') : $framework?->pqf_level) === (string) $level)>Level {{ $level }}</option>
+                    @endfor
+                </select>
+                @error('pqf_level')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+        </div>
+    </section>
+
+    <section class="framework-form-section">
+        <div class="framework-form-section-heading">
+            <span>02</span>
+            <div><h3>Recognition details</h3><p>Describe what the complete set of microcredentials is intended to satisfy.</p></div>
+        </div>
+        <div class="form-grid">
+            <div class="field">
+                <label for="recognition-type-{{ $formId }}">Recognition target type</label>
+                <select id="recognition-type-{{ $formId }}" name="recognition_target_type" data-recognition-target-type required>
+                    <option value="">Select target type</option>
+                    <option value="course_requirement" @selected($recognitionTargetType === 'course_requirement')>Course requirement</option>
+                    <option value="elective_requirement" @selected($recognitionTargetType === 'elective_requirement')>Elective requirement</option>
+                    <option value="specialization" @selected($recognitionTargetType === 'specialization')>Specialization</option>
+                    <option value="certificate" @selected($recognitionTargetType === 'certificate')>Certificate</option>
+                    <option value="other_institutional_requirement" @selected($recognitionTargetType === 'other_institutional_requirement')>Other institutional requirement</option>
+                    <option value="other" @selected($recognitionTargetType === 'other')>Other</option>
+                    @if(in_array($recognitionTargetType, $legacyRecognitionTypes, true))
+                        <optgroup label="Existing framework target">
+                            <option value="degree_requirement" @selected($recognitionTargetType === 'degree_requirement')>Degree requirement</option>
+                            <option value="other_institutional_recognition" @selected($recognitionTargetType === 'other_institutional_recognition')>Other institutional recognition</option>
+                        </optgroup>
+                    @endif
+                    @if($recognitionTargetType === 'course_equivalency')
+                        <optgroup label="Existing framework target">
+                            <option value="course_equivalency" selected>Course equivalency</option>
+                        </optgroup>
+                    @endif
+                </select>
+                @error('recognition_target_type')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field">
+                <label for="target-{{ $formId }}">Intended recognition</label>
+                <input id="target-{{ $formId }}" name="target_recognition" value="{{ $restoreOldInput ? old('target_recognition') : $framework?->target_recognition }}" required maxlength="255" placeholder="e.g. Information Technology elective requirement">
+                @error('target_recognition')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field">
+                <label for="approving-unit-{{ $formId }}">Approving academic unit</label>
+                <input id="approving-unit-{{ $formId }}" name="approving_academic_unit" value="{{ $restoreOldInput ? old('approving_academic_unit') : $framework?->approving_academic_unit }}" required maxlength="255">
+                @error('approving_academic_unit')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field" data-credit-field @if(! in_array($recognitionTargetType, $courseRecognitionTypes, true)) hidden @endif>
+                <label for="equivalent-course-{{ $formId }}">Equivalent course (if applicable)</label>
+                <input id="equivalent-course-{{ $formId }}" name="equivalent_course" value="{{ $restoreOldInput ? old('equivalent_course') : $framework?->equivalent_course }}" maxlength="255">
+            </div>
+            <div class="field" data-credit-field @if(! in_array($recognitionTargetType, $courseRecognitionTypes, true)) hidden @endif>
+                <label for="equivalent-units-{{ $formId }}">Equivalent academic units (if applicable)</label>
+                <input id="equivalent-units-{{ $formId }}" name="equivalent_units" type="number" min="0" step="0.01" value="{{ $restoreOldInput ? old('equivalent_units') : $framework?->equivalent_units }}">
+                @error('equivalent_units')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field field-wide">
+                <label for="conditions-{{ $formId }}">Recognition conditions (optional)</label>
+                <textarea id="conditions-{{ $formId }}" name="credit_recognition_conditions" rows="2" maxlength="2000">{{ $restoreOldInput ? old('credit_recognition_conditions') : $framework?->credit_recognition_conditions }}</textarea>
+            </div>
+        </div>
+    </section>
+
+    <section class="framework-form-section">
+        <div class="framework-form-section-heading">
+            <span>03</span>
+            <div><h3>Cumulative learning outcomes</h3><p>Add one outcome per field. These describe the combined competencies demonstrated by the full framework.</p></div>
+        </div>
+        <div id="outcomes-{{ $formId }}" class="framework-outcomes">
+            @foreach($outcomes as $index => $outcome)
+                <div class="outcome-field-row">
+                    <label class="sr-only" for="outcome-{{ $formId }}-{{ $index }}">Learning outcome {{ $index + 1 }}</label>
+                    <textarea id="outcome-{{ $formId }}-{{ $index }}" name="cumulative_outcomes[{{ $index }}]" rows="2" maxlength="500" required placeholder="Enter one measurable learning outcome">{{ $outcome }}</textarea>
+                    <button class="remove-row" type="button" aria-label="Remove learning outcome" onclick="removeOutcomeField(this, '{{ $formId }}')">×</button>
+                </div>
+            @endforeach
+        </div>
+        <button class="framework-button secondary" type="button" onclick="addOutcomeField('{{ $formId }}')">+ Add learning outcome</button>
+        @error('cumulative_outcomes')<span class="field-error">{{ $message }}</span>@enderror
+        @foreach($errors->getMessages() as $key => $messages)
+            @if(str_starts_with($key, 'cumulative_outcomes.'))
+                <span class="field-error">{{ $messages[0] }}</span>
+                @break
+            @endif
+        @endforeach
+        <template id="outcome-template-{{ $formId }}">
+            <div class="outcome-field-row">
+                <label class="sr-only" data-outcome-label>Learning outcome</label>
+                <textarea data-outcome-field rows="2" maxlength="500" required placeholder="Enter one measurable learning outcome"></textarea>
+                <button class="remove-row" type="button" aria-label="Remove learning outcome" onclick="removeOutcomeField(this, '{{ $formId }}')">×</button>
+            </div>
+        </template>
+    </section>
+
+    <section class="framework-form-section">
+        <div class="framework-form-section-heading">
+            <span>04</span>
+            <div><h3>Required microcredentials</h3><p>Every selected microcredential is required. Learners must officially complete all of them to meet this framework.</p></div>
+        </div>
+        <div class="course-picker">
+            <div class="field">
+                <label for="course-search-{{ $formId }}">Search available microcredentials</label>
+                <input id="course-search-{{ $formId }}" type="search" autocomplete="off" placeholder="Search title, category, or PQF level" oninput="filterRequiredCourses('{{ $formId }}', this.value)">
+            </div>
+            <div class="course-picker-controls">
+                <div class="field">
+                    <label for="course-picker-{{ $formId }}">Available approved courses</label>
+                    <select id="course-picker-{{ $formId }}" data-course-picker>
+                        <option value="">Select a microcredential</option>
+                        @foreach($courses as $course)
+                            <option
+                                value="{{ $course->id }}"
+                                data-title="{{ $course->title }}"
+                                data-category="{{ $course->category }}"
+                                data-pqf="{{ $course->pqf_level }}"
+                                data-hours="{{ $course->learning_hours }}"
+                                data-search="{{ strtolower($course->title.' '.$course->category.' '.$course->pqf_level) }}"
+                            >{{ $course->title }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button class="framework-button secondary" type="button" onclick="addRequiredCourse('{{ $formId }}')">Add required microcredential</button>
+            </div>
+            @if($courses->isEmpty())
+                <p class="picker-empty">No published, approved microcredential courses are available.</p>
+            @endif
+            @error('requirements')<span class="field-error">{{ $message }}</span>@enderror
+            @foreach($errors->getMessages() as $key => $messages)
+                @if(str_starts_with($key, 'requirements.'))
+                    <span class="field-error">{{ $messages[0] }}</span>
+                    @break
+                @endif
+            @endforeach
+        </div>
+
+        <div class="selected-requirements-header">
+            <strong>Selected required microcredentials</strong>
+            <span id="requirement-count-{{ $formId }}" aria-live="polite"></span>
+        </div>
+        <div id="requirements-{{ $formId }}" class="selected-requirements" data-next-index="{{ count($selectedRequirements) }}">
+            @foreach($selectedRequirements as $index => $selectedRequirement)
+                @php
+                    $courseId = (int) (is_array($selectedRequirement) ? ($selectedRequirement['course_id'] ?? 0) : $selectedRequirement->course_id);
+                    $courseOrder = (int) (is_array($selectedRequirement) ? ($selectedRequirement['order'] ?? $index + 1) : $selectedRequirement->order);
+                    $selectedCourse = $courses->firstWhere('id', $courseId);
+                @endphp
+                <div class="requirement-row" data-course-id="{{ $courseId }}">
+                    <input type="hidden" name="requirements[{{ $index }}][course_id]" value="{{ $courseId }}">
+                    <input type="hidden" name="requirements[{{ $index }}][order]" value="{{ $courseOrder }}" data-requirement-order>
+                    <div class="requirement-course-details">
+                        <strong>{{ $selectedCourse?->title ?? 'Removed course' }}</strong>
+                        <span>{{ $selectedCourse?->category ?: 'Microcredential' }}{{ $selectedCourse?->pqf_level ? ' · PQF '.$selectedCourse->pqf_level : '' }}{{ $selectedCourse?->learning_hours ? ' · '.$selectedCourse->learning_hours.' hours' : '' }}</span>
+                    </div>
+                    <span class="required-tag">Required</span>
+                    <button class="remove-row" type="button" aria-label="Remove microcredential" onclick="removeRequiredCourse(this, '{{ $formId }}')">×</button>
+                </div>
+            @endforeach
+            <p class="picker-empty" data-requirements-empty @if(count($selectedRequirements) > 0) hidden @endif>No microcredentials selected. Add at least one.</p>
+        </div>
+
+        <label class="sequence-option">
+            <input type="checkbox" name="sequence_required" value="1" @checked((bool) ($restoreOldInput ? old('sequence_required') : $framework?->sequence_required))>
+            Require the displayed completion order
+        </label>
+        <small class="field-help">Enable only when the institutional approval documentation explicitly requires a fixed sequence.</small>
+        @error('sequence_required')<span class="field-error">{{ $message }}</span>@enderror
+    </section>
+
+    <section class="framework-form-section">
+        <div class="framework-form-section-heading">
+            <span>05</span>
+            <div><h3>Approval and effective period</h3><p>Record the institutional approval source. Required before an administrator can activate this draft.</p></div>
+        </div>
+        <div class="form-grid">
+            <div class="field field-wide">
+                <label for="approval-reference-{{ $formId }}">Approval reference</label>
+                <input id="approval-reference-{{ $formId }}" name="approval_reference" value="{{ $restoreOldInput ? old('approval_reference') : $framework?->approval_reference }}" maxlength="255" placeholder="Resolution, memo, or approval identifier">
+                @error('approval_reference')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field">
+                <label for="approval-date-{{ $formId }}">Approval date</label>
+                <input id="approval-date-{{ $formId }}" name="approval_date" type="date" value="{{ $restoreOldInput ? old('approval_date') : $framework?->approval_date?->format('Y-m-d') }}">
+                @error('approval_date')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field">
+                <label for="effective-date-{{ $formId }}">Effective date</label>
+                <input id="effective-date-{{ $formId }}" name="effective_date" type="date" value="{{ $restoreOldInput ? old('effective_date') : $framework?->effective_date?->format('Y-m-d') }}">
+                @error('effective_date')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="field">
+                <label for="expiration-date-{{ $formId }}">Expiration date (optional)</label>
+                <input id="expiration-date-{{ $formId }}" name="expiration_date" type="date" value="{{ $restoreOldInput ? old('expiration_date') : $framework?->expiration_date?->format('Y-m-d') }}">
+                @error('expiration_date')<span class="field-error">{{ $message }}</span>@enderror
+            </div>
+        </div>
+    </section>
 </div>
-@foreach($errors->getMessages() as $key => $messages)
-    @if(str_starts_with($key, 'requirements'))
-        <span class="field-error">{{ $messages[0] }}</span>
-        @break
-    @endif
-@endforeach
-
-<template id="requirement-template-{{ $formId }}">
-    <div class="requirement-row">
-        <select data-field="course_id" required>
-            <option value="">Select microcredential</option>
-            @foreach($courses as $course)<option value="{{ $course->id }}">{{ $course->title }}</option>@endforeach
-        </select>
-        <label class="requirement-required"><input data-field="is_required" type="checkbox" value="1"> Required</label>
-        <input data-field="order" type="number" min="1" step="1" value="1" required aria-label="Requirement order">
-        <button class="remove-row" type="button" aria-label="Remove requirement" onclick="this.closest('.requirement-row').remove(); updateCompletionRule('{{ $formId }}')">×</button>
-    </div>
-</template>
-
-<script>
-    function updateCompletionRule(formId) {
-        const root = document.getElementById('requirements-' + formId);
-        const mode = document.getElementById('completion-mode-' + formId);
-        const countInput = document.getElementById('required-count-' + formId);
-        const sequence = document.getElementById('sequence-' + formId);
-        const summary = document.querySelector('[data-completion-summary][data-form-id="' + formId + '"]');
-        const configSummary = document.querySelector('[data-config-summary][data-form-id="' + formId + '"]');
-        if (!root || !mode || !countInput || !sequence) return;
-
-        const rows = Array.from(root.querySelectorAll('.requirement-row'));
-        const selectedCount = rows.filter((row) => row.querySelector('select[name$="[course_id]"]')?.value).length;
-        const requiredCount = root.querySelectorAll('input[data-field="is_required"]:checked, .requirement-required input[type="checkbox"]:checked').length;
-        const minimumMode = mode.value === 'minimum_required';
-        const fixedOrder = sequence.value === '1';
-
-        countInput.readOnly = !minimumMode;
-        countInput.max = Math.max(requiredCount, 1);
-        if (!minimumMode) countInput.value = Math.max(requiredCount, 1);
-        if (minimumMode && Number(countInput.value || 0) > requiredCount) countInput.value = Math.max(requiredCount, 1);
-
-        rows.forEach((row, index) => {
-            const orderInput = row.querySelector('input[name$="[order]"]');
-            if (!fixedOrder && orderInput) {
-                orderInput.value = String(index + 1);
-            }
-            if (orderInput) {
-                orderInput.readOnly = !fixedOrder;
-            }
-        });
-
-        const selectedCourseIds = new Set(rows.map((row) => row.querySelector('select[name$="[course_id]"]')?.value).filter(Boolean));
-        rows.forEach((row) => {
-            const select = row.querySelector('select[name$="[course_id]"]');
-            if (!select) return;
-            Array.from(select.options).forEach((option) => {
-                option.disabled = option.value !== '' && selectedCourseIds.has(option.value) && select.value !== option.value;
-            });
-        });
-
-        if (summary) {
-            summary.textContent = minimumMode
-                ? `Completion target: any ${countInput.value || 0} of ${requiredCount} required microcredentials.`
-                : `Completion target: all ${requiredCount} required microcredentials.`;
-        }
-
-        if (configSummary) {
-            const targetCount = minimumMode ? (countInput.value || 0) : requiredCount;
-            configSummary.textContent = `${selectedCount} microcredentials selected · ${requiredCount} required microcredentials · Completion target: ${targetCount} of ${requiredCount}`;
-        }
-    }
-
-    function addRequirementRow(formId) {
-        const container = document.getElementById('requirements-' + formId);
-        const template = document.getElementById('requirement-template-' + formId);
-        if (!container || !template) return;
-        const index = Number(container.dataset.nextIndex || 0);
-        const row = template.content.cloneNode(true);
-        row.querySelector('[data-field="course_id"]').name = 'requirements[' + index + '][course_id]';
-        row.querySelector('[data-field="order"]').name = 'requirements[' + index + '][order]';
-        row.querySelector('[data-field="is_required"]').name = 'requirements[' + index + '][is_required]';
-        container.appendChild(row);
-        container.dataset.nextIndex = String(index + 1);
-        updateCompletionRule(formId);
-    }
-
-    document.addEventListener('change', function (event) {
-        const mode = event.target.closest('[data-completion-mode]');
-        if (mode) updateCompletionRule(mode.id.replace('completion-mode-', ''));
-        const sequence = event.target.closest('select[id^="sequence-"]');
-        if (sequence) updateCompletionRule(sequence.id.replace('sequence-', ''));
-        if (event.target.matches('.requirement-required input[type="checkbox"]')) {
-            const root = event.target.closest('[id^="requirements-"]');
-            if (root) updateCompletionRule(root.id.replace('requirements-', ''));
-        }
-        if (event.target.matches('select[name$="[course_id]"]')) {
-            const root = event.target.closest('[id^="requirements-"]');
-            if (root) updateCompletionRule(root.id.replace('requirements-', ''));
-        }
-        if (event.target.matches('[data-recognition-target-type]')) {
-            const form = event.target.closest('form');
-            const isCourseEquivalency = event.target.value === 'course_equivalency';
-            form?.querySelectorAll('[data-credit-field]').forEach((field) => {
-                field.hidden = !isCourseEquivalency;
-            });
-        }
-    });
-
-    document.addEventListener('input', function (event) {
-        if (!event.target.matches('[id^="required-count-"]')) return;
-        const formId = event.target.id.replace('required-count-', '');
-        updateCompletionRule(formId);
-    });
-
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('[id^="completion-mode-"]').forEach(function (mode) {
-            updateCompletionRule(mode.id.replace('completion-mode-', ''));
-        });
-    });
-</script>

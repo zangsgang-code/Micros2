@@ -29,6 +29,12 @@ class StackingProgressService
         $frameworks = StackingFramework::query()
             ->where('status', 'approved')
             ->where('is_active', true)
+            ->where(function ($query): void {
+                $query->whereNull('effective_date')->orWhereDate('effective_date', '<=', today());
+            })
+            ->where(function ($query): void {
+                $query->whereNull('expiration_date')->orWhereDate('expiration_date', '>=', today());
+            })
             ->whereHas('requirements', fn ($query) => $query->where('course_id', $enrollment->course_id))
             ->with('requirements.course')
             ->get();
@@ -52,6 +58,12 @@ class StackingProgressService
         return StackingFramework::query()
             ->where('status', 'approved')
             ->where('is_active', true)
+            ->where(function ($query): void {
+                $query->whereNull('effective_date')->orWhereDate('effective_date', '<=', today());
+            })
+            ->where(function ($query): void {
+                $query->whereNull('expiration_date')->orWhereDate('expiration_date', '>=', today());
+            })
             ->whereHas('requirements', fn ($query) => $query->whereIn('course_id', $courseIds))
             ->with(['requirements.course'])
             ->orderBy('name')
@@ -62,7 +74,7 @@ class StackingProgressService
 
     public function syncFrameworkForUser(StackingFramework $framework, int $userId): ?UserStackingProgress
     {
-        if ($framework->status !== 'approved' || ! $framework->is_active) {
+        if (! $framework->isAvailableToStudents()) {
             return null;
         }
 
@@ -126,9 +138,7 @@ class StackingProgressService
         $requiredDetails = $requirementDetails->where('is_required', true)->values();
         $completedRequiredCount = $requiredDetails->where('is_completed', true)->count();
         $totalRequiredCount = $requiredDetails->count();
-        $targetRequiredCount = $framework->completion_mode === 'minimum_required'
-            ? min((int) $framework->required_count, $totalRequiredCount)
-            : $totalRequiredCount;
+        $targetRequiredCount = $totalRequiredCount;
         $sequenceSatisfied = ! $framework->sequence_required
             || $this->sequenceSatisfied($requiredDetails, $targetRequiredCount);
         $status = $completedRequiredCount >= $targetRequiredCount && $sequenceSatisfied
@@ -145,7 +155,7 @@ class StackingProgressService
             'completed_required_count' => $completedRequiredCount,
             'total_required_count' => $totalRequiredCount,
             'target_required_count' => $targetRequiredCount,
-            'completion_mode' => $framework->completion_mode ?: 'all_required',
+            'completion_mode' => 'all_required',
             'remaining_required_count' => max(0, $targetRequiredCount - $completedRequiredCount),
             'completion_percentage' => $percentage,
             'status' => $status,

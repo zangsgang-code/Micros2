@@ -249,8 +249,6 @@ Route::middleware([PreventBackHistory::class, RoleBasedAccess::class.':admin', R
         ->name('admin.stacking-frameworks.store');
     Route::patch('/Admin-stacking-frameworks/{id}', [AdminController::class, 'updateStackingFramework'])
         ->whereNumber('id')->name('admin.stacking-frameworks.update');
-    Route::post('/Admin-stacking-frameworks/{id}/submit', [AdminController::class, 'submitStackingFramework'])
-        ->whereNumber('id')->name('admin.stacking-frameworks.submit');
     Route::post('/Admin-stacking-frameworks/{id}/approve', [AdminController::class, 'approveStackingFramework'])
         ->whereNumber('id')->name('admin.stacking-frameworks.approve');
     Route::post('/Admin-stacking-frameworks/{id}/deactivate', [AdminController::class, 'deactivateStackingFramework'])
@@ -258,8 +256,12 @@ Route::middleware([PreventBackHistory::class, RoleBasedAccess::class.':admin', R
 
     Route::get('/Admin-academic-credit-recognition', [AdminController::class, 'academicCreditRecognitionRequests'])
         ->name('admin.academic-credit-recognition');
-    Route::get('/Admin-credit-evidence/{userId}/{frameworkId}', [AdminController::class, 'creditEvidenceReport'])
-        ->whereNumber('userId')->whereNumber('frameworkId')->name('admin.credit-evidence');
+    Route::get('/Admin-academic-credit-recognition/{id}', [AdminController::class, 'showAcademicCreditRecognition'])
+        ->whereNumber('id')->name('admin.academic-credit-recognition.show');
+    Route::post('/Admin-academic-credit-recognition/{id}/status', [AdminController::class, 'updateAcademicCreditRecognition'])
+        ->whereNumber('id')->name('admin.academic-credit-recognition.status');
+    Route::get('/Admin-credit-evidence/{recognitionId}', [AdminController::class, 'creditEvidenceReport'])
+        ->whereNumber('recognitionId')->name('admin.credit-evidence');
 
     Route::get('/Admin-report/download', [AdminController::class, 'downloadAnalyticsReport'])->name('admin.report.download');
     Route::get('/Admin-report', [AdminController::class, 'report'])->name('admin.report');
@@ -338,8 +340,10 @@ Route::middleware([PreventBackHistory::class, RoleBasedAccess::class.':student',
     Route::get('/pathways', [StudentController::class, 'pathways'])->name('pathways.index');
     Route::post('/pathways/select', [StudentController::class, 'selectPathway'])->name('pathways.select');
     Route::get('/stacking-progress', [StudentController::class, 'stackingProgress'])->name('stacking.progress');
-    Route::get('/stacking-progress/{frameworkId}/evidence-report', [StudentController::class, 'creditEvidenceReport'])
-        ->whereNumber('frameworkId')->name('stacking.evidence-report');
+    Route::post('/stacking-progress/{frameworkId}/requests', [StudentController::class, 'requestStackingRecognition'])
+        ->whereNumber('frameworkId')->name('stacking.requests.store');
+    Route::post('/stacking-progress/requests/{recognitionId}/response', [StudentController::class, 'respondToStackingRecognition'])
+        ->whereNumber('recognitionId')->name('stacking.requests.response');
     Route::get('/analytics/report', [StudentController::class, 'downloadAnalyticsReport'])->name('analytics.report');
     Route::get('/analytics', [StudentController::class, 'analytics'])->name('analytics.index');
 

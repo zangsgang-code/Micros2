@@ -24,7 +24,7 @@ use App\Models\StackingFramework;
 use App\Models\StackingFrameworkRequirement;
 use App\Models\User;
 use App\Models\UserBadge;
-use App\Models\UserStackingProgress;
+use App\Services\AcademicCreditRecognitionService;
 use App\Services\AdminPageAccessService;
 use App\Services\AdminUserManagementService;
 use App\Services\CourseModerationService;
@@ -1979,29 +1979,95 @@ class AdminController extends Controller
     }
 
     // ══════════════════════════════════════════════════════════════════
-    public function academicCreditRecognitionRequests()
+    public function academicCreditRecognitionRequests(Request $request)
     {
-        $recognitions = AcademicCreditRecognition::with(['user', 'framework'])
-            ->orderByDesc('updated_at')
-            ->get();
-        $eligibleReports = UserStackingProgress::with(['user', 'framework'])
-            ->where('status', 'requirements_met')
-            ->orderByDesc('requirements_met_at')
-            ->get();
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:120'],
+            'status' => ['nullable', 'in:all,submitted,under_review,needs_information,report_generated,legacy'],
+        ]);
+        $search = trim((string) ($filters['search'] ?? ''));
+        $status = $filters['status'] ?? 'all';
+        $internalStatuses = ['submitted', 'under_review', 'needs_information', 'report_generated'];
+
+        $recognitions = AcademicCreditRecognition::query()
+            ->with(['user', 'framework'])
+            ->when($status === 'legacy', fn ($query) => $query->whereNotIn('status', $internalStatuses))
+            ->when(in_array($status, $internalStatuses, true), fn ($query) => $query->where('status', $status))
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('user', fn ($user) => $user
+                        ->where('first_name', 'like', '%'.$search.'%')
+                        ->orWhere('last_name', 'like', '%'.$search.'%')
+                        ->orWhere('student_id', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%'))
+                        ->orWhereHas('framework', fn ($framework) => $framework->where('name', 'like', '%'.$search.'%'));
+                });
+            })
+            ->latest('updated_at')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.academic-credit-recognition', [
             'user' => UserPresenter::admin(Auth::user()),
             'recognitions' => $recognitions,
-            'eligibleReports' => $eligibleReports,
+            'search' => $search,
+            'status' => $status,
         ]);
     }
 
-    public function creditEvidenceReport(int $userId, int $frameworkId, CreditEvidenceReportService $reports)
+    public function showAcademicCreditRecognition(int $id, CreditEvidenceReportService $reports)
     {
-        $student = User::query()->where('role_id', User::ROLE_STUDENT)->findOrFail($userId);
-        $framework = StackingFramework::query()->findOrFail($frameworkId);
+        $recognition = AcademicCreditRecognition::with(['user', 'framework'])->findOrFail($id);
+        $evidence = in_array($recognition->status, ['submitted', 'under_review', 'needs_information', 'report_generated'], true)
+            ? $reports->build($recognition)
+            : null;
 
-        return view('credit-evidence-report', $reports->build($student, $framework));
+        return view('admin.academic-credit-recognition-show', [
+            'user' => UserPresenter::admin(Auth::user()),
+            'recognition' => $recognition,
+            'evidence' => $evidence,
+        ]);
+    }
+
+    public function updateAcademicCreditRecognition(
+        Request $request,
+        int $id,
+        AcademicCreditRecognitionService $recognitions
+    ) {
+        $data = $request->validate([
+            'status' => ['required', 'in:under_review,needs_information'],
+            'review_notes' => ['nullable', 'string', 'max:4000'],
+        ]);
+
+        try {
+            $recognitions->updateInternalStatus(
+                AcademicCreditRecognition::findOrFail($id),
+                Auth::user(),
+                $data['status'],
+                $data['review_notes'] ?? null
+            );
+        } catch (\InvalidArgumentException $exception) {
+            return back()->withErrors(['status' => $exception->getMessage()]);
+        }
+
+        return back()->with('success', 'Internal request status updated.');
+    }
+
+    public function creditEvidenceReport(int $recognitionId, CreditEvidenceReportService $reports, AcademicCreditRecognitionService $recognitions)
+    {
+        $recognition = AcademicCreditRecognition::with(['user', 'framework'])->findOrFail($recognitionId);
+        abort_unless($recognition->user?->role_id === User::ROLE_STUDENT, 404);
+        abort_unless(in_array($recognition->status, ['under_review', 'report_generated'], true), 403);
+
+        $document = Pdf::loadView('credit-evidence-report', $reports->build($recognition))
+            ->setPaper('a4', 'portrait');
+        $content = $document->output();
+        $recognitions->markReportGenerated($recognition, Auth::user());
+
+        return response($content, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="UPSKILL-Evidence-Request-'.$recognition->id.'.pdf"',
+        ]);
     }
 
     // PROGRAM CATEGORIES  (Admin › Management › Program Categories)
@@ -2104,37 +2170,25 @@ class AdminController extends Controller
     {
         return view('admin.stacking-frameworks', [
             'user' => UserPresenter::admin(Auth::user()),
-            'frameworks' => StackingFramework::with(['requirements.course', 'approver'])
+            'frameworks' => StackingFramework::with(['requirements.course', 'approver', 'previousVersion', 'newerVersions'])
                 ->withCount('requirements')
                 ->orderBy('name')
                 ->get(),
-            'courses' => $this->microcredentialCourses()->orderBy('title')->get(['id', 'title']),
+            'courses' => $this->microcredentialCourses()->orderBy('title')->get([
+                'id', 'title', 'description', 'category', 'pqf_level', 'learning_hours',
+            ]),
         ]);
     }
 
     public function storeStackingFramework(Request $request)
     {
         $data = $this->validateStackingFramework($request);
-        $requirements = $this->validateStackingRequirements($data['requirements'] ?? []);
-        $this->validateCompletionRule($data['completion_mode'], $data['required_count'] ?? null, $requirements);
+        $requirements = $this->validateStackingRequirements($data['requirements']);
 
         DB::transaction(function () use ($data, $requirements): void {
-            $framework = StackingFramework::create([
-                'name' => trim($data['name']),
-                'description' => $data['description'] ?? null,
+            $framework = StackingFramework::create($this->stackingFrameworkAttributes($data, count($requirements)) + [
                 'status' => 'draft',
-                'approving_academic_unit' => $data['approving_academic_unit'] ?? null,
-                'target_recognition' => $data['target_recognition'] ?? null,
-                'recognition_target_type' => $data['recognition_target_type'],
-                'completion_mode' => $data['completion_mode'],
-                'required_count' => $this->resolveRequiredCount($data['completion_mode'], $requirements, $data['required_count'] ?? null),
-                'cumulative_outcomes' => $this->normalizeCumulativeOutcomes($data['cumulative_outcomes'] ?? null),
-                'equivalent_course' => $data['recognition_target_type'] === 'course_equivalency' ? ($data['equivalent_course'] ?? null) : null,
-                'equivalent_units' => $data['recognition_target_type'] === 'course_equivalency' ? ($data['equivalent_units'] ?? null) : null,
-                'sequence_required' => $data['sequence_required'] ?? false,
-                'credit_recognition_conditions' => $data['credit_recognition_conditions'] ?? null,
-                'pqf_level' => $data['pqf_level'] ?? null,
-                'credit_equivalency' => $data['recognition_target_type'] === 'course_equivalency' ? ($data['credit_equivalency'] ?? null) : null,
+                'version_number' => 1,
                 'is_active' => false,
             ]);
 
@@ -2153,52 +2207,43 @@ class AdminController extends Controller
                 ->withErrors(['framework' => 'Deactivate an approved framework before editing its structure.']);
         }
 
-        $data = $this->validateStackingFramework($request);
-        $requirements = $request->has('requirements')
-            ? $this->validateStackingRequirements($data['requirements'] ?? [])
-            : $framework->requirements->map(fn (StackingFrameworkRequirement $requirement): array => [
-                'course_id' => $requirement->course_id,
-                'order' => $requirement->order,
-                'is_required' => $requirement->is_required,
-            ])->all();
-        $this->validateCompletionRule($data['completion_mode'], $data['required_count'] ?? null, $requirements);
+        if ($framework->status === 'inactive' && $framework->newerVersions()->exists()) {
+            return redirect()->route('admin.stacking-frameworks')
+                ->withErrors(['framework' => 'Create a revision from the latest framework version to preserve version history.']);
+        }
 
-        DB::transaction(function () use ($data, $framework, $requirements): void {
-            $framework->update([
-                'name' => trim($data['name']),
-                'description' => $data['description'] ?? null,
-                'status' => 'draft',
-                'approved_by' => null,
-                'approved_at' => null,
-                'approving_academic_unit' => $data['approving_academic_unit'] ?? null,
-                'target_recognition' => $data['target_recognition'] ?? null,
-                'recognition_target_type' => $data['recognition_target_type'],
-                'completion_mode' => $data['completion_mode'],
-                'required_count' => $this->resolveRequiredCount($data['completion_mode'], $requirements, $data['required_count'] ?? null),
-                'cumulative_outcomes' => $this->normalizeCumulativeOutcomes($data['cumulative_outcomes'] ?? null),
-                'equivalent_course' => $data['recognition_target_type'] === 'course_equivalency' ? ($data['equivalent_course'] ?? null) : null,
-                'equivalent_units' => $data['recognition_target_type'] === 'course_equivalency' ? ($data['equivalent_units'] ?? null) : null,
-                'sequence_required' => $data['sequence_required'] ?? false,
-                'credit_recognition_conditions' => $data['credit_recognition_conditions'] ?? null,
-                'pqf_level' => $data['pqf_level'] ?? null,
-                'credit_equivalency' => $data['recognition_target_type'] === 'course_equivalency' ? ($data['credit_equivalency'] ?? null) : null,
-                'is_active' => false,
-            ]);
+        $data = $this->validateStackingFramework($request);
+        $requirements = $this->validateStackingRequirements($data['requirements']);
+        $createsNewVersion = $framework->status === 'inactive';
+
+        DB::transaction(function () use ($data, $framework, $requirements, $createsNewVersion): void {
+            if ($createsNewVersion) {
+                $draft = $framework->replicate();
+                $draft->fill($this->stackingFrameworkAttributes($data, count($requirements)));
+                $draft->status = 'draft';
+                $draft->version_number = (int) $framework->version_number + 1;
+                $draft->previous_version_id = $framework->id;
+                $draft->approved_by = null;
+                $draft->approved_at = null;
+                $draft->is_active = false;
+                $draft->save();
+                $framework = $draft;
+            } else {
+                $framework->update($this->stackingFrameworkAttributes($data, count($requirements)) + [
+                    'status' => 'draft',
+                    'approved_by' => null,
+                    'approved_at' => null,
+                    'is_active' => false,
+                ]);
+            }
 
             $this->replaceStackingRequirements($framework, $requirements);
         });
 
-        return redirect()->route('admin.stacking-frameworks')->with('success', 'Stacking framework updated as a draft.');
-    }
-
-    public function submitStackingFramework(int $id)
-    {
-        $framework = StackingFramework::with('requirements')->findOrFail($id);
-        $this->validateFrameworkForApproval($framework);
-
-        $framework->update(['status' => 'pending_approval', 'is_active' => false]);
-
-        return redirect()->route('admin.stacking-frameworks')->with('success', 'Stacking framework submitted for approval.');
+        return redirect()->route('admin.stacking-frameworks')->with(
+            'success',
+            $createsNewVersion ? 'A new framework draft version was created.' : 'Stacking framework updated as a draft.'
+        );
     }
 
     public function approveStackingFramework(int $id)
@@ -2207,7 +2252,12 @@ class AdminController extends Controller
 
         if (! in_array($framework->status, ['draft', 'pending_approval', 'inactive'], true)) {
             return redirect()->route('admin.stacking-frameworks')
-                ->withErrors(['framework' => 'Only draft, submitted, or inactive stacking frameworks can be activated.']);
+                ->withErrors(['framework' => 'Only a draft or archived framework version can be activated.']);
+        }
+
+        if ($framework->status === 'inactive' && $framework->newerVersions()->exists()) {
+            return redirect()->route('admin.stacking-frameworks')
+                ->withErrors(['framework' => 'Only the latest framework version can be activated.']);
         }
 
         $this->validateFrameworkForApproval($framework);
@@ -2225,33 +2275,40 @@ class AdminController extends Controller
     public function deactivateStackingFramework(int $id)
     {
         $framework = StackingFramework::findOrFail($id);
+
+        if ($framework->status !== 'approved') {
+            return redirect()->route('admin.stacking-frameworks')
+                ->withErrors(['framework' => 'Only an active framework can be archived.']);
+        }
+
         $framework->update(['status' => 'inactive', 'is_active' => false]);
 
-        return redirect()->route('admin.stacking-frameworks')->with('success', 'Stacking framework deactivated.');
+        return redirect()->route('admin.stacking-frameworks')->with('success', 'Framework archived; its version and prior requests are preserved.');
     }
 
     private function validateStackingFramework(Request $request): array
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:150'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'pqf_level' => ['nullable', 'regex:/^[1-8]$/'],
-            'cumulative_outcomes' => ['nullable', 'string', 'max:4000'],
-            'target_recognition' => ['nullable', 'string', 'max:255'],
-            'recognition_target_type' => ['required', 'in:course_equivalency,certificate,specialization,degree_requirement,other_institutional_recognition'],
+            'description' => ['required', 'string', 'max:2000'],
+            'pqf_level' => ['nullable', 'in:5,6,7,8'],
+            'cumulative_outcomes' => ['required', 'array', 'min:1'],
+            'cumulative_outcomes.*' => ['required', 'string', 'max:500'],
+            'target_recognition' => ['required', 'string', 'max:255'],
+            'recognition_target_type' => ['required', 'in:course_requirement,elective_requirement,specialization,certificate,other_institutional_requirement,other,course_equivalency,degree_requirement,other_institutional_recognition'],
             'equivalent_course' => ['nullable', 'string', 'max:255'],
             'equivalent_units' => ['nullable', 'numeric', 'min:0'],
             'credit_equivalency' => ['nullable', 'string', 'max:1000'],
             'credit_recognition_conditions' => ['nullable', 'string', 'max:2000'],
-            'approving_academic_unit' => ['nullable', 'string', 'max:255'],
-            'completion_mode' => ['required', 'in:all_required,minimum_required'],
-            'required_count' => ['nullable', 'integer', 'min:1'],
+            'approving_academic_unit' => ['required', 'string', 'max:255'],
+            'approval_reference' => ['nullable', 'string', 'max:255'],
+            'approval_date' => ['nullable', 'date'],
+            'effective_date' => ['nullable', 'date'],
+            'expiration_date' => ['nullable', 'date'],
             'sequence_required' => ['nullable', 'boolean'],
-            'requirements' => ['nullable', 'array'],
-            'requirements.*.id' => ['nullable', 'integer'],
+            'requirements' => ['required', 'array', 'min:1'],
             'requirements.*.course_id' => ['required', 'integer', 'exists:courses,id'],
             'requirements.*.order' => ['required', 'integer', 'min:1'],
-            'requirements.*.is_required' => ['nullable', 'boolean'],
         ]);
     }
 
@@ -2261,12 +2318,14 @@ class AdminController extends Controller
         $normalized = collect($requirements)->map(fn (array $requirement): array => [
             'course_id' => (int) $requirement['course_id'],
             'order' => (int) $requirement['order'],
-            'is_required' => (bool) ($requirement['is_required'] ?? false),
+            'is_required' => true,
         ])->values()->all();
 
         $courseIds = collect($normalized)->pluck('course_id');
         if ($courseIds->isEmpty()) {
-            return $normalized;
+            throw ValidationException::withMessages([
+                'requirements' => 'Add at least one required microcredential.',
+            ]);
         }
 
         if ($courseIds->duplicates()->isNotEmpty()) {
@@ -2288,42 +2347,42 @@ class AdminController extends Controller
         return $normalized;
     }
 
-    private function validateCompletionRule(string $completionMode, $requiredCount, array $requirements, bool $forApproval = false): void
+    /** @param list<array{course_id: int, order: int, is_required: bool}> $requirements
+     * @return array<string, mixed>
+     */
+    private function stackingFrameworkAttributes(array $data, int $requiredCount): array
     {
-        $requiredItems = collect($requirements)->where('is_required', true)->count();
+        $courseRecognition = in_array($data['recognition_target_type'], [
+            'course_requirement', 'elective_requirement', 'course_equivalency',
+        ], true);
 
-        if ($requiredItems === 0) {
-            throw ValidationException::withMessages([
-                'requirements' => 'Add at least one microcredential marked as required for completion.',
-            ]);
-        }
-
-        if ($completionMode === 'all_required') {
-            return;
-        }
-
-        $count = (int) ($requiredCount ?? 0);
-        if ($count < 1 || $count > $requiredItems) {
-            throw ValidationException::withMessages([
-                'required_count' => 'The minimum required count must be between 1 and the number of required microcredentials.',
-            ]);
-        }
-    }
-
-    private function resolveRequiredCount(string $completionMode, array $requirements, $requestedCount): int
-    {
-        $requiredItems = collect($requirements)->where('is_required', true)->count();
-
-        return $completionMode === 'all_required'
-            ? $requiredItems
-            : (int) $requestedCount;
+        return [
+            'name' => trim($data['name']),
+            'description' => trim($data['description']),
+            'approving_academic_unit' => trim($data['approving_academic_unit']),
+            'approval_reference' => $data['approval_reference'] ?? null,
+            'approval_date' => $data['approval_date'] ?? null,
+            'effective_date' => $data['effective_date'] ?? null,
+            'expiration_date' => $data['expiration_date'] ?? null,
+            'target_recognition' => trim($data['target_recognition']),
+            'recognition_target_type' => $data['recognition_target_type'],
+            'completion_mode' => 'all_required',
+            'required_count' => $requiredCount,
+            'cumulative_outcomes' => $this->normalizeCumulativeOutcomes($data['cumulative_outcomes']),
+            'equivalent_course' => $courseRecognition ? ($data['equivalent_course'] ?? null) : null,
+            'equivalent_units' => $courseRecognition ? ($data['equivalent_units'] ?? null) : null,
+            'sequence_required' => (bool) ($data['sequence_required'] ?? false),
+            'credit_recognition_conditions' => $data['credit_recognition_conditions'] ?? null,
+            'pqf_level' => $data['pqf_level'] ?? null,
+            'credit_equivalency' => $courseRecognition ? ($data['credit_equivalency'] ?? null) : null,
+        ];
     }
 
     /** @return list<string> */
-    private function normalizeCumulativeOutcomes(?string $outcomes): array
+    private function normalizeCumulativeOutcomes(array $outcomes): array
     {
-        return collect(preg_split('/\r\n|\r|\n/', (string) $outcomes) ?: [])
-            ->map(fn (string $outcome): string => trim(preg_replace('/^[-•*]\s*/', '', $outcome) ?? $outcome))
+        return collect($outcomes)
+            ->map(fn (string $outcome): string => trim($outcome))
             ->filter(fn (string $outcome): bool => $outcome !== '')
             ->values()
             ->all();
@@ -2337,8 +2396,61 @@ class AdminController extends Controller
             'is_required' => $requirement->is_required,
         ])->all();
 
-        $requirements = $this->validateStackingRequirements($requirements);
-        $this->validateCompletionRule((string) $framework->completion_mode, $framework->required_count, $requirements, true);
+        $this->validateStackingRequirements($requirements);
+
+        foreach ([
+            'name' => 'Enter a framework name before activating it.',
+            'description' => 'Enter a framework description before activating it.',
+            'approving_academic_unit' => 'Enter the approving academic unit before activating the framework.',
+            'target_recognition' => 'Enter the intended recognition before activating the framework.',
+            'recognition_target_type' => 'Select a recognition target type before activating the framework.',
+        ] as $field => $message) {
+            if (blank($framework->{$field})) {
+                throw ValidationException::withMessages([$field => $message]);
+            }
+        }
+
+        if (collect($framework->cumulative_outcomes ?? [])->filter(fn ($outcome): bool => filled($outcome))->isEmpty()) {
+            throw ValidationException::withMessages([
+                'cumulative_outcomes' => 'Add at least one cumulative learning outcome before activating the framework.',
+            ]);
+        }
+
+        if (blank($framework->approval_reference)) {
+            throw ValidationException::withMessages([
+                'approval_reference' => 'Enter the institutional approval reference before activating this framework.',
+            ]);
+        }
+
+        if (! $framework->approval_date) {
+            throw ValidationException::withMessages([
+                'approval_date' => 'Enter the date of the institutional approval before activating this framework.',
+            ]);
+        }
+
+        if ($framework->approval_date->isAfter(today())) {
+            throw ValidationException::withMessages([
+                'approval_date' => 'The institutional approval date cannot be in the future.',
+            ]);
+        }
+
+        if (! $framework->effective_date) {
+            throw ValidationException::withMessages([
+                'effective_date' => 'Enter the date this approved framework takes effect.',
+            ]);
+        }
+
+        if ($framework->expiration_date && $framework->expiration_date->lt($framework->effective_date)) {
+            throw ValidationException::withMessages([
+                'expiration_date' => 'The expiration date must be on or after the effective date.',
+            ]);
+        }
+
+        if ($framework->expiration_date && $framework->expiration_date->isBefore(today())) {
+            throw ValidationException::withMessages([
+                'expiration_date' => 'An expired framework cannot be activated.',
+            ]);
+        }
     }
 
     /** @param list<array{course_id: int, order: int, is_required: bool}> $requirements */

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicCreditRecognition;
 use App\Models\AnalyticsEvent;
 use App\Models\Certificate;
 use App\Models\CompetencyProgress;
@@ -22,9 +23,9 @@ use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
 use App\Models\StackingFramework;
 use App\Models\UserBadge;
+use App\Services\AcademicCreditRecognitionService;
 use App\Services\CourseCompletionService;
 use App\Services\CourseEvaluationService;
-use App\Services\CreditEvidenceReportService;
 use App\Services\MicrocredentialCompletionService;
 use App\Services\QuizAttemptService;
 use App\Services\StackingProgressService;
@@ -321,23 +322,61 @@ class StudentController extends Controller
     {
         $auth = Auth::user();
         $frameworks = $this->stackingProgress->progressForUser((int) $auth->id);
+        $recognitionRequests = AcademicCreditRecognition::query()
+            ->where('user_id', $auth->id)
+            ->whereIn('stacking_framework_id', $frameworks->pluck('framework.id'))
+            ->get()
+            ->keyBy('stacking_framework_id');
 
-        // N+1 fix: recognition records were fetched one query per framework.
         return view('student.stacking-progress', [
             'user' => UserPresenter::student($auth),
-            'frameworks' => $frameworks,
+            'frameworks' => $frameworks->map(fn (array $item): array => $item + [
+                'recognition_request' => $recognitionRequests->get($item['framework']->id),
+            ]),
         ]);
     }
 
-    public function creditEvidenceReport(int $frameworkId, CreditEvidenceReportService $reports)
-    {
-        $student = Auth::user();
-        $framework = StackingFramework::query()->findOrFail($frameworkId);
-        $item = $this->stackingProgress->progressForUser((int) $student->id)
-            ->first(fn (array $progress): bool => (int) $progress['framework']->id === $frameworkId);
-        abort_unless($item && $item['status'] === 'requirements_met', 403);
+    public function requestStackingRecognition(
+        Request $request,
+        int $frameworkId,
+        AcademicCreditRecognitionService $recognitions
+    ) {
+        $data = $request->validate([
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ]);
 
-        return view('credit-evidence-report', $reports->build($student, $framework));
+        try {
+            $recognitions->requestRecognition(
+                Auth::user(),
+                StackingFramework::query()->findOrFail($frameworkId),
+                $data['notes'] ?? null
+            );
+        } catch (\InvalidArgumentException $exception) {
+            return back()->withErrors(['recognition' => $exception->getMessage()]);
+        }
+
+        return back()->with('success', 'Your request was submitted for internal UPSKILL review. No academic credit is awarded by this request.');
+    }
+
+    public function respondToStackingRecognition(
+        Request $request,
+        int $recognitionId,
+        AcademicCreditRecognitionService $recognitions
+    ) {
+        $data = $request->validate([
+            'student_response' => ['required', 'string', 'max:4000'],
+        ]);
+        $recognition = AcademicCreditRecognition::query()
+            ->where('user_id', Auth::id())
+            ->findOrFail($recognitionId);
+
+        try {
+            $recognitions->submitStudentResponse($recognition, Auth::user(), $data['student_response']);
+        } catch (\InvalidArgumentException $exception) {
+            return back()->withErrors(['student_response' => $exception->getMessage()]);
+        }
+
+        return back()->with('success', 'Your additional information was sent for internal review.');
     }
 
     // ── First-login About Me ─────────────────────────────────────────────

@@ -3,14 +3,22 @@
                 <header class="page-head page-header ui-page-header student-page-heading">
                     <div>
                         <h1 class="ui-page-title">Stacking Progress</h1>
-                        <p class="subtitle ui-page-subtitle">Track officially completed microcredentials toward approved frameworks.</p>
+                        <p class="subtitle ui-page-subtitle">Track officially completed microcredentials toward active, approved frameworks.</p>
                     </div>
                 </header>
+
+                @if(session('success'))
+                    <div class="ui-card-surface" role="status">{{ session('success') }}</div>
+                @endif
+                @if($errors->any())
+                    <div class="ui-card-surface" role="alert">{{ $errors->first() }}</div>
+                @endif
 
                 @forelse($frameworks as $item)
                     @php
                         $framework = $item['framework'];
                         $isMet = $item['status'] === 'requirements_met';
+                        $recognition = $item['recognition_request'];
                     @endphp
                     <section class="framework-card ui-card-surface">
                         <div class="framework-head ui-card-header">
@@ -23,7 +31,7 @@
                         <div class="meta">
                             @if($framework->pqf_level)<span>PQF <strong>{{ $framework->pqf_level }}</strong></span>@endif
                             @if($framework->target_recognition)<span>Target <strong>{{ $framework->target_recognition }}</strong></span>@endif
-                            <span><strong>{{ $item['completed_required_count'] }}</strong> of <strong>{{ $item['target_required_count'] }}</strong> required target met</span><span>{{ $item['total_required_count'] }} required configured</span>
+                            <span><strong>{{ $item['completed_required_count'] }}</strong> of <strong>{{ $item['total_required_count'] }}</strong> required microcredentials completed</span>
                             <span><strong>{{ $item['remaining_required_count'] }}</strong> remaining</span>
                         </div>
                         <div class="progress-row" aria-label="{{ $item['completion_percentage'] }} percent complete">
@@ -31,16 +39,55 @@
                             <div class="percent">{{ $item['completion_percentage'] }}%</div>
                         </div>
 
-                        @if($isMet)
-                            <a class="evidence-report-link ui-button ui-button--secondary" href="{{ route('stacking.evidence-report', $framework->id) }}" target="_blank" rel="noopener">Generate academic credit evidence report</a>
+                        @if($isMet && ! $recognition)
+                            <form method="POST" action="{{ route('stacking.requests.store', $framework->id) }}" class="recognition-request-form">
+                                @csrf
+                                <p>All required microcredentials are officially complete. You may request an internal UPSKILL review and supporting evidence report. This does not award academic credit.</p>
+                                <label for="request-notes-{{ $framework->id }}">Optional note for the reviewer</label>
+                                <textarea id="request-notes-{{ $framework->id }}" name="notes" rows="2" maxlength="2000"></textarea>
+                                <button class="ui-button ui-button--primary" type="submit">Request internal review</button>
+                            </form>
+                        @elseif($recognition && in_array($recognition->status, ['submitted', 'under_review', 'needs_information', 'report_generated'], true))
+                            <div class="recognition-request-status">
+                                <strong>{{ Illuminate\Support\Str::headline($recognition->status) }}</strong>
+                                <p>
+                                    @switch($recognition->status)
+                                        @case('submitted') Your request is waiting for internal UPSKILL review. @break
+                                        @case('under_review') An administrator is reviewing your request. @break
+                                        @case('needs_information') An administrator requested additional information. @break
+                                        @case('report_generated') Your supporting evidence report has been generated for internal review. @break
+                                    @endswitch
+                                </p>
+                                @if($recognition->review_notes)
+                                    <p><strong>Reviewer note:</strong> {{ $recognition->review_notes }}</p>
+                                @endif
+                                @if($recognition->notes)
+                                    <p><strong>Your note:</strong> {{ $recognition->notes }}</p>
+                                @endif
+                                @if($recognition->status === 'needs_information')
+                                    <form method="POST" action="{{ route('stacking.requests.response', $recognition->id) }}">
+                                        @csrf
+                                        <label for="student-response-{{ $recognition->id }}">Additional information</label>
+                                        <textarea id="student-response-{{ $recognition->id }}" name="student_response" rows="3" maxlength="4000" required>{{ old('student_response') }}</textarea>
+                                        <button class="ui-button ui-button--primary" type="submit">Send additional information</button>
+                                    </form>
+                                @elseif($recognition->student_response)
+                                    <p><strong>Your response:</strong> {{ $recognition->student_response }}</p>
+                                @endif
+                            </div>
+                        @elseif($recognition)
+                            <div class="recognition-request-status">
+                                <strong>Historical request on file</strong>
+                                <p>This older request record is preserved. No additional UPSKILL action is available for it.</p>
+                            </div>
                         @endif
                         <div class="requirements-wrap">
                             <table class="requirements ui-table">
-                                <thead><tr><th>Microcredential</th><th>Order</th><th>Type</th><th>Completion</th></tr></thead>
+                                <thead><tr><th>Microcredential</th><th>Order</th><th>Requirement</th><th>Official completion</th></tr></thead>
                                 <tbody>
                                     @foreach($item['requirements'] as $detail)
                                         <tr>
-                                            <td><span class="course-title">{{ $detail['course']->title }}</span></td>
+                                            <td><span class="course-title">{{ $detail['course']->title ?? 'Removed course' }}</span></td>
                                             <td>{{ $framework->sequence_required ? $detail['requirement']->order : '—' }}</td>
                                             <td>{{ $detail['is_required'] ? 'Required' : 'Optional' }}</td>
                                             <td>

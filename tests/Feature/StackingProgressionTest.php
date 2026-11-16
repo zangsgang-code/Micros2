@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Course;
+use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\StackingFramework;
 use App\Models\StackingFrameworkRequirement;
@@ -174,6 +175,13 @@ test('official completion triggers stacking progress without academic credit rec
         'is_completed' => false,
         'completion_status' => 'in_progress',
     ]);
+    CourseReview::create([
+        'course_id' => $course->id,
+        'user_id' => $student->id,
+        'rating' => 5,
+        'answers' => [],
+        'comment' => 'Course requirements completed.',
+    ]);
 
     app(MicrocredentialCompletionService::class)->recordAcademicUnitConfirmation($enrollment, $admin->id, 'confirmed');
 
@@ -207,7 +215,7 @@ test('non-students cannot access student stacking progress', function () {
     $this->actingAs($admin)->get(route('stacking.progress'))->assertRedirect();
 });
 
-test('stacking progress reaches 100 percent and zero remaining when the configured n-of-m target is met', function () {
+test('all required microcredentials must be completed even when a legacy framework stored an n-of-m target', function () {
     $student = User::factory()->create();
     $first = makeProgressCourseFixture('N of M One');
     $second = makeProgressCourseFixture('N of M Two');
@@ -220,9 +228,22 @@ test('stacking progress reaches 100 percent and zero remaining when the configur
 
     $progress = app(StackingProgressService::class)->progressForUser($student->id)->firstWhere('framework.id', $framework->id);
 
-    expect($progress['status'])->toBe('requirements_met')
+    expect($progress['status'])->toBe('in_progress')
         ->and($progress['completed_required_count'])->toBe(2)
-        ->and($progress['target_required_count'])->toBe(2)
-        ->and($progress['remaining_required_count'])->toBe(0)
-        ->and($progress['completion_percentage'])->toBe(100);
+        ->and($progress['target_required_count'])->toBe(3)
+        ->and($progress['remaining_required_count'])->toBe(1)
+        ->and($progress['completion_percentage'])->toBe(67);
+});
+
+test('frameworks outside their effective period are not shown to students', function () {
+    $student = User::factory()->create();
+    $course = makeProgressCourseFixture('Expired Framework Course');
+    $framework = makeProgressFrameworkFixture([$course], [
+        'effective_date' => today()->subDays(10),
+        'expiration_date' => today()->subDay(),
+    ]);
+    makeProgressEnrollmentFixture($student, $course, MicrocredentialCompletionService::STATUS_COMPLETED);
+
+    expect(app(StackingProgressService::class)->progressForUser($student->id))->toBeEmpty()
+        ->and(app(StackingProgressService::class)->syncFrameworkForUser($framework, $student->id))->toBeNull();
 });

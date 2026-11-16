@@ -21,6 +21,12 @@ class StackingFramework extends Model
         'description',
         'status',
         'approving_academic_unit',
+        'approval_reference',
+        'approval_date',
+        'effective_date',
+        'expiration_date',
+        'version_number',
+        'previous_version_id',
         'approved_by',
         'approved_at',
         'target_recognition',
@@ -44,6 +50,10 @@ class StackingFramework extends Model
             'sequence_required' => 'boolean',
             'is_active' => 'boolean',
             'approved_at' => 'datetime',
+            'approval_date' => 'date',
+            'effective_date' => 'date',
+            'expiration_date' => 'date',
+            'version_number' => 'integer',
             'completion_mode' => 'string',
             'required_count' => 'integer',
         ];
@@ -52,6 +62,26 @@ class StackingFramework extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function previousVersion(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'previous_version_id');
+    }
+
+    public function newerVersions(): HasMany
+    {
+        return $this->hasMany(self::class, 'previous_version_id');
+    }
+
+    public function isAvailableToStudents(): bool
+    {
+        $today = now()->toDateString();
+
+        return $this->status === 'approved'
+            && $this->is_active
+            && (! $this->effective_date || $this->effective_date->toDateString() <= $today)
+            && (! $this->expiration_date || $this->expiration_date->toDateString() >= $today);
     }
 
     public function requirements(): HasMany

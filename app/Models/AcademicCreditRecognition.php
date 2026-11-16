@@ -6,14 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * The separate institutional academic-credit recognition workflow.
+ * A student's internal UPSKILL request for an evidence report.
  *
- * Completely independent of `UserStackingProgress`. A framework reaching
- * `requirements_met` must never automatically create or advance a row
- * here — that remains a distinct, explicit process (Academic Unit
- * recommendation -> Dean endorsement -> Registrar recording), implemented
- * in Phase 7. No Phase 2 or later completion/stacking code is permitted
- * to write to this table automatically.
+ * Legacy institutional-decision columns remain in the database for historical
+ * records and are not written by the current request/review workflow.
  */
 class AcademicCreditRecognition extends Model
 {
@@ -21,22 +17,22 @@ class AcademicCreditRecognition extends Model
         'user_id',
         'stacking_framework_id',
         'status',
-        'unit_reviewed_by',
-        'unit_reviewed_at',
-        'unit_recommendation',
-        'dean_endorsed_by',
-        'dean_endorsed_at',
-        'registrar_recorded_by',
-        'registrar_recorded_at',
         'notes',
+        'framework_snapshot',
+        'review_notes',
+        'student_response',
+        'reviewed_by',
+        'reviewed_at',
+        'report_generated_by',
+        'report_generated_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'unit_reviewed_at' => 'datetime',
-            'dean_endorsed_at' => 'datetime',
-            'registrar_recorded_at' => 'datetime',
+            'framework_snapshot' => 'array',
+            'reviewed_at' => 'datetime',
+            'report_generated_at' => 'datetime',
         ];
     }
 
@@ -50,18 +46,13 @@ class AcademicCreditRecognition extends Model
         return $this->belongsTo(StackingFramework::class, 'stacking_framework_id');
     }
 
-    public function unitReviewer(): BelongsTo
+    public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'unit_reviewed_by');
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
-    public function deanEndorser(): BelongsTo
+    public function reportGenerator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'dean_endorsed_by');
-    }
-
-    public function registrarRecorder(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'registrar_recorded_by');
+        return $this->belongsTo(User::class, 'report_generated_by');
     }
 }
