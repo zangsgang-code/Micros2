@@ -1531,6 +1531,9 @@ class FacultyController extends Controller
             'duration' => ['nullable', 'numeric', 'min:0'],
             'passing_score' => ['nullable', 'integer', 'min:0', 'max:100'],
             'learning_outcomes_content' => ['nullable', 'string', 'max:50000'],
+            'learning_outcomes' => ['nullable', 'array'],
+            'learning_outcomes.*.description' => ['required', 'string', 'max:50000'],
+            'learning_outcomes.*.competency_unit_id' => ['nullable', 'integer', 'exists:competency_units,id'],
             'competencies' => ['nullable', 'array'],
             'competencies.*' => ['string', 'max:120'],
             'prerequisites' => ['nullable', 'string', 'max:120'],
@@ -1601,9 +1604,7 @@ class FacultyController extends Controller
 
         DB::transaction(function () use ($course, $attributes, $data, $learningOutcomes, $request): void {
             $course->update($attributes);
-            $outcomeContent = $this->sanitizeRichText($data['learning_outcomes_content'] ?? '');
-            $outcomes = $outcomeContent === '' ? [] : [['description' => $outcomeContent]];
-            $learningOutcomes->sync($course, $outcomes);
+            $learningOutcomes->sync($course, $this->learningOutcomesFrom($data));
 
             $course->related_skills = $this->relatedSkillsFrom($request);
             $course->prerequisite_ids = $this->prerequisiteIdsFrom($request, $course->id);
@@ -1750,6 +1751,29 @@ class FacultyController extends Controller
         return RichTextSanitizer::sanitize($html);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return list<array{description: string, competency_unit_id?: int|null}>
+     */
+    private function learningOutcomesFrom(array $data): array
+    {
+        if (array_key_exists('learning_outcomes', $data)) {
+            return collect($data['learning_outcomes'] ?? [])
+                ->map(fn (array $outcome): array => [
+                    'description' => $outcome['description'],
+                    'competency_unit_id' => filled($outcome['competency_unit_id'] ?? null)
+                        ? (int) $outcome['competency_unit_id']
+                        : null,
+                ])
+                ->values()
+                ->all();
+        }
+
+        $outcomeContent = $this->sanitizeRichText($data['learning_outcomes_content'] ?? '');
+
+        return $outcomeContent === '' ? [] : [['description' => $outcomeContent]];
+    }
+
     private function saveInlineBadge(Request $request, Course $course): ?int
     {
         if (! $request->boolean('badge_enabled')) {
@@ -1802,6 +1826,9 @@ class FacultyController extends Controller
             'passing_score' => ['nullable', 'integer', 'min:0', 'max:100'],
             'learning_objectives' => ['nullable', 'string'],
             'learning_outcomes_content' => ['nullable', 'string', 'max:50000'],
+            'learning_outcomes' => ['nullable', 'array'],
+            'learning_outcomes.*.description' => ['required', 'string', 'max:50000'],
+            'learning_outcomes.*.competency_unit_id' => ['nullable', 'integer', 'exists:competency_units,id'],
             'competencies' => ['nullable', 'array'],
             'competencies.*' => ['string', 'max:120'],
             'prerequisites' => ['nullable', 'string', 'max:120'],
@@ -1829,9 +1856,7 @@ class FacultyController extends Controller
         try {
             $course = DB::transaction(function () use ($request, $data, $auth, $courseCreationService, $learningOutcomes): Course {
                 $course = $courseCreationService->create($request, $data, $auth);
-                $outcomeContent = $this->sanitizeRichText($data['learning_outcomes_content'] ?? '');
-                $outcomes = $outcomeContent === '' ? [] : [['description' => $outcomeContent]];
-                $learningOutcomes->sync($course, $outcomes);
+                $learningOutcomes->sync($course, $this->learningOutcomesFrom($data));
 
                 return $course;
             });

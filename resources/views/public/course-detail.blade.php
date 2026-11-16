@@ -33,9 +33,9 @@
     .pc-btn--ghost:hover{background:var(--pc-tint);color:var(--pc-blue)}
     .pc a:focus-visible,.pc summary:focus-visible,.pc-tab:focus-visible{outline:3px solid #2f6bff;outline-offset:2px}
     .pc-details{margin:1.25rem 0 0;padding:0;border-top:1px solid var(--pc-line)}
-    .pc-details div{display:flex;justify-content:space-between;gap:1rem;padding:.65rem 0;border-bottom:1px solid var(--pc-line);font-size:.9rem}
+    .pc-details div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);align-items:start;gap:1rem;padding:.65rem 0;border-bottom:1px solid var(--pc-line);font-size:.9rem}
     .pc-details dt{color:var(--pc-muted);font-weight:400}
-    .pc-details dd{margin:0;text-align:right;font-weight:600;color:var(--pc-ink)}
+    .pc-details dd{min-width:0;margin:0;text-align:left;font-weight:600;color:var(--pc-ink)}
     .pc-aside__note{margin:1rem 0 0;font-size:.82rem;line-height:1.5;color:var(--pc-muted)}
 
     /* Tabs */

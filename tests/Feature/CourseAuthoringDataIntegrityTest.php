@@ -53,6 +53,37 @@ test('course creation parses the related skills mirror consistently', function (
         ->toBe(['Web Development', 'Databases']);
 });
 
+test('course creation stores separately entered learning outcomes', function () {
+    $faculty = User::factory()->faculty()->create();
+
+    $this->actingAs($faculty)->get(route('faculty.create'))
+        ->assertOk()
+        ->assertSee('learningOutcomeInput')
+        ->assertSee('Add outcome');
+
+    $this->actingAs($faculty)->post(route('faculty.create.store'), [
+        'title' => 'Course with measurable outcomes',
+        'short_description' => 'A course summary.',
+        'learning_outcomes' => [
+            ['description' => 'Build a responsive page.'],
+            ['description' => 'Apply accessible labels to form controls.'],
+        ],
+    ])->assertRedirect();
+
+    $course = Course::query()->firstOrFail();
+
+    expect($course->learningOutcomes()->orderBy('order')->pluck('description')->all())
+        ->toBe([
+            'Build a responsive page.',
+            'Apply accessible labels to form controls.',
+        ]);
+
+    $this->actingAs($faculty)->get(route('faculty.courses.edit', $course->id))
+        ->assertOk()
+        ->assertSee('Build a responsive page.')
+        ->assertSee('Apply accessible labels to form controls.');
+});
+
 test('editing a course preserves legacy fields and its certificate signature name', function () {
     $faculty = User::factory()->faculty()->create();
     $prerequisite = Course::create([

@@ -95,20 +95,22 @@
                     $savedCompetencies = old('competencies', isset($course) && $course ? ($course->skills ?? []) : []);
                     $savedCompetencies = is_array($savedCompetencies) ? $savedCompetencies : [];
 
-                    $savedOutcomes = old('learning_outcomes_content');
-                    if (! is_string($savedOutcomes)) {
-                        $outcomeDescriptions = isset($course) && $course
-                            ? $course->learningOutcomes->pluck('description')->all()
+                    $savedOutcomes = old('learning_outcomes');
+                    if (! is_array($savedOutcomes)) {
+                        $savedOutcomes = isset($course) && $course
+                            ? $course->learningOutcomes
+                                ->map(fn ($outcome) => [
+                                    'description' => $outcome->description,
+                                    'competency_unit_id' => $outcome->competency_unit_id,
+                                ])
+                                ->all()
                             : [];
-                        if ($outcomeDescriptions === [] && isset($course) && $course) {
-                            $outcomeDescriptions = $course->objectives ?? [];
+
+                        if ($savedOutcomes === [] && isset($course) && $course) {
+                            $savedOutcomes = collect($course->objectives ?? [])
+                                ->map(fn ($objective) => ['description' => $objective, 'competency_unit_id' => null])
+                                ->all();
                         }
-                     
-                        $savedOutcomes = count($outcomeDescriptions) === 1
-                            ? (string) $outcomeDescriptions[0]
-                            : ($outcomeDescriptions === []
-                                ? ''
-                                : '<ul><li>'.implode('</li><li>', array_map('e', $outcomeDescriptions)).'</li></ul>');
                     }
 
                     $selectedPrereqs = collect(old('prerequisite_ids', $course->prerequisite_ids ?? []))
@@ -234,7 +236,7 @@
                                         <span class="competency-chip"><input type="hidden" name="competencies[]" value="{{ $competency }}"><span>{{ $competency }}</span><button type="button" class="competency-remove" aria-label="Remove {{ $competency }}">&times;</button></span>
                                     @endforeach
                                 </div>
-                                <small class="field-hint">Use the learning outcomes below to map assessed skills to formal competency units.</small>
+                                <small class="field-hint">Add observable learner outcomes in the Learning design section.</small>
                             </div>
 
                             {{-- Internal only. Drives the Recommended toggle on the
@@ -338,15 +340,31 @@
                     <div class="form-card-body">
 
                         <div class="field">
-                            <label class="label" for="learning-outcomes-editor">Measurable learning outcomes</label>
-                            @include('components.rich-text-editor', [
-                                'name' => 'learning_outcomes_content',
-                                'id' => 'learning-outcomes-editor',
-                                'value' => $savedOutcomes,
-                                'placeholder' => 'Describe what learners will be able to do after completing this micro-credential.',
-                                'preset' => 'content-table',
-                            ])
-                            <small class="field-hint">Describe observable actions. These outcomes appear to students and in credential records.</small>
+                            <label class="label" for="learningOutcomeInput">Measurable learning outcomes</label>
+                            <div class="competency-entry">
+                                <input class="input" type="text" id="learningOutcomeInput" maxlength="50000"
+                                       placeholder="Enter an observable learning outcome, then press Enter">
+                                <button type="button" class="competency-add" id="addLearningOutcome">Add outcome</button>
+                            </div>
+                            <div class="competency-list learning-outcome-list" id="learningOutcomeList">
+                                @foreach ($savedOutcomes as $outcomeIndex => $outcome)
+                                    @php
+                                        $outcomeDescription = (string) ($outcome['description'] ?? '');
+                                        $outcomePreview = trim(html_entity_decode(
+                                            strip_tags(preg_replace('/<\/(?:p|li|div|h[1-6])>/i', ' ', $outcomeDescription)),
+                                            ENT_QUOTES | ENT_HTML5,
+                                            'UTF-8'
+                                        ));
+                                    @endphp
+                                    <span class="competency-chip learning-outcome-chip">
+                                        <input type="hidden" name="learning_outcomes[{{ $outcomeIndex }}][description]" value="{{ $outcomeDescription }}">
+                                        <input type="hidden" name="learning_outcomes[{{ $outcomeIndex }}][competency_unit_id]" value="{{ $outcome['competency_unit_id'] ?? '' }}">
+                                        <span>{{ $outcomePreview }}</span>
+                                        <button type="button" class="competency-remove" aria-label="Remove learning outcome">&times;</button>
+                                    </span>
+                                @endforeach
+                            </div>
+                            <small class="field-hint">Add each observable outcome separately. These outcomes appear to learners and in credential records.</small>
                         </div>
 
                         <div class="field field-grid">
@@ -535,6 +553,60 @@
         });
         list.querySelectorAll('.competency-remove').forEach(function (button) {
             button.addEventListener('click', function () { button.closest('.competency-chip').remove(); });
+        });
+    })();
+
+    // ── Measurable learning outcomes ────────────────────────────────
+    (function () {
+        var input = document.getElementById('learningOutcomeInput');
+        var addButton = document.getElementById('addLearningOutcome');
+        var list = document.getElementById('learningOutcomeList');
+        if (!input || !addButton || !list) return;
+
+        function addLearningOutcome() {
+            var value = input.value.trim();
+            if (!value) return;
+
+            var descriptions = Array.prototype.slice.call(
+                list.querySelectorAll('input[name$="[description]"]')
+            );
+            if (descriptions.some(function (field) { return field.value.toLowerCase() === value.toLowerCase(); })) {
+                input.value = '';
+                return;
+            }
+
+            var indexes = descriptions.map(function (field) {
+                return Number((field.name.match(/learning_outcomes\[(\d+)\]/) || [])[1] || -1);
+            });
+            var index = Math.max(-1, ...indexes) + 1;
+            var chip = document.createElement('span');
+            chip.className = 'competency-chip learning-outcome-chip';
+            chip.innerHTML = '<input type="hidden"><input type="hidden"><span></span><button type="button" class="competency-remove" aria-label="Remove learning outcome">&times;</button>';
+
+            var description = chip.querySelectorAll('input')[0];
+            description.name = `learning_outcomes[${index}][description]`;
+            description.value = value;
+
+            var competencyUnit = chip.querySelectorAll('input')[1];
+            competencyUnit.name = `learning_outcomes[${index}][competency_unit_id]`;
+            competencyUnit.value = '';
+
+            chip.querySelector('span').textContent = value;
+            chip.querySelector('button').addEventListener('click', function () { chip.remove(); });
+            list.appendChild(chip);
+            input.value = '';
+            input.focus();
+        }
+
+        addButton.addEventListener('click', addLearningOutcome);
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addLearningOutcome();
+            }
+        });
+        list.querySelectorAll('.competency-remove').forEach(function (button) {
+            button.addEventListener('click', function () { button.closest('.learning-outcome-chip').remove(); });
         });
     })();
 

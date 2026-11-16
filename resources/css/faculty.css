@@ -2091,6 +2091,8 @@
     :where(html[data-faculty-page="faculty-courses-create"]) .competency-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--f-border-soft);border-radius:6px;padding:4px 6px 4px 10px;background:#f2f4f7;color:var(--f-label);font-size:13px;font-weight:500;line-height:1.4;}
     :where(html[data-faculty-page="faculty-courses-create"]) .competency-remove{flex:0 0 auto;display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border:0;border-radius:5px;background:transparent;color:var(--f-muted);font-size:17px;line-height:1;padding:0;cursor:pointer;}
     :where(html[data-faculty-page="faculty-courses-create"]) .competency-remove:hover{background:#e4e7ec;color:var(--f-strong);}
+    :where(html[data-faculty-page="faculty-courses-create"]) .learning-outcome-chip{max-width:100%;align-items:flex-start;}
+    :where(html[data-faculty-page="faculty-courses-create"]) .learning-outcome-chip span{min-width:0;overflow-wrap:anywhere;white-space:normal;}
 
 
     /* ── Thumbnail picker ────────────────────────────────────── */
