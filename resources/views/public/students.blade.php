@@ -162,10 +162,11 @@
     .credential-dropzone {
         display: flex;
         width: min(100%, 620px);
-        min-height: 76px;
+        min-height: 116px;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 12px;
+        gap: 8px;
         margin: 1.1rem auto 0;
         padding: 14px 18px;
         border: 1px dashed #b8c3d8;
@@ -173,7 +174,7 @@
         background: #fff;
         color: #344054;
         cursor: pointer;
-        text-align: left;
+        text-align: center;
         transition: background var(--transition), border-color var(--transition);
     }
 
@@ -189,13 +190,13 @@
     }
 
     .credential-dropzone__icon {
-        width: 25px;
-        height: 25px;
+        width: 38px;
+        height: 38px;
         flex: 0 0 auto;
         color: #172f94;
     }
 
-    .credential-dropzone__copy { display: grid; gap: 3px; }
+    .credential-dropzone__copy { display: grid; gap: 3px; justify-items: center; }
     .credential-dropzone__copy strong { color: #182230; font-size: .9rem; }
     .credential-dropzone__copy span { color: #64748b; font-size: .78rem; }
 
@@ -392,7 +393,7 @@
         .credential-search__icon { margin-left: .75rem; }
         .credential-search__input { flex: 1 1 0; height: 44px; }
         .credential-search__button { flex: 1 0 100%; min-height: 44px; border-radius: 14px; }
-        .credential-dropzone { min-height: 72px; padding: 12px; }
+        .credential-dropzone { min-height: 112px; padding: 12px; }
         .certfloat { padding: 14px; }
         .certfloat__verified { margin-bottom: 10px; }
         .certfloat__btn { margin-top: 12px; }

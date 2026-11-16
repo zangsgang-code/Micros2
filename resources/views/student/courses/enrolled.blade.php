@@ -49,22 +49,24 @@
             </h3>
             @forelse ($inProgressCourses as $course)
                 <div class="course-card ui-card-surface">
-                    <div class="thumb" @if($course->thumbnail_url) style="background-image:url('{{ $course->thumbnail_url }}')" @endif></div>
-                    <div class="course-info">
-                        <h4>{{ $course->title }}</h4>
-                        @if($course->category)
-                            <div class="cat">{{ $course->category }}</div>
-                        @endif
+                    <div class="course-summary">
+                        <div class="thumb" @if($course->thumbnail_url) style="background-image:url('{{ $course->thumbnail_url }}')" @endif></div>
+                        <div class="course-info">
+                            <h4>{{ $course->title }}</h4>
+                            @if($course->category)
+                                <div class="cat">{{ $course->category }}</div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="course-progress">
                         @include('components.course-rating', ['rating' => $course->rating_average, 'count' => $course->review_count])
                         <div class="progress-track ui-progress-track">
                             <div class="progress-fill ui-progress-fill" style="width:{{ $course->progress_percent ?? 0 }}%"></div>
                         </div>
                         <div class="pct">{{ $course->progress_percent ?? 0 }}% Complete</div>
                     </div>
-                    <a href="{{ route('courses.show', ['id' => $course->id, 'from' => 'enrollments']) }}">
-                        <button class="btn-start ui-button ui-button--primary" type="button">
-                            {{ ($course->progress_percent ?? 0) > 0 ? 'Continue' : 'Start' }}
-                        </button>
+                    <a class="course-action btn-start ui-button ui-button--primary" href="{{ route('courses.show', ['id' => $course->id, 'from' => 'enrollments']) }}">
+                        {{ ($course->progress_percent ?? 0) > 0 ? 'Continue' : 'Start' }}
                     </a>
                 </div>
             @empty
@@ -77,21 +79,23 @@
             </h3>
             @forelse ($completedCourses as $course)
                 <div class="course-card is-completed ui-card-surface">
-                    <div class="thumb" @if($course->thumbnail_url) style="background-image:url('{{ $course->thumbnail_url }}')" @endif></div>
-                    <div class="course-info">
-                        <h4>{{ $course->title }}</h4>
-                        @if($course->category)
-                            <div class="cat">{{ $course->category }}</div>
-                        @endif
+                    <div class="course-summary">
+                        <div class="thumb" @if($course->thumbnail_url) style="background-image:url('{{ $course->thumbnail_url }}')" @endif></div>
+                        <div class="course-info">
+                            <h4>{{ $course->title }}</h4>
+                            @if($course->category)
+                                <div class="cat">{{ $course->category }}</div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="course-progress">
                         @include('components.course-rating', ['rating' => $course->rating_average, 'count' => $course->review_count])
                         <div class="progress-track ui-progress-track">
                             <div class="progress-fill ui-progress-fill" style="width:{{ $course->progress_percent ?? 0 }}%"></div>
                         </div>
                         <div class="pct">{{ $course->progress_percent ?? 0 }}% Complete</div>
                     </div>
-                    <a href="{{ route('courses.show', ['id' => $course->id, 'from' => 'enrollments']) }}">
-                        <button class="btn-start btn-completed ui-button ui-button--secondary" type="button">Review</button>
-                    </a>
+                    <a class="course-action btn-start btn-completed ui-button ui-button--secondary" href="{{ route('courses.show', ['id' => $course->id, 'from' => 'enrollments']) }}">Review</a>
                 </div>
             @empty
                 <div class="empty-state ui-empty-state">No completed courses yet - finish a course and it will appear here.</div>

@@ -110,10 +110,16 @@
                                         <span>Scan to verify this badge</span>
                                     </span>
                                 </span>
-                                <button class="badge-download-button" type="button" data-badge-download aria-label="Download {{ $badge->name }} badge image">
-                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 16v4h14v-4"/></svg>
-                                    <span>Download badge image</span>
-                                </button>
+                                <span class="badge-download-actions">
+                                    <button class="badge-download-button" type="button" data-badge-download aria-label="Download full {{ $badge->name }} badge image">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 16v4h14v-4"/></svg>
+                                        <span>Download full image</span>
+                                    </button>
+                                    <button class="badge-download-button" type="button" data-badge-download-compact aria-label="Download compact {{ $badge->name }} badge image with QR code">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 16v4h14v-4"/></svg>
+                                        <span>Download badge + QR</span>
+                                    </button>
+                                </span>
                             @endif
                             <span class="badge-flip-hint">Click to return to badge</span>
                         </span>
@@ -235,22 +241,62 @@
             context.roundRect(x, y, width, height, radius);
         }
 
-        async function downloadBadgeImage(card) {
-            var name = card.querySelector('.badge-title')?.textContent.trim() || 'Badge';
-            var status = card.querySelector('.badge-status')?.textContent.trim() || 'Earned';
-            var description = card.querySelector('.badge-front .desc')?.textContent.trim() || '';
-            var iconSource = card.querySelector('.badge-icon img')?.src || '';
-            var qrSource = card.querySelector('.badge-verification-qr img')?.src || '';
-            var details = Array.from(card.querySelectorAll('.badge-details .badge-detail')).map(function (row) {
+        async function loadBadgeDownloadData(card) {
+            var detailRows = Array.from(card.querySelectorAll('.badge-details .badge-detail'));
+            var details = detailRows.map(function (row) {
+                var label = row.querySelector('dt')?.textContent.trim() || '';
                 return {
-                    label: row.querySelector('dt')?.textContent.trim() || '',
-                    value: row.querySelector('dd')?.textContent.replace(/\s+/g, ' ').trim() || ''
+                    label: label,
+                    value: row.querySelector('dd')?.textContent.replace(/\s+/g, ' ').trim() || '',
+                    items: label.toLowerCase() === 'learning outcomes'
+                        ? Array.from(row.querySelectorAll('dd > ul > li')).map(function (item) {
+                            return item.textContent.replace(/\s+/g, ' ').trim();
+                        }).filter(Boolean)
+                        : []
                 };
             }).filter(function (row) { return row.label && row.value; });
+            var dateReceived = detailRows.find(function (row) {
+                return row.querySelector('dt')?.textContent.trim() === 'Date received';
+            })?.querySelector('dd')?.textContent.replace(/\s+/g, ' ').trim() || '';
+            var iconSource = card.querySelector('.badge-icon img')?.src || '';
+            var qrSource = card.querySelector('.badge-verification-qr img')?.src || '';
             var images = await Promise.all([loadBadgeImage(iconSource), loadBadgeImage(qrSource)]);
-            var icon = images[0];
             var qr = images[1];
             if (!qr) throw new Error('The verification QR code could not be loaded. Try again in a moment.');
+
+            return {
+                name: card.querySelector('.badge-title')?.textContent.trim() || 'Badge',
+                status: card.querySelector('.badge-status')?.textContent.trim() || 'Earned',
+                description: card.querySelector('.badge-front .desc')?.textContent.trim() || '',
+                icon: images[0],
+                qr: qr,
+                details: details,
+                dateReceived: dateReceived
+            };
+        }
+
+        async function saveBadgeCanvas(canvas, name, suffix) {
+            var blob = await new Promise(function (resolve) { canvas.toBlob(resolve, 'image/png'); });
+            if (!blob) throw new Error('The badge image could not be created.');
+            var objectUrl = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            var safeName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'badge';
+            link.href = objectUrl;
+            link.download = safeName + '-' + suffix + '.png';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.setTimeout(function () { URL.revokeObjectURL(objectUrl); }, 1000);
+        }
+
+        async function downloadBadgeImage(card) {
+            var badge = await loadBadgeDownloadData(card);
+            var name = badge.name;
+            var status = badge.status;
+            var description = badge.description;
+            var details = badge.details;
+            var icon = badge.icon;
+            var qr = badge.qr;
 
             var canvas = document.createElement('canvas');
             var width = 1200;
@@ -264,7 +310,21 @@
             var descriptionLines = description ? wrapBadgeText(measure, description, contentWidth, descriptionFont) : [];
             var preparedRows = details.map(function (row) {
                 var lines = wrapBadgeText(measure, row.value, contentWidth - 300, valueFont);
-                return { label: row.label, lines: lines, height: Math.max(68, lines.length * 34 + 28) };
+                var items = row.items.map(function (item) {
+                    return wrapBadgeText(measure, item, contentWidth - 324, valueFont);
+                });
+                var itemLineCount = items.reduce(function (count, itemLines) { return count + itemLines.length; }, 0);
+                var itemGaps = Math.max(0, items.length - 1) * 12;
+                var rowContentHeight = items.length
+                    ? itemLineCount * 34 + itemGaps
+                    : lines.length * 34;
+
+                return {
+                    label: row.label,
+                    lines: lines,
+                    items: items,
+                    height: Math.max(68, rowContentHeight + 28)
+                };
             });
             var top = 70 + 190 + 35 + titleLines.length * 56 + (descriptionLines.length ? 24 + descriptionLines.length * 34 : 0) + 84 + 34;
             preparedRows.forEach(function (row) { top += row.height; });
@@ -340,7 +400,19 @@
                 context.fillStyle = '#526078';
                 context.textAlign = 'left';
                 context.fillText(row.label.toUpperCase(), side, y + 30);
-                drawBadgeText(context, row.lines, side + 300, y + 30, 34, '#182b4d', valueFont, 'left');
+                if (row.items.length) {
+                    var itemY = y + 30;
+                    row.items.forEach(function (itemLines) {
+                        context.beginPath();
+                        context.arc(side + 306, itemY - 8, 4, 0, Math.PI * 2);
+                        context.fillStyle = '#182b4d';
+                        context.fill();
+                        drawBadgeText(context, itemLines, side + 324, itemY, 34, '#182b4d', valueFont, 'left');
+                        itemY += itemLines.length * 34 + 12;
+                    });
+                } else {
+                    drawBadgeText(context, row.lines, side + 300, y + 30, 34, '#182b4d', valueFont, 'left');
+                }
                 y += row.height;
                 context.strokeStyle = '#e5eaf1';
                 context.lineWidth = 1;
@@ -357,19 +429,96 @@
             context.drawImage(qr, side + 26, y + 20, 180, 180);
             drawBadgeText(context, ['Scan to verify this badge'], side + 238, y + 76, 36, '#182b4d', '700 25px Arial, sans-serif', 'left');
 
-            var blob = await new Promise(function (resolve) { canvas.toBlob(resolve, 'image/png'); });
-            if (!blob) throw new Error('The badge image could not be created.');
-            var objectUrl = URL.createObjectURL(blob);
-            var link = document.createElement('a');
-            link.href = objectUrl;
-            link.download = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-badge.png';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.setTimeout(function () { URL.revokeObjectURL(objectUrl); }, 1000);
+            await saveBadgeCanvas(canvas, name, 'badge');
         }
 
-        document.querySelectorAll('[data-badge-download]').forEach(function (button) {
+        async function downloadCompactBadgeImage(card) {
+            var badge = await loadBadgeDownloadData(card);
+            var canvas = document.createElement('canvas');
+            var width = 1040;
+            var titleFont = '700 42px Arial, sans-serif';
+            canvas.width = width;
+            var measure = canvas.getContext('2d');
+            var titleLines = wrapBadgeText(measure, badge.name, 390, titleFont);
+            var titleHeight = titleLines.length * 50;
+            var height = Math.max(360, titleHeight + 230);
+            canvas.height = height;
+
+            var context = canvas.getContext('2d');
+            roundRect(context, 1, 1, width - 2, height - 2, 28);
+            context.fillStyle = '#ffffff';
+            context.fill();
+            context.strokeStyle = '#d8e0eb';
+            context.lineWidth = 2;
+            context.stroke();
+            context.fillStyle = '#123b7a';
+            roundRect(context, 1, 1, width - 2, 18, [28, 28, 0, 0]);
+            context.fill();
+            context.fillStyle = '#f4b900';
+            context.fillRect(1, 17, width - 2, 6);
+
+            var iconSize = 240;
+            var iconX = 64;
+            var iconY = (height - iconSize) / 2;
+            if (badge.icon) {
+                var iconRatio = Math.min(iconSize / badge.icon.naturalWidth, iconSize / badge.icon.naturalHeight);
+                var iconWidth = badge.icon.naturalWidth * iconRatio;
+                var iconHeight = badge.icon.naturalHeight * iconRatio;
+                context.drawImage(
+                    badge.icon,
+                    iconX + (iconSize - iconWidth) / 2,
+                    iconY + (iconSize - iconHeight) / 2,
+                    iconWidth,
+                    iconHeight
+                );
+            } else {
+                context.beginPath();
+                context.arc(iconX + iconSize / 2, iconY + iconSize / 2, 96, 0, Math.PI * 2);
+                context.fillStyle = '#e8eef8';
+                context.fill();
+                context.fillStyle = '#123b7a';
+                context.font = '700 88px Arial, sans-serif';
+                context.textAlign = 'center';
+                context.fillText(badge.name.charAt(0).toUpperCase(), iconX + iconSize / 2, iconY + 125);
+            }
+
+            context.strokeStyle = '#e3e9f2';
+            context.beginPath();
+            context.moveTo(326, 82);
+            context.lineTo(326, height - 82);
+            context.stroke();
+
+            context.font = '700 20px Arial, sans-serif';
+            var pillWidth = Math.max(132, context.measureText(badge.status).width + 44);
+            var statusY = Math.round((height - titleHeight - 120) / 2);
+            roundRect(context, 350, statusY, pillWidth, 42, 21);
+            context.fillStyle = badge.status.toLowerCase() === 'revoked' ? '#fee4e2' : '#eaf7ee';
+            context.fill();
+            context.fillStyle = badge.status.toLowerCase() === 'revoked' ? '#b42318' : '#167a3f';
+            context.textAlign = 'center';
+            context.fillText(badge.status, 350 + pillWidth / 2, statusY + 28);
+
+            var titleY = statusY + 92;
+            drawBadgeText(context, titleLines, 350, titleY, 50, '#123b7a', titleFont, 'left');
+            if (badge.dateReceived) {
+                context.fillStyle = '#526078';
+                context.font = '400 24px Arial, sans-serif';
+                context.textAlign = 'left';
+                context.fillText('Earned on ' + badge.dateReceived, 350, titleY + titleHeight + 36);
+            }
+
+            var qrX = 778;
+            var qrY = Math.round((height - 240) / 2);
+            context.drawImage(badge.qr, qrX, qrY, 210, 210);
+            context.fillStyle = '#526078';
+            context.font = '700 16px Arial, sans-serif';
+            context.textAlign = 'center';
+            context.fillText('SCAN TO VERIFY', qrX + 105, qrY + 240);
+
+            await saveBadgeCanvas(canvas, badge.name, 'badge-qr');
+        }
+
+        document.querySelectorAll('[data-badge-download], [data-badge-download-compact]').forEach(function (button) {
             button.addEventListener('click', async function (event) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -377,7 +526,10 @@
                 button.disabled = true;
                 if (button.querySelector('span')) button.querySelector('span').textContent = 'Preparing image…';
                 try {
-                    await downloadBadgeImage(button.closest('.badge-card'));
+                    var download = button.hasAttribute('data-badge-download-compact')
+                        ? downloadCompactBadgeImage
+                        : downloadBadgeImage;
+                    await download(button.closest('.badge-card'));
                 } catch (error) {
                     window.showFlashToast?.(error.message || 'Could not download this badge image.', 'error');
                 } finally {
