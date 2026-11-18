@@ -1745,7 +1745,7 @@
     @media (max-width:640px){
         :where(html[data-faculty-page="faculty-courses-index"]) .main{padding:16px 12px 42px;}
         :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-panel{align-items:stretch;flex-direction:column;padding:18px 26px 18px 16px;}
-        :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-add-form{align-self:flex-end;}
+        :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-add-form{align-self:stretch;}
         :where(html[data-faculty-page="faculty-courses-index"]) .course-banner{padding:18px 16px;} :where(html[data-faculty-page="faculty-courses-index"]) .banner-actions{width:100%;}
         :where(html[data-faculty-page="faculty-courses-index"]) .course-meta{gap:12px 20px;}
         :where(html[data-faculty-page="faculty-courses-index"]) .module-card{--module-content-left-gutter:34px;--module-content-right-gutter:13px;padding:16px 12px 14px 30px;} :where(html[data-faculty-page="faculty-courses-index"]) .module-drag-handle{left:7px;top:18px;} :where(html[data-faculty-page="faculty-courses-index"]) .module-collapse-toggle{top:30px;}
@@ -3002,7 +3002,8 @@
 :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-title{margin:0 0 6px;}
 :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-copy{flex:1;min-width:0;}
 :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-description{margin:0;color:#667085;}
-:where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-add-form{display:flex;flex:0 0 auto;justify-content:flex-end;}
+:where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-panel--add{padding-right:22px;}
+:where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-add-form{display:flex;flex:1 1 auto;justify-content:center;}
 :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-header{display:flex;flex:1;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
 :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-meta{margin-top:4px;color:#667085;}
 :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-warning{margin-top:4px;color:#b45309;}
@@ -3076,3 +3077,6 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
         .layout.faculty-sidebar-layout .faculty-sidebar{display:none !important;}
         .layout.faculty-sidebar-layout{align-content:start;}
     }
+@media (max-width:640px){
+    :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-panel--add{padding:18px 16px;}
+}

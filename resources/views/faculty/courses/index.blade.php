@@ -385,7 +385,7 @@
                 </div>
                 <div id="reorder-status" aria-live="polite"></div>
 
-                <section class="panel fac-final-exam-panel" aria-labelledby="course-completion-title">
+                <section class="panel fac-final-exam-panel{{ $finalModule ? '' : ' fac-final-exam-panel--add' }}" aria-labelledby="course-completion-title">
                     @if($finalModule)
                         <div class="fac-final-exam-header">
                             <div>
@@ -547,8 +547,8 @@
             @if ($isNewQuiz)
                 <div class="quiz-card">
                     <div>
-                        <label class="q-label" for="quiz-title">Quiz title <span class="req">*</span></label>
-                        <input class="input-outline fac-width-full" id="quiz-title" type="text" name="quiz_title" placeholder="MySQL Fundamentals Quiz" value="{{ old('quiz_title', $quiz->title ?? '') }}" required>
+                        <label class="q-label" for="quiz-title">{{ $mode === 'final-exam' ? 'Final exam title' : 'Quiz title' }} <span class="req">*</span></label>
+                        <input class="input-outline fac-width-full" id="quiz-title" type="text" name="quiz_title" placeholder="{{ $mode === 'final-exam' ? 'e.g. Data Structures & Algorithms Final Exam' : 'MySQL Fundamentals Quiz' }}" value="{{ old('quiz_title', $quiz->title ?? '') }}" required>
                         @error('quiz_title')<small class="field-help" role="alert">{{ $message }}</small>@enderror
                     </div>
                     <div style="margin-top:14px;">
@@ -608,8 +608,8 @@
                 <section class="quiz-builder-panel" id="quiz-panel-settings" role="tabpanel" aria-labelledby="quiz-tab-settings" data-quiz-tab-panel="settings" @if($initialQuizTab !== 'settings') hidden @endif>
                     <div class="quiz-card">
                         <div>
-                            <label class="q-label" for="quiz-title">Quiz title <span class="req">*</span></label>
-                            <input class="input-outline fac-width-full" id="quiz-title" type="text" name="quiz_title" placeholder="MySQL Fundamentals Quiz" value="{{ old('quiz_title', $quiz->title ?? '') }}" required>
+                            <label class="q-label" for="quiz-title">{{ $mode === 'final-exam' ? 'Final exam title' : 'Quiz title' }} <span class="req">*</span></label>
+                            <input class="input-outline fac-width-full" id="quiz-title" type="text" name="quiz_title" placeholder="{{ $mode === 'final-exam' ? 'e.g. Data Structures & Algorithms Final Exam' : 'MySQL Fundamentals Quiz' }}" value="{{ old('quiz_title', $quiz->title ?? '') }}" required>
                             @error('quiz_title')<small class="field-help" role="alert">{{ $message }}</small>@enderror
                         </div>
                         <div class="grid3" style="margin-top:14px;">
