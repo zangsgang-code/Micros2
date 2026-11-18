@@ -1162,10 +1162,28 @@ class FacultyController extends Controller
         // Modules — idx/key carry the real ids so every Blade form
         // (add lesson, add quiz, delete) targets the right records.
         $modules = $course->modules->reject(fn (CourseModule $module): bool => $module->is_final)->map(function (CourseModule $m) {
+            $outlineItems = $m->lessons->map(fn (CourseLesson $lesson) => (object) [
+                'type' => 'lesson',
+                'id' => $lesson->id,
+                'title' => $lesson->title,
+                'module_order' => $lesson->module_order,
+            ])->merge($m->activities->where('is_active', true)->map(fn (LessonActivity $activity) => (object) [
+                'type' => 'activity',
+                'id' => $activity->id,
+                'title' => $activity->title,
+                'module_order' => $activity->module_order,
+            ]))->merge($m->quizzes->where('is_active', true)->map(fn (Quiz $quiz) => (object) [
+                'type' => 'quiz',
+                'id' => $quiz->id,
+                'title' => $quiz->title,
+                'module_order' => $quiz->module_order,
+            ]))->sortBy('module_order')->values();
+
             return (object) [
                 'idx' => $m->id,
                 'key' => 'mod-'.$m->id,
                 'title' => $m->title,
+                'outline_items' => $outlineItems,
                 // 'subtitle' is a short plain-text preview for the compact
                 // header row; 'description' keeps the raw CKEditor HTML so
                 // the edit form can load it back into the editor.

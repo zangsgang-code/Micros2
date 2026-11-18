@@ -53,6 +53,62 @@
     <main class="main {{ $mode === 'manage' ? 'manage-course-page' : '' }}">
 
     @if ($mode === 'manage')
+        <aside class="course-outline-drawer" data-course-outline aria-label="Course content navigation">
+            <button class="course-outline-toggle" type="button" data-course-outline-toggle aria-controls="course-outline-panel" aria-expanded="false" aria-label="Open course outline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <span>Jump to</span>
+            </button>
+            <nav class="course-outline-panel" id="course-outline-panel" aria-label="Course outline" hidden>
+                <div class="course-outline-heading">
+                    <div>
+                        <span>Course outline</span>
+                        <strong>{{ $course->title }}</strong>
+                    </div>
+                    <button class="course-outline-close" type="button" data-course-outline-close aria-label="Close course outline">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <ol class="course-outline-list">
+                    @forelse($modules as $outlineModule)
+                        <li>
+                            <a class="course-outline-link" href="#course-outline-module-{{ $outlineModule->idx }}" data-course-outline-link>
+                                <span class="course-outline-kind">Module {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                                <span>{{ $outlineModule->title }}</span>
+                            </a>
+                            @if($outlineModule->outline_items->isNotEmpty() || $outlineModule->quiz)
+                                <ul class="course-outline-items">
+                                    @foreach($outlineModule->outline_items as $outlineItem)
+                                        <li>
+                                            <a class="course-outline-link" href="#course-outline-{{ $outlineItem->type }}-{{ $outlineModule->idx }}-{{ $outlineItem->id }}" data-course-outline-link>
+                                                <span class="course-outline-kind">{{ Illuminate\Support\Str::headline($outlineItem->type) }}</span>
+                                                <span>{{ $outlineItem->title }}</span>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                    @if($outlineModule->quiz)
+                                        <li>
+                                            <a class="course-outline-link" href="#quiz-row-{{ $outlineModule->idx }}" data-course-outline-link>
+                                                <span class="course-outline-kind">Summative assessment</span>
+                                                <span>{{ $outlineModule->quiz->title }}</span>
+                                            </a>
+                                        </li>
+                                    @endif
+                                </ul>
+                            @endif
+                        </li>
+                    @empty
+                        <li class="course-outline-empty">No modules have been added yet.</li>
+                    @endforelse
+                    <li>
+                        <a class="course-outline-link" href="#course-outline-final-exam" data-course-outline-link>
+                            <span class="course-outline-kind">Final exam</span>
+                            <span>{{ $finalModule ? ($finalModule->quiz->title ?? 'Final Exam') : 'Add final exam' }}</span>
+                        </a>
+                    </li>
+                </ol>
+            </nav>
+        </aside>
+
         @include('components.breadcrumbs', ['breadcrumbClass' => 'faculty-breadcrumbs', 'items' => [
             ['label' => 'My Courses', 'url' => route('faculty.courses')],
             ['label' => $course->title ?? 'Course Management'],
@@ -151,7 +207,7 @@
 
                 <div class="sortable-list module-sort-list" data-order-kind="modules" data-order-url="{{ route('faculty.modules.reorder', $course->id) }}">
                 @forelse ($modules as $module)
-                    <div class="module-card sortable-item" data-order-item data-order-id="{{ $module->idx }}">
+                    <div id="course-outline-module-{{ $module->idx }}" class="module-card sortable-item course-outline-target" data-order-item data-order-id="{{ $module->idx }}">
                         @php
                             $moduleLessons = $module->lessons ?? collect();
                             $moduleLessonCount = $moduleLessons->count();
@@ -269,7 +325,7 @@
                         <div class="sortable-list module-content-sort-list" data-order-kind="module-items" data-parent-id="{{ $module->idx }}" data-order-url="{{ route('faculty.module-items.reorder', [$course->id, $module->idx]) }}">
                             @forelse($moduleItems as $moduleItem)
                                 @php $item = $moduleItem->item; @endphp
-                                <article class="module-content-card sortable-item module-content-card-{{ $moduleItem->type }}" data-order-item data-order-type="{{ $moduleItem->type }}" data-order-id="{{ $item->id }}">
+                                <article id="course-outline-{{ $moduleItem->type }}-{{ $module->idx }}-{{ $item->id }}" class="module-content-card sortable-item module-content-card-{{ $moduleItem->type }} course-outline-target" data-order-item data-order-type="{{ $moduleItem->type }}" data-order-id="{{ $item->id }}">
                                     <button class="drag-handle module-content-drag-handle" type="button" draggable="true" title="Drag to reorder {{ $moduleItem->type }}" aria-label="Drag to reorder {{ $moduleItem->type }}">⋮⋮</button>
                                     <span class="module-content-number">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
                                     <div class="module-content-copy">
@@ -335,7 +391,7 @@
                         </div>
 
                         {{-- The module quiz is the summative assessment for all lessons in this module. --}}
-                        <section class="quiz-row summative-assessment" id="quiz-row-{{ $module->idx }}" aria-label="Summative assessment">
+                        <section class="quiz-row summative-assessment course-outline-target" id="quiz-row-{{ $module->idx }}" aria-label="Summative assessment">
                             <div class="summative-label">Summative Assessment</div>
                             <div class="summative-content">
                             @if($module->quiz ?? null)
@@ -385,7 +441,7 @@
                 </div>
                 <div id="reorder-status" aria-live="polite"></div>
 
-                <section class="panel fac-final-exam-panel{{ $finalModule ? '' : ' fac-final-exam-panel--add' }}" aria-labelledby="course-completion-title">
+                <section id="course-outline-final-exam" class="panel fac-final-exam-panel{{ $finalModule ? '' : ' fac-final-exam-panel--add' }} course-outline-target" aria-labelledby="course-completion-title">
                     @if($finalModule)
                         <div class="fac-final-exam-header">
                             <div>
@@ -506,36 +562,6 @@
                     ? 'settings'
                     : 'questions';
             @endphp
-
-            <style>
-                .quiz-builder-tabs { display: flex; gap: 8px; border-bottom: 1px solid #dfe5ef; margin: 0 0 18px; }
-                .quiz-builder-tab { border: 0; border-bottom: 3px solid transparent; background: transparent; padding: 10px 14px; color: #526078; font: inherit; font-weight: 700; cursor: pointer; }
-                .quiz-builder-tab[aria-selected="true"] { border-color: #123b7a; color: #123b7a; }
-                .quiz-builder-panel[hidden], .quiz-set-panel[hidden] { display: none; }
-                .quiz-builder-notice { margin: 0 0 16px; padding: 12px 14px; border-left: 4px solid #dba617; background: #fff7dc; border-radius: 8px; color: #4a3b00; font-size: .9rem; }
-                .quiz-builder-errors { margin: 0 0 16px; padding: 12px 14px; border-left: 4px solid #b42318; background: #fee4e2; border-radius: 8px; color: #7a1a12; }
-                .quiz-builder-errors ul { margin: 6px 0 0; padding-left: 18px; }
-                .quiz-question-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-                .quiz-add-menu { position: relative; }
-                .quiz-add-menu summary { list-style: none; cursor: pointer; }
-                .quiz-add-menu summary::-webkit-details-marker { display: none; }
-                .quiz-add-menu__items { position: absolute; z-index: 20; top: calc(100% + 6px); right: 0; display: grid; min-width: 190px; padding: 6px; border: 1px solid #dfe5ef; border-radius: 8px; background: #fff; box-shadow: 0 8px 24px rgba(20, 35, 60, .12); }
-                .quiz-add-menu__items button { border: 0; background: transparent; padding: 9px 10px; text-align: left; cursor: pointer; color: #182b4d; font: inherit; }
-                .quiz-add-menu__items button:hover { background: #f3f6fc; }
-                .quiz-empty-state { padding: 24px; border: 1px dashed #c8d2e1; border-radius: 10px; color: #526078; text-align: center; }
-                .quiz-shuffle-options { display: grid; gap: 10px; margin: 14px 0; padding-top: 14px; border-top: 1px solid #e5eaf1; }
-                .quiz-shuffle-options label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
-                .quiz-field-label-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-                .quiz-field-label-row .q-label { margin: 0; }
-                .quiz-help-icon { position: relative; display: grid; width: 18px; height: 18px; flex: 0 0 18px; place-items: center; padding: 0; border: 1px solid #123b7a; border-radius: 50%; background: #fff; color: #123b7a; font: 700 12px/1 Inter, sans-serif; cursor: help; }
-                .quiz-help-tooltip { display: none; position: absolute; z-index: 30; top: calc(100% + 8px); left: 0; width: max-content; max-width: min(300px, 80vw); padding: 9px 11px; border-radius: 7px; background: #182b4d; box-shadow: 0 6px 18px rgba(16, 24, 40, .18); color: #fff; font: 400 12px/1.45 Inter, sans-serif; text-align: left; white-space: normal; }
-                .quiz-help-icon--align-right .quiz-help-tooltip { right: 0; left: auto; }
-                .quiz-help-icon:hover .quiz-help-tooltip, .quiz-help-icon:focus .quiz-help-tooltip { display: block; }
-                .quiz-shuffle-setting { display: flex; align-items: flex-start; gap: 4px; }
-                .lock-choice-order { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; font-size: .88rem; color: #182b4d; cursor: pointer; }
-                .lock-choice-order small { display: block; color: #526078; }
-                .question-answered-note { margin-top: 10px; color: #8a5a00; font-size: .8rem; }
-            </style>
 
             @if ($errors->any())
                 <div class="quiz-builder-errors" role="alert">
@@ -738,6 +764,55 @@
 
     <x-slot:scripts>
 <script>
+    (function () {
+        var drawer = document.querySelector('[data-course-outline]');
+        if (!drawer) return;
+
+        var toggle = drawer.querySelector('[data-course-outline-toggle]');
+        var panel = drawer.querySelector('#course-outline-panel');
+        var closeButton = drawer.querySelector('[data-course-outline-close]');
+        if (!toggle || !panel || !closeButton) return;
+
+        function setOpen(isOpen) {
+            toggle.setAttribute('aria-expanded', String(isOpen));
+            toggle.setAttribute('aria-label', isOpen ? 'Close course outline' : 'Open course outline');
+            panel.hidden = !isOpen;
+        }
+
+        toggle.addEventListener('click', function () {
+            setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+        });
+
+        closeButton.addEventListener('click', function () {
+            setOpen(false);
+            toggle.focus();
+        });
+
+        panel.addEventListener('click', function (event) {
+            var link = event.target.closest('[data-course-outline-link]');
+            if (!link) return;
+
+            var target = document.getElementById(link.hash.slice(1));
+            if (!target) return;
+
+            var moduleCard = target.closest('.module-card');
+            var moduleToggle = moduleCard && moduleCard.querySelector('.module-collapse-toggle');
+            var moduleBody = moduleToggle && document.getElementById(moduleToggle.getAttribute('aria-controls'));
+            if (moduleBody && moduleBody.hidden) {
+                toggleModuleCollapse(moduleCard.dataset.orderId, moduleToggle);
+            }
+
+            setOpen(false);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !panel.hidden) {
+                setOpen(false);
+                toggle.focus();
+            }
+        });
+    })();
+
     function toggleModuleCreate(show) {
         var form = document.getElementById('module-create-form');
         var button = document.getElementById('toggle-module-create');

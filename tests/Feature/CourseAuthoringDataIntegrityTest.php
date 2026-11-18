@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Course;
+use App\Models\CourseLesson;
+use App\Models\CourseModule;
 use App\Models\User;
 use App\Services\CourseReadinessService;
 use App\Services\LearningOutcomeService;
@@ -185,4 +187,46 @@ test('an approved but unpublished course is not labeled published', function () 
     ]);
 
     expect($course->statusLabel())->toBe('Draft');
+});
+
+test('faculty course outline links to modules lessons and the final exam', function () {
+    $faculty = User::factory()->faculty()->create();
+    $course = Course::create([
+        'title' => 'Course Outline Test',
+        'short_description' => 'Course outline summary.',
+        'slug' => 'course-outline-test',
+        'created_by' => $faculty->id,
+        'approval_status' => 'draft',
+        'is_approved' => false,
+        'is_published' => false,
+    ]);
+    $module = CourseModule::create([
+        'course_id' => $course->id,
+        'title' => 'Foundations',
+        'order' => 1,
+    ]);
+    $lesson = CourseLesson::create([
+        'course_id' => $course->id,
+        'module_id' => $module->id,
+        'title' => 'First lesson',
+        'type' => 'Text',
+        'module_order' => 1,
+    ]);
+    CourseModule::create([
+        'course_id' => $course->id,
+        'title' => 'Final Exam',
+        'order' => 2,
+        'is_final' => true,
+    ]);
+
+    $this->actingAs($faculty)
+        ->get(route('faculty.courses.manage', $course->id))
+        ->assertOk()
+        ->assertSee('Course outline')
+        ->assertSee('href="#course-outline-module-'.$module->id.'"', false)
+        ->assertSee('href="#course-outline-lesson-'.$module->id.'-'.$lesson->id.'"', false)
+        ->assertSee('id="course-outline-lesson-'.$module->id.'-'.$lesson->id.'"', false)
+        ->assertSee('href="#course-outline-final-exam"', false)
+        ->assertSee('id="course-outline-final-exam"', false)
+        ->assertSee('toggleModuleCollapse(moduleCard.dataset.orderId, moduleToggle)', false);
 });
