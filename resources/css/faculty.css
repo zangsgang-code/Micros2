@@ -363,13 +363,15 @@
     :where(html[data-faculty-page="faculty-students"]) .btn-outline{display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1px solid #cbd5e1;color:var(--navy);font-weight:700;padding:9px 15px;border-radius:8px;font-size:13px;white-space:nowrap;}
     :where(html[data-faculty-page="faculty-students"]) .btn-outline:hover{background:#f8fafc;border-color:#94a3b8;}
     :where(html[data-faculty-page="faculty-students"]) .course-table-wrap{max-width:1440px;overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);}
-    :where(html[data-faculty-page="faculty-students"]) .course-table{width:100%;min-width:760px;border-collapse:collapse;text-align:left;}
+    :where(html[data-faculty-page="faculty-students"]) .course-table{width:100%;min-width:880px;border-collapse:collapse;text-align:left;}
     :where(html[data-faculty-page="faculty-students"]) .course-table th{padding:14px 18px;background:#f1f4fb;color:#475569;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;}
     :where(html[data-faculty-page="faculty-students"]) .course-table th:not(:first-child), :where(html[data-faculty-page="faculty-students"]) .course-table td:not(:first-child){text-align:center;}
     :where(html[data-faculty-page="faculty-students"]) .course-table td{padding:16px 18px;border-top:1px solid var(--line);vertical-align:middle;}
     :where(html[data-faculty-page="faculty-students"]) .course-table tbody tr:first-child td{border-top:0;}
     :where(html[data-faculty-page="faculty-students"]) .course-title{min-width:240px;font-family:'Plus Jakarta Sans',Inter,sans-serif;font-size:15px;line-height:1.4;font-weight:700;color:var(--ink);}
     :where(html[data-faculty-page="faculty-students"]) .course-learners{color:#334155;font-size:13px;font-weight:600;white-space:nowrap;}
+    :where(html[data-faculty-page="faculty-students"]) .course-quiz-attempts{color:#334155;font-size:13px;font-weight:600;white-space:nowrap;}
+    :where(html[data-faculty-page="faculty-students"]) .quiz-attempts-exhausted{display:inline-block;width:8px;height:8px;margin-left:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.15);vertical-align:middle;}
     :where(html[data-faculty-page="faculty-students"]) .course-status{font-size:11px;font-weight:700;line-height:1;border-radius:999px;padding:6px 9px;background:#f1f5f9;color:#475569;}
     :where(html[data-faculty-page="faculty-students"]) .course-status.published{background:#dcfce7;color:#166534;}:where(html[data-faculty-page="faculty-students"]) .course-status.pending{background:#fff7ed;color:#c2410c;}:where(html[data-faculty-page="faculty-students"]) .course-status.denied{background:#fee2e2;color:#b91c1c;}
     :where(html[data-faculty-page="faculty-students"]) .review-count{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#fff7ed;color:#c2410c;font-size:12px;font-weight:700;white-space:nowrap;}

@@ -14,11 +14,12 @@
 
         @if($courses->total())
             <div class="course-table-wrap paginated-table-scroll">
-                <table class="course-table" aria-label="Courses and learner verification status">
+                <table class="course-table" aria-label="Courses, quiz attempts, and learner verification status">
                     <thead>
                         <tr>
                             <th scope="col">Course</th>
                             <th scope="col">Learners</th>
+                            <th scope="col">Quiz attempts</th>
                             <th scope="col">Course status</th>
                             <th scope="col">Verification</th>
                             <th scope="col">Action</th>
@@ -29,6 +30,12 @@
                             <tr>
                                 <td class="course-title">{{ $course->title }}</td>
                                 <td class="course-learners">{{ $course->students_count }} {{ Illuminate\Support\Str::plural('student', $course->students_count) }}</td>
+                                <td class="course-quiz-attempts">
+                                    {{ $course->quiz_attempts_count }}
+                                    @if($course->has_exhausted_quiz_attempts)
+                                        <span class="quiz-attempts-exhausted" role="img" aria-label="One or more learners have exhausted all quiz or exam attempts" title="One or more learners have exhausted all quiz or exam attempts"></span>
+                                    @endif
+                                </td>
                                 <td><span class="course-status {{ Illuminate\Support\Str::slug($course->status) }}">{{ $course->status }}</span></td>
                                 <td>
                                     @if($course->requires_faculty_verification)
@@ -39,7 +46,7 @@
                                         <span class="review-count zero">Faculty verification not required</span>
                                     @endif
                                 </td>
-                                <td><a class="manage-link" href="{{ route('faculty.students.course', $course->id) }}">Manage</a></td>
+                                <td><a class="manage-link" href="{{ route('faculty.students.course', $course->id) }}">View</a></td>
                             </tr>
                         @endforeach
                     </tbody>

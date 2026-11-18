@@ -102,6 +102,67 @@ test('faculty learner progress shows verify action when the required faculty rev
         ]), false);
 });
 
+test('faculty learner progress lists submitted quiz attempts by enrolled learners', function () {
+    $faculty = User::factory()->faculty()->create();
+    [$course, , $student] = makeReadyEnrollmentFor($faculty);
+    $quiz = Quiz::query()->where('course_id', $course->id)->firstOrFail();
+
+    QuizAttempt::create([
+        'user_id' => $student->id,
+        'quiz_id' => $quiz->id,
+        'score' => 80,
+        'passed' => true,
+        'started_at' => now(),
+        'submitted_at' => now(),
+    ]);
+    QuizAttempt::create([
+        'user_id' => $student->id,
+        'quiz_id' => $quiz->id,
+        'started_at' => now(),
+    ]);
+    QuizAttempt::create([
+        'user_id' => User::factory()->create()->id,
+        'quiz_id' => $quiz->id,
+        'score' => 90,
+        'passed' => true,
+        'started_at' => now(),
+        'submitted_at' => now(),
+    ]);
+
+    $response = $this->actingAs($faculty)
+        ->get(route('faculty.students'))
+        ->assertOk()
+        ->assertSeeInOrder(['Learners', 'Quiz attempts', 'Course status']);
+
+    expect(preg_match('/<td class="course-quiz-attempts">\s*2\s*<\/td>/', $response->getContent()))->toBe(1);
+});
+
+test('faculty learner progress flags courses with exhausted quiz attempts and labels action as view', function () {
+    $faculty = User::factory()->faculty()->create();
+    [$exhaustedCourse] = makeReadyEnrollmentFor($faculty);
+    makeReadyEnrollmentFor($faculty);
+
+    $quiz = Quiz::query()->where('course_id', $exhaustedCourse->id)->firstOrFail();
+    $quiz->update(['attempts' => '1 Attempt']);
+    $attempt = QuizAttempt::query()->where('quiz_id', $quiz->id)->firstOrFail();
+    $attempt->update(['score' => 0, 'passed' => false]);
+    $question = QuizQuestion::query()->where('quiz_id', $quiz->id)->firstOrFail();
+    $attempt->answers()->create([
+        'question_id' => $question->id,
+        'answer' => 'Incorrect',
+        'is_correct' => false,
+    ]);
+
+    $response = $this->actingAs($faculty)
+        ->get(route('faculty.students'))
+        ->assertOk()
+        ->assertSee('aria-label="One or more learners have exhausted all quiz or exam attempts"', false)
+        ->assertSee('>View</a>', false)
+        ->assertDontSee('>Manage</a>', false);
+
+    expect(substr_count($response->getContent(), 'class="quiz-attempts-exhausted"'))->toBe(1);
+});
+
 test('faculty can download all enrolled students as pdf word or excel from the all students tab', function () {
     $faculty = User::factory()->faculty()->create();
     [$course, , $student] = makeReadyEnrollmentFor($faculty);

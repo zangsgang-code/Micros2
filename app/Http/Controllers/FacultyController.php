@@ -39,6 +39,7 @@ use App\Support\SkillCatalog;
 use App\Support\UserPresenter;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -226,25 +227,83 @@ class FacultyController extends Controller
 
     // ── Enrolled Students (this faculty's courses only) ─────────────────
 
-    public function students()
+    public function students(QuizAttemptService $quizAttemptService)
     {
         $auth = Auth::user();
 
-        $courses = Course::where('created_by', $auth->id)
+        $quizAttemptsCount = DB::table('quiz_attempts')
+            ->join('quizzes', 'quizzes.id', '=', 'quiz_attempts.quiz_id')
+            ->whereColumn('quizzes.course_id', 'courses.id')
+            ->whereNotNull('quiz_attempts.submitted_at')
+            ->whereExists(function (Builder $query): void {
+                $query->selectRaw('1')
+                    ->from('enrollments')
+                    ->whereColumn('enrollments.user_id', 'quiz_attempts.user_id')
+                    ->whereColumn('enrollments.course_id', 'courses.id');
+            })
+            ->selectRaw('COUNT(*)');
+
+        $courses = Course::query()
+            ->where('created_by', $auth->id)
             ->withCount([
                 'enrollments',
                 'enrollments as faculty_reviews_count' => fn ($query) => $query
                     ->whereIn('faculty_verification_status', ['pending', 'not_required'])
                     ->where('completion_status', MicrocredentialCompletionService::STATUS_AWAITING_FACULTY_VERIFICATION),
             ])
+            ->addSelect(['quiz_attempts_count' => $quizAttemptsCount])
             ->latest()
             ->paginate(20)
             ->withQueryString();
+
+        $courseIds = $courses->getCollection()->modelKeys();
+        $attemptPairs = DB::table('quiz_attempts')
+            ->join('quizzes', 'quizzes.id', '=', 'quiz_attempts.quiz_id')
+            ->whereIn('quizzes.course_id', $courseIds)
+            ->whereExists(function (Builder $query): void {
+                $query->selectRaw('1')
+                    ->from('enrollments')
+                    ->whereColumn('enrollments.user_id', 'quiz_attempts.user_id')
+                    ->whereColumn('enrollments.course_id', 'quizzes.course_id');
+            })
+            ->whereExists(function (Builder $query): void {
+                $query->selectRaw('1')
+                    ->from('quiz_questions')
+                    ->whereColumn('quiz_questions.quiz_id', 'quizzes.id');
+            })
+            ->groupBy('quizzes.course_id', 'quiz_attempts.user_id', 'quiz_attempts.quiz_id')
+            ->select(['quizzes.course_id', 'quiz_attempts.user_id', 'quiz_attempts.quiz_id'])
+            ->selectRaw('COUNT(*) as attempt_rows_count')
+            ->get();
+        $quizzes = Quiz::query()
+            ->whereIn('id', $attemptPairs->pluck('quiz_id')->unique())
+            ->get()
+            ->keyBy('id');
+        $coursesWithExhaustedAttempts = [];
+
+        foreach ($attemptPairs as $attemptPair) {
+            $quiz = $quizzes->get((int) $attemptPair->quiz_id);
+            if (! $quiz) {
+                continue;
+            }
+
+            $baseAttemptLimit = $quizAttemptService->attemptsAllowed($quiz);
+            if ($baseAttemptLimit === 0 || (int) $attemptPair->attempt_rows_count < $baseAttemptLimit) {
+                continue;
+            }
+
+            if ($quizAttemptService->retakeStatus($quiz, (int) $attemptPair->user_id)['exhausted']) {
+                $coursesWithExhaustedAttempts[(int) $attemptPair->course_id] = true;
+            }
+        }
+
         $courses->getCollection()->transform(fn (Course $course) => (object) [
             'id' => $course->id,
             'title' => $course->title,
             'status' => $course->statusLabel(),
             'students_count' => (int) $course->enrollments_count,
+            'quiz_attempts_count' => (int) $course->quiz_attempts_count,
+            'has_exhausted_quiz_attempts' => isset($coursesWithExhaustedAttempts[(int) $course->id]),
             'faculty_reviews_count' => $course->requires_faculty_verification ? (int) $course->faculty_reviews_count : 0,
             'requires_faculty_verification' => (bool) $course->requires_faculty_verification,
         ]);
