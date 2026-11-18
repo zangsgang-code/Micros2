@@ -546,8 +546,10 @@ test('active attempt grading and review use its frozen question text choices ans
         ->and($start->getContent())->not->toContain('correct_answer')
         ->and($attempt->question_snapshot['questions'][0]['text'])->toBe($frozen['text'])
         ->and($review[0]['question'])->toBe($frozen['text'])
-        ->and(collect($review[0]['options'])->pluck('text')->all())->toBe($frozen['options'])
-        ->and(collect($review[0]['options'])->firstWhere('is_correct', true)['text'])->toBe($frozen['correct_answer']);
+        ->and($review[0]['answer_correct'])->toBeTrue()
+        ->and(collect($review[0]['options'])->pluck('text')->all())->toBe([$frozen['correct_answer']])
+        ->and(collect($review[0]['options'])->first()['is_selected'])->toBeTrue()
+        ->and($review[0]['options'][0])->not->toHaveKey('is_correct');
 });
 
 test('a passed course quiz review reveals answers from the attempt snapshot', function () {
@@ -565,7 +567,8 @@ test('a passed course quiz review reveals answers from the attempt snapshot', fu
 
     expect($result['passed'])->toBeTrue()
         ->and($data[0]['questions'][0]['text'])->toBe('Set 0 question 0')
-        ->and(collect($data[0]['questions'][0]['options'])->firstWhere('is_correct', true)['text'])->toBe('Right 0-0')
+        ->and($data[0]['questions'][0]['answer_correct'])->toBeTrue()
+        ->and(collect($data[0]['questions'][0]['options'])->pluck('text')->all())->toBe(['Right 0-0'])
         ->and($page->getContent())->not->toContain('question_snapshot')
         ->and($page->getContent())->not->toContain('"correct_answer"');
 });
@@ -581,6 +584,7 @@ test('failed quiz submissions and reviews do not expose correct answers', functi
     expect($result['passed'])->toBeFalse()
         ->and($result['answers'][(string) $question->id])->toBe(['answer' => 'B'])
         ->and($result['review_questions'][0])->not->toHaveKey('review_answer')
+        ->and($result['review_questions'][0])->not->toHaveKey('submitted_answer')
         ->and($result['review_questions'][0]['options'][0])->not->toHaveKey('is_correct')
         ->and($service->reviewQuestionsForAttempt($attempt)[0]['options'][0])->not->toHaveKey('is_correct');
 
@@ -797,7 +801,7 @@ test('the course player displays quiz instructions and accepts identification an
         ->assertSee('id="qh-instructions"', false)
         ->assertSee('Read the directions carefully.');
 
-    $this->postJson(route('courses.progress', $course->id), [
+    $submission = $this->postJson(route('courses.progress', $course->id), [
         'quiz_results' => [
             0 => [
                 'answers' => [(string) $question->id => 'HyperText Markup Language'],
@@ -805,7 +809,11 @@ test('the course player displays quiz instructions and accepts identification an
         ],
     ])
         ->assertOk()
-        ->assertJsonPath('quiz_submissions.0.passed', true);
+        ->assertJsonPath('quiz_submissions.0.passed', true)
+        ->assertJsonPath('quiz_submissions.0.review_questions.0.submitted_answer', 'HyperText Markup Language');
+
+    $page = $this->actingAs($student)->get(route('courses.learn', $course->id))->assertOk();
+    expect($page->getContent())->toContain('|| q.submitted_answer');
 });
 
 test('student quiz responses omit correct answers before submission', function () {

@@ -197,7 +197,12 @@ class QuizAttemptService
             'earned_points' => $grade['earned_points'],
             'possible_points' => $grade['possible_points'],
             'answers' => $passed
-                ? $grade['answers']
+                ? collect($grade['answers'])
+                    ->map(fn (array $answer): array => [
+                        'answer' => $answer['answer'],
+                        'correct' => $answer['correct'],
+                    ])
+                    ->all()
                 : collect($grade['answers'])
                     ->map(fn (array $answer): array => ['answer' => $answer['answer']])
                     ->all(),
@@ -374,12 +379,20 @@ class QuizAttemptService
             return null;
         }
 
-        $includeCorrectAnswers = (bool) $attempt->passed;
+        $includeSubmittedAnswers = (bool) $attempt->passed;
+        $attemptAnswers = $includeSubmittedAnswers
+            ? $attempt->answers()->get()->keyBy('question_id')
+            : collect();
 
-        return collect($snapshot['questions'])->map(function (array $question) use ($attempt, $includeCorrectAnswers): array {
+        return collect($snapshot['questions'])->map(function (array $question) use ($attempt, $includeSubmittedAnswers, $attemptAnswers): array {
             $options = ($question['type'] ?? null) === 'Identification' ? [] : array_values((array) ($question['options'] ?? []));
-            $answer = $question['correct_answer'] ?? null;
             $order = $attempt->presentation['choice_orders'][(string) ($question['id'] ?? '')] ?? array_keys($options);
+            if (count($order) !== count($options) || array_diff(array_keys($options), $order) !== []) {
+                $order = array_keys($options);
+            }
+            $attemptAnswer = $attemptAnswers->get((int) ($question['id'] ?? 0));
+            $submittedAnswer = $attemptAnswer?->answer;
+            $answerCorrect = (bool) $attemptAnswer?->is_correct;
 
             $review = [
                 'id' => (int) ($question['id'] ?? 0),
@@ -387,16 +400,25 @@ class QuizAttemptService
                 'question' => (string) ($question['text'] ?? ''),
                 'type' => (string) ($question['type'] ?? ''),
                 'points' => $question['points'] ?? null,
-                'options' => collect($options)->map(fn ($option, int $index): array => [
-                    'letter' => chr(65 + (int) ($order[$index] ?? $index)),
-                    'label' => chr(65 + $index),
-                    'text' => (string) $option,
-                    ...($includeCorrectAnswers ? ['is_correct' => is_string($answer) && $option === $answer] : []),
-                ])->all(),
+                'options' => collect(array_values($order))
+                    ->map(fn (int $originalIndex, int $displayIndex): array => [
+                        'letter' => chr(65 + $originalIndex),
+                        'label' => chr(65 + $displayIndex),
+                        'text' => (string) ($options[$originalIndex] ?? ''),
+                        ...($includeSubmittedAnswers ? [
+                            'is_selected' => is_string($submittedAnswer) && $submittedAnswer === chr(65 + $originalIndex),
+                        ] : []),
+                    ])
+                    ->when($includeSubmittedAnswers, fn (Collection $options): Collection => $options->filter(
+                        fn (array $option): bool => $option['is_selected'],
+                    ))
+                    ->values()
+                    ->all(),
             ];
 
-            if ($includeCorrectAnswers && ($question['type'] ?? null) === 'Identification') {
-                $review['review_answer'] = (string) $answer;
+            if ($includeSubmittedAnswers) {
+                $review['submitted_answer'] = $submittedAnswer;
+                $review['answer_correct'] = $answerCorrect;
             }
 
             return $review;

@@ -629,6 +629,7 @@
                     </div>
                     <div class="quiz-empty-state" id="quiz-empty-state" @if($questionCount > 0) hidden @endif>No questions yet. Use Add to create a question manually or upload a CSV.</div>
                     <div id="questions"></div>
+                    <button class="quiz-add-question-bottom" type="button" onclick="addQuestion()">+ Add question</button>
                 </section>
 
                 <section class="quiz-builder-panel" id="quiz-panel-settings" role="tabpanel" aria-labelledby="quiz-tab-settings" data-quiz-tab-panel="settings" @if($initialQuizTab !== 'settings') hidden @endif>

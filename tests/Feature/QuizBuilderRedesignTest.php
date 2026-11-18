@@ -203,6 +203,35 @@ test('shared builder creates empty quizzes, authors questions, imports CSV, and 
         ->assertSee('questions_per_attempt', false);
 })->with('shared quiz builder assessment types');
 
+test('adding a module quiz creates a separate quiz instead of replacing the existing one', function () {
+    [$course, $faculty, $createUrl, $storeUrl, $editUrlFor] = quizBuilderRedesignContext('module');
+    $this->actingAs($faculty);
+
+    $this->from($createUrl)->post($storeUrl, [
+        'quiz_title' => 'First module quiz',
+        'passing_score' => 75,
+    ])->assertRedirect();
+    $firstQuiz = Quiz::query()->where('course_id', $course->id)->where('title', 'First module quiz')->firstOrFail();
+
+    $this->from($createUrl)->post($storeUrl, [
+        'quiz_title' => 'Second module quiz',
+        'passing_score' => 80,
+    ])->assertRedirect($editUrlFor(Quiz::query()->where('course_id', $course->id)->where('title', 'Second module quiz')->firstOrFail()));
+
+    $firstQuiz->refresh();
+    $moduleQuizzes = Quiz::query()
+        ->where('module_id', $firstQuiz->module_id)
+        ->whereNull('lesson_id')
+        ->where('is_summative', false)
+        ->orderBy('module_order')
+        ->get();
+
+    expect($moduleQuizzes)->toHaveCount(2)
+        ->and($firstQuiz->title)->toBe('First module quiz')
+        ->and($moduleQuizzes->pluck('title')->all())->toBe(['First module quiz', 'Second module quiz'])
+        ->and($moduleQuizzes->pluck('module_order')->unique())->toHaveCount(2);
+});
+
 test('identification questions save and accept alternative answers without exposing them to learners', function () {
     [$course, $faculty, , $storeUrl] = quizBuilderRedesignContext('module');
     $this->actingAs($faculty)->post($storeUrl, [
@@ -244,7 +273,9 @@ test('identification questions save and accept alternative answers without expos
     expect($question->options)->toBe(['chilly', 'cool'])
         ->and($result['passed'])->toBeTrue()
         ->and($result['answers'][(string) $question->id]['correct'])->toBeTrue()
-        ->and($result['review_questions'][0]['review_answer'])->toBe('cold')
+        ->and($result['review_questions'][0]['submitted_answer'])->toBe('CHILLY')
+        ->and($result['review_questions'][0]['answer_correct'])->toBeTrue()
+        ->and($result['review_questions'][0])->not->toHaveKey('review_answer')
         ->and($result['review_questions'][0]['options'])->toBe([])
         ->and($presentation['question_snapshot']['questions'][0]['options'])->toBe(['chilly', 'cool'])
         ->and($attemptService->presentedQuestions($quiz, $presentation)[0]['options'])->toBe([]);

@@ -1705,6 +1705,21 @@
     :where(html[data-faculty-page="faculty-courses-index"]) .btn-add-choice:hover{background:var(--bg);border-color:var(--navy);}
     :where(html[data-faculty-page="faculty-courses-index"]) .tf-label{flex:1;max-width:520px;font-weight:600;font-size:14px;color:var(--ink);border:1px solid #d0d5dd;border-radius:9px;padding:10px 14px;background:var(--soft);}
     :where(html[data-faculty-page="faculty-courses-index"]) .save-quiz-row{display:flex;justify-content:center;}
+    :where(html[data-faculty-page="faculty-courses-index"]) #quiz-builder-form .save-quiz-row{
+        position:sticky;bottom:12px;z-index:30;width:fit-content;margin:16px auto 0;padding:10px 12px;
+        border:1px solid rgba(208,213,221,.9);border-radius:12px;background:rgba(255,255,255,.96);
+        box-shadow:0 8px 24px rgba(16,24,40,.12);
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .quiz-add-question-bottom{
+        display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin:12px 0 0;padding:10px 14px;
+        border:1px dashed #c9d3e3;border-radius:10px;background:#fff;color:#123b7a;font-weight:700;cursor:pointer;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .quiz-add-question-bottom:hover{
+        border-color:#123b7a;background:#f8faff;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .quiz-add-question-bottom:focus-visible{
+        outline:3px solid rgba(49,92,190,.25);outline-offset:3px;
+    }
     :where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;}
     :where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar h3{margin:0;color:#123b7a;font-size:1rem;}
     :where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar__actions{display:flex;flex-wrap:wrap;gap:8px;}

@@ -15,7 +15,7 @@
 
         @if(session('quiz_result'))
             <div class="quiz-notice {{ session('quiz_result.passed') ? 'quiz-pass' : 'quiz-fail' }}" role="status">
-                Attempt scored {{ session('quiz_result.score') }}%. {{ session('quiz_result.passed') ? 'You passed.' : 'You did not meet the passing score.' }}
+                Attempt scored {{ session('quiz_result.score') }}% ({{ session('quiz_result.correct') }}/{{ session('quiz_result.total') }} correct; {{ session('quiz_result.earned_points') }}/{{ session('quiz_result.possible_points') }} points). {{ session('quiz_result.passed') ? 'You passed.' : 'You did not meet the passing score.' }}
                 @if(session('quiz_result.passed') && session('quiz_result.lesson_completed'))
                     <p><strong>This lesson is complete.</strong></p>
                 @elseif(session('quiz_result.passed') && session('quiz_result.pending_review'))
@@ -28,20 +28,26 @@
                     <p><a href="{{ route('courses.learn', $quiz->course_id) }}">Return to course</a></p>
                 @endif
             </div>
-            @foreach(session('quiz_result.review_questions', []) as $reviewQuestion)
-                <fieldset class="quiz-question quiz-question-review">
-                    <legend><strong>{{ $loop->iteration }}. {{ $reviewQuestion['question'] }}</strong></legend>
-                    @if($reviewQuestion['type'] === 'Identification')
-                        <p>Correct answer: {{ $reviewQuestion['review_answer'] }}</p>
-                    @else
-                        <div class="quiz-options">
-                            @foreach($reviewQuestion['options'] as $option)
-                                <p class="quiz-option {{ $option['is_correct'] ? 'correct-ans' : '' }}">{{ $option['label'] }}. {{ $option['text'] }} @if($option['is_correct']) <strong>Correct answer</strong> @endif</p>
-                            @endforeach
-                        </div>
-                    @endif
-                </fieldset>
-            @endforeach
+            @if(session('quiz_result.passed'))
+                <h2>Your answers</h2>
+                @foreach(session('quiz_result.review_questions', []) as $reviewQuestion)
+                    <fieldset class="quiz-question quiz-question-review">
+                        <legend><strong>{{ $loop->iteration }}. {{ $reviewQuestion['question'] }}</strong></legend>
+                        @if($reviewQuestion['type'] === 'Identification')
+                            <p>Your answer: {{ $reviewQuestion['submitted_answer'] ?: 'No answer submitted' }} — <strong>{{ $reviewQuestion['answer_correct'] ? 'Correct' : 'Wrong' }}</strong></p>
+                        @else
+                            <div class="quiz-options">
+                                @foreach($reviewQuestion['options'] as $option)
+                                    <p class="quiz-option {{ $reviewQuestion['answer_correct'] ? 'correct-ans' : 'wrong-ans' }}">{{ $option['label'] }}. {{ $option['text'] }} <strong>Your answer — {{ $reviewQuestion['answer_correct'] ? 'Correct' : 'Wrong' }}</strong></p>
+                                @endforeach
+                                @if($reviewQuestion['options'] === [])
+                                    <p>No answer submitted — <strong>Wrong</strong></p>
+                                @endif
+                            </div>
+                        @endif
+                    </fieldset>
+                @endforeach
+            @endif
         @endif
         @error('quiz')<div class="quiz-notice quiz-error" role="alert">{{ $message }}</div>@enderror
 

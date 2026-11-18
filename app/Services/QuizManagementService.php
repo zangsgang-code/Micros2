@@ -24,7 +24,7 @@ class QuizManagementService
 
     public function save(Request $request, Course $course, CourseModule $module): bool
     {
-        return $this->persist($request, $course, ['module_id' => $module->id, 'lesson_id' => null, 'is_summative' => true]);
+        return $this->persist($request, $course, ['module_id' => $module->id, 'lesson_id' => null, 'is_summative' => true])['questions_changed'];
     }
 
     public function saveRegularForModule(Request $request, Course $course, CourseModule $module, ?Quiz $quiz = null): bool
@@ -33,7 +33,19 @@ class QuizManagementService
             'module_id' => $module->id,
             'lesson_id' => null,
             'is_summative' => false,
-        ], $quiz, $quiz === null);
+        ], $quiz, $quiz === null)['questions_changed'];
+    }
+
+    /**
+     * @return array{quiz: Quiz, questions_changed: bool}
+     */
+    public function createRegularForModule(Request $request, Course $course, CourseModule $module): array
+    {
+        return $this->persist($request, $course, [
+            'module_id' => $module->id,
+            'lesson_id' => null,
+            'is_summative' => false,
+        ], createNew: true);
     }
 
     public function saveForLesson(Request $request, Course $course, CourseLesson $lesson): bool
@@ -42,7 +54,7 @@ class QuizManagementService
             'module_id' => $lesson->module_id,
             'lesson_id' => $lesson->id,
             'is_summative' => false,
-        ]);
+        ])['questions_changed'];
     }
 
     /** @param array<string, mixed> $question */
@@ -130,8 +142,11 @@ class QuizManagementService
         });
     }
 
-    /** @param array{module_id: int|null, lesson_id: int|null, is_summative: bool} $scope */
-    private function persist(Request $request, Course $course, array $scope, ?Quiz $targetQuiz = null, bool $createNew = false): bool
+    /**
+     * @param  array{module_id: int|null, lesson_id: int|null, is_summative: bool}  $scope
+     * @return array{quiz: Quiz, questions_changed: bool}
+     */
+    private function persist(Request $request, Course $course, array $scope, ?Quiz $targetQuiz = null, bool $createNew = false): array
     {
         $validated = validator(['quiz_title' => $request->input('quiz_title')], [
             'quiz_title' => ['required', 'string', 'max:255'],
@@ -207,7 +222,7 @@ class QuizManagementService
         $quiz->save();
         $quiz->touch();
 
-        return $questionsChanged;
+        return ['quiz' => $quiz, 'questions_changed' => $questionsChanged];
     }
 
     /**

@@ -276,7 +276,7 @@ test('lesson quiz header shows the number of questions in the attempt instead of
     expect($standaloneHtml)->toContain('2 questions · pass 70%');
 });
 
-test('passing a lesson quiz returns correct answers and shows the latest attempt in the header', function () {
+test('passing a lesson quiz shows the submitted answer and its correctness', function () {
     [$student, $course, $lesson] = lessonTrackingFixture();
     $quiz = Quiz::create([
         'course_id' => $course->id,
@@ -315,19 +315,84 @@ test('passing a lesson quiz returns correct answers and shows the latest attempt
         'answers' => [(string) $question->id => 'A'],
     ])->assertOk()
         ->assertJsonPath('passed', true)
-        ->assertJsonPath('review_questions.0.options.0.is_correct', true);
-
-    expect($submission->json('review_questions.0.options.1.is_correct'))->toBeFalse();
+        ->assertJsonPath('review_questions.0.answer_correct', true)
+        ->assertJsonPath('review_questions.0.options.0.is_selected', true);
 
     $quizPanel = $this->getJson(route('quiz.show', $quiz->id))->assertOk()->json('html');
     expect($quizPanel)
         ->toContain('inline-assessment-feedback--compact')
         ->toContain('Latest attempt: 100%. You passed. Continue to the next required item.')
         ->toContain('inline-quiz-review-options')
-        ->toContain('Correct answer')
+        ->toContain('Your answers')
+        ->toContain('Your answer - Correct')
         ->toContain('is-correct')
         ->toContain('Correct')
         ->not->toContain('Submit lesson quiz');
+});
+
+test('passing with weighted points explains the score and hides the answer to missed questions', function () {
+    [$student, $course, $lesson] = lessonTrackingFixture();
+    $quiz = Quiz::create([
+        'course_id' => $course->id,
+        'lesson_id' => $lesson->id,
+        'title' => 'Weighted Lesson Quiz',
+        'passing_score' => 75,
+        'attempts' => 'Unlimited',
+        'is_active' => true,
+        'sort_order' => 1,
+    ]);
+
+    $questions = collect([
+        ['text' => 'Question one', 'correct' => 'Correct one', 'points' => 2],
+        ['text' => 'Question two', 'correct' => 'Correct two', 'points' => 1],
+        ['text' => 'Question three', 'correct' => 'Missed answer', 'points' => 1],
+        ['text' => 'Question four', 'correct' => 'Correct four', 'points' => 1],
+    ])->map(fn (array $question): QuizQuestion => QuizQuestion::create([
+        'quiz_id' => $quiz->id,
+        'question' => $question['text'],
+        'type' => 'Multiple Choice',
+        'options' => ['Chosen answer', $question['correct']],
+        'correct_answer' => $question['text'] === 'Question three' ? $question['correct'] : 'Chosen answer',
+        'points' => $question['points'],
+    ]));
+
+    Enrollment::create([
+        'user_id' => $student->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+        'progress_percent' => 0,
+        'progress_state' => [],
+    ]);
+
+    $this->actingAs($student)
+        ->postJson(route('courses.lessons.start', [$course->id, $lesson->id]))
+        ->assertOk();
+    $this->travel(6)->seconds();
+    $this->postJson(route('courses.lessons.complete', [$course->id, $lesson->id]))
+        ->assertOk();
+    $this->postJson(route('quiz.start', $quiz->id))->assertOk();
+
+    $answers = $questions->mapWithKeys(fn (QuizQuestion $question): array => [(string) $question->id => 'A'])->all();
+    $submission = $this->postJson(route('quiz.submit', $quiz->id), ['answers' => $answers])
+        ->assertOk()
+        ->assertJsonPath('score', 80)
+        ->assertJsonPath('correct', 3)
+        ->assertJsonPath('total', 4)
+        ->assertJsonPath('earned_points', 4)
+        ->assertJsonPath('possible_points', 5)
+        ->assertJsonPath('passed', true)
+        ->assertJsonPath('review_questions.2.answer_correct', false)
+        ->assertJsonPath('review_questions.2.options.0.is_selected', true);
+
+    expect($submission->json('review_questions.2.options'))->toHaveCount(1)
+        ->and($submission->json('review_questions.2.options.0.text'))->toBe('Chosen answer')
+        ->and(array_key_exists('is_correct', $submission->json('review_questions.2.options.0')))->toBeFalse();
+
+    $quizPanel = $this->getJson(route('quiz.show', $quiz->id))->assertOk()->json('html');
+    expect($quizPanel)
+        ->toContain('A. Chosen answer (Your answer - Wrong)')
+        ->toContain('Wrong')
+        ->not->toContain('Missed answer');
 });
 
 test('opening a module quiz works when its module has no activities', function () {

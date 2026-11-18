@@ -303,8 +303,19 @@
     width: 16px; height: 16px; margin: 0; flex: 0 0 auto; cursor: pointer; accent-color: #000;
 }
 #quiz-questions-container .quiz-simple-option input[type="radio"]:disabled { cursor: default; }
-#quiz-questions-container .quiz-simple-option.is-correct-answer { color: #15803d; font-weight: 600; }
-#quiz-questions-container .quiz-simple-option.is-wrong { color: #b91c1c; font-weight: 600; }
+#quiz-questions-container .quiz-simple-option.is-correct,
+#quiz-questions-container .quiz-review-answer.is-correct {
+    border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 10px;
+    background: #ecfdf3; color: #166534; font-weight: 700;
+}
+#quiz-questions-container .quiz-simple-option.is-wrong,
+#quiz-questions-container .quiz-review-answer.is-wrong {
+    border: 1px solid #fecaca; border-radius: 8px; padding: 8px 10px;
+    background: #fef2f2; color: #991b1b; font-weight: 700;
+}
+#quiz-questions-container .quiz-review-answer { margin: 8px 0 0; }
+#quiz-questions-container .quiz-simple-option.is-correct input[type="radio"] { accent-color: #15803d; }
+#quiz-questions-container .quiz-simple-option.is-wrong input[type="radio"] { accent-color: #b91c1c; }
 #quiz-questions-container .quiz-simple-marker { font-size: 13px; font-weight: 600; margin-left: 4px; }
 #quiz-questions-container .quiz-identification-answer {
     width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1;
@@ -360,8 +371,9 @@ var QUIZ_DATA = {!! $modules->mapWithKeys(fn ($m, $i) => [
                 'points' => (int) (is_array($question) ? ($question['points'] ?? 0) : $question->points),
                 'options' => $type === 'Identification' ? [] : $options,
             ];
-            if (is_array($question) && array_key_exists('review_answer', $question)) {
-                $item['review_answer'] = $question['review_answer'];
+            if (is_array($question) && array_key_exists('submitted_answer', $question)) {
+                $item['submitted_answer'] = $question['submitted_answer'];
+                $item['answer_correct'] = (bool) ($question['answer_correct'] ?? false);
             }
 
             return $item;
@@ -1796,9 +1808,10 @@ async function submitInlineAssessment(form, timeExpired) {
             feedback.className = 'inline-assessment-feedback';
             feedback.setAttribute('role', 'status');
             feedback.classList.add(result.passed ? 'is-success' : 'is-warning');
+            const scoreDetails = '(' + result.correct + '/' + result.total + ' correct; ' + result.earned_points + '/' + result.possible_points + ' points). ';
             feedback.textContent = result.passed
-                ? 'You passed with ' + result.score + '%. ' + (result.lesson_completed ? 'This lesson is complete.' : 'Continue to the next required item.')
-                : 'You scored ' + result.score + '%. You did not meet the passing score. ' + (result.attempts_remaining === null ? 'Your attempts are unlimited.' : 'You have ' + result.attempts_remaining + ' attempt' + (result.attempts_remaining === 1 ? '' : 's') + ' remaining.');
+                ? 'You passed with ' + result.score + '% ' + scoreDetails + (result.lesson_completed ? 'This lesson is complete.' : 'Continue to the next required item.')
+                : 'You scored ' + result.score + '% ' + scoreDetails + 'You did not meet the passing score. ' + (result.attempts_remaining === null ? 'Your attempts are unlimited.' : 'You have ' + result.attempts_remaining + ' attempt' + (result.attempts_remaining === 1 ? '' : 's') + ' remaining.');
             panel.dataset.cooldownUntil = String(result.retake_unlock_at || 0);
             panel.dataset.canContinue = result.passed || (result.retake_unlock_at && !result.attempts_exhausted) ? '1' : '0';
             const quizId = String(panel.dataset.assessmentId || '');
@@ -1872,7 +1885,7 @@ async function submitInlineAssessment(form, timeExpired) {
             const review = document.createElement('section');
             review.className = 'inline-quiz-review';
             const reviewHeading = document.createElement('h3');
-            reviewHeading.textContent = 'Correct answers';
+            reviewHeading.textContent = 'Your answers';
             review.appendChild(reviewHeading);
 
             result.review_questions.forEach(function (question, index) {
@@ -1884,17 +1897,24 @@ async function submitInlineAssessment(form, timeExpired) {
 
                 if (question.type === 'Identification') {
                     const answer = document.createElement('p');
-                    answer.textContent = 'Correct answer: ' + (question.review_answer || '');
+                    answer.className = question.answer_correct ? 'is-correct' : 'is-wrong';
+                    answer.textContent = 'Your answer: ' + (question.submitted_answer || 'No answer submitted') + ' - ' + (question.answer_correct ? 'Correct' : 'Wrong');
                     questionBlock.appendChild(answer);
                 } else {
                     const options = document.createElement('div');
                     options.className = 'inline-quiz-review-options';
                     (question.options || []).forEach(function (option) {
                         const answerOption = document.createElement('p');
-                        answerOption.className = option.is_correct ? 'is-correct' : '';
-                        answerOption.textContent = option.label + '. ' + option.text + (option.is_correct ? ' (Correct answer)' : '');
+                        answerOption.className = question.answer_correct ? 'is-correct' : 'is-wrong';
+                        answerOption.textContent = option.label + '. ' + option.text + ' (Your answer - ' + (question.answer_correct ? 'Correct' : 'Wrong') + ')';
                         options.appendChild(answerOption);
                     });
+                    if (!question.options || question.options.length === 0) {
+                        const noAnswer = document.createElement('p');
+                        noAnswer.className = 'is-wrong';
+                        noAnswer.textContent = 'No answer submitted - Wrong';
+                        options.appendChild(noAnswer);
+                    }
                     questionBlock.appendChild(options);
                 }
 
@@ -2276,7 +2296,9 @@ function showQuizView(modIdx, viewOnly, retakeOnly, serverStarted) {
         optWrap.id = 'opts-' + ri;
 
         const result = review[String(q.id)];
-        const selected = result?.answer || savedAnswers[String(q.id)] || savedAnswers[qi];
+        const selected = result?.answer || savedAnswers[String(q.id)] || savedAnswers[qi] || q.submitted_answer;
+        const hasReviewStatus = typeof q.answer_correct === 'boolean';
+        const answerCorrect = hasReviewStatus ? q.answer_correct : !!result?.correct;
 
         if (q.type === 'Identification') {
             const input = document.createElement('input');
@@ -2291,15 +2313,18 @@ function showQuizView(modIdx, viewOnly, retakeOnly, serverStarted) {
             input.disabled = viewOnly;
             optWrap.appendChild(input);
 
-            if (viewOnly && q.review_answer) {
-                const answer = document.createElement('p');
-                answer.className = 'quiz-review-answer';
-                answer.textContent = 'Correct answer: ' + q.review_answer;
-                optWrap.appendChild(answer);
+            if (viewOnly && hasReviewStatus) {
+                const status = document.createElement('p');
+                status.className = 'quiz-review-answer ' + (answerCorrect ? 'is-correct' : 'is-wrong');
+                status.textContent = 'Your answer - ' + (selected ? String(selected) : 'No answer submitted') + ' - ' + (answerCorrect ? 'Correct' : 'Wrong');
+                optWrap.appendChild(status);
             }
         } else {
             optWrap.setAttribute('role', 'radiogroup');
             (q.options || []).forEach(function(opt) {
+                const isSelected = !!opt.is_selected || (!!selected && selected === opt.letter);
+                if (viewOnly && hasReviewStatus && !isSelected) return;
+
                 const row = document.createElement('label');
                 row.className = 'quiz-simple-option';
 
@@ -2316,28 +2341,27 @@ function showQuizView(modIdx, viewOnly, retakeOnly, serverStarted) {
 
                 if (viewOnly) {
                     input.disabled = true;
-                    if (selected && selected === opt.letter) {
+                    if (isSelected) {
                         input.checked = true;
-                        row.classList.add(result?.correct ? 'is-correct' : 'is-wrong');
-                    }
-                    if (opt.is_correct) {
-                        row.classList.add('is-correct-answer');
-                        const marker = document.createElement('span');
-                        marker.className = 'quiz-simple-marker';
-                        marker.textContent = '(Correct answer)';
-                        row.appendChild(marker);
+                        if (hasReviewStatus) {
+                            row.classList.add(answerCorrect ? 'is-correct' : 'is-wrong');
+                            const marker = document.createElement('span');
+                            marker.className = 'quiz-simple-marker';
+                            marker.textContent = 'Your answer - ' + (answerCorrect ? 'Correct' : 'Wrong');
+                            row.appendChild(marker);
+                        }
                     }
                 }
                 optWrap.appendChild(row);
             });
+            if (viewOnly && hasReviewStatus && !(q.options || []).some(function(opt) { return !!opt.is_selected || (!!selected && selected === opt.letter); })) {
+                const noAnswer = document.createElement('p');
+                noAnswer.className = 'quiz-review-answer is-wrong';
+                noAnswer.textContent = 'No answer submitted - Wrong';
+                optWrap.appendChild(noAnswer);
+            }
         }
         block.appendChild(optWrap);
-        if (viewOnly && q.review_answer) {
-            const answer = document.createElement('p');
-            answer.className = 'quiz-review-answer';
-            answer.textContent = 'Correct answer: ' + q.review_answer;
-            block.appendChild(answer);
-        }
         container.appendChild(block);
     });
 
@@ -2566,9 +2590,10 @@ function applyServerQuizSubmission(modIdx, submission) {
     const questionCount = Number(submission.total || data.questions.length);
     const pass = !!submission.passed;
     const scoreEl = document.getElementById('quiz-score-result');
+    const pointDetails = submission.earned_points + '/' + submission.possible_points + ' points';
     scoreEl.innerHTML = pass
-        ? 'You passed! Score: ' + scorePercent + '% (' + correctCount + '/' + questionCount + ' correct)'
-        : 'Score: ' + scorePercent + '% (' + correctCount + '/' + questionCount + ' correct) — Keep practicing!';
+        ? 'You passed! Score: ' + scorePercent + '% (' + correctCount + '/' + questionCount + ' correct; ' + pointDetails + ')'
+        : 'Score: ' + scorePercent + '% (' + correctCount + '/' + questionCount + ' correct; ' + pointDetails + ') — Keep practicing!';
     scoreEl.className = 'quiz-score-result ' + (pass ? 'pass' : 'fail');
     scoreEl.style.display = 'block';
 

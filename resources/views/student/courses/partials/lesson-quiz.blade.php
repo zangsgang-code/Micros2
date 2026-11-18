@@ -54,19 +54,22 @@
     @endif
     @if($latestAttemptPassed && ! empty($review_questions))
         <section class="inline-quiz-review">
-            <h3>Correct answers</h3>
+            <h3>Your answers</h3>
             @foreach($review_questions as $reviewQuestion)
                 <fieldset class="inline-quiz-review-question">
                     <legend>{{ $loop->iteration }}. {{ $reviewQuestion['question'] }}</legend>
                     @if($reviewQuestion['type'] === 'Identification')
-                        <p>Correct answer: {{ $reviewQuestion['review_answer'] }}</p>
+                        <p class="{{ $reviewQuestion['answer_correct'] ? 'is-correct' : 'is-wrong' }}">Your answer: {{ $reviewQuestion['submitted_answer'] ?: 'No answer submitted' }} — {{ $reviewQuestion['answer_correct'] ? 'Correct' : 'Wrong' }}</p>
                     @else
                         <div class="inline-quiz-review-options">
                             @foreach($reviewQuestion['options'] as $option)
-                                <p class="{{ $option['is_correct'] ? 'is-correct' : '' }}">
-                                    {{ $option['label'] }}. {{ $option['text'] }} @if($option['is_correct']) (Correct answer) @endif
+                                <p class="{{ $reviewQuestion['answer_correct'] ? 'is-correct' : 'is-wrong' }}">
+                                    {{ $option['label'] }}. {{ $option['text'] }} (Your answer - {{ $reviewQuestion['answer_correct'] ? 'Correct' : 'Wrong' }})
                                 </p>
                             @endforeach
+                            @if($reviewQuestion['options'] === [])
+                                <p class="is-wrong">No answer submitted - Wrong</p>
+                            @endif
                         </div>
                     @endif
                 </fieldset>

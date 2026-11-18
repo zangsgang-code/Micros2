@@ -2252,23 +2252,16 @@ class FacultyController extends Controller
     {
         $course = $this->ownedCourse($id);
         $module = CourseModule::where('course_id', $course->id)->where('is_final', false)->findOrFail($moduleIndex);
-        $existingQuiz = Quiz::query()->where('module_id', $module->id)->whereNull('lesson_id')->where('is_summative', false)->first();
-        $questionsChanged = $quizManagementService->saveRegularForModule($request, $course, $module, $existingQuiz);
+        $result = $quizManagementService->createRegularForModule($request, $course, $module);
         $this->returnCourseToDraft($course);
-        $quiz = Quiz::query()->where('module_id', $module->id)->whereNull('lesson_id')->where('is_summative', false)->firstOrFail();
+        $quiz = $result['quiz'];
 
         if ($redirect = $this->redirectToQuizImportIfRequested($request, $course, $quiz)) {
             return $redirect;
         }
 
-        if ($existingQuiz === null) {
-            return redirect()->route('faculty.module-quiz.edit', [$course->id, $module->id, $quiz->id])
-                ->with('success', 'Module quiz created. Add questions or update its settings.');
-        }
-
-        return redirect()->route('faculty.module-quiz.edit', [$course->id, $module->id, $quiz->id])->with('success', $questionsChanged
-            ? 'Module quiz saved. The questions changed, so students may need a new attempt.'
-            : 'Module quiz saved.');
+        return redirect()->route('faculty.module-quiz.edit', [$course->id, $module->id, $quiz->id])
+            ->with('success', 'Module quiz created. Add questions or update its settings.');
     }
 
     public function updateModuleQuiz(Request $request, int $id, int $moduleIndex, int $quizId, QuizManagementService $quizManagementService): RedirectResponse
