@@ -395,7 +395,7 @@ class StudentController extends Controller
             'date_of_birth' => ['required', 'date', 'before:today'],
             'gender' => ['required', 'string', 'max:50'],
             'education' => ['required', 'string', 'max:255'],
-            'school' => ['required', 'string', 'max:255'],
+            'school' => ['exclude_if:education,No formal schooling', 'required', 'string', 'max:255'],
             'school_other' => ['nullable', 'string', 'max:255'],
             'address_province' => ['required', 'string', 'max:150'],
             'address_city' => ['required', 'string', 'max:150'],

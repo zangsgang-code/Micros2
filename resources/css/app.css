@@ -3592,15 +3592,10 @@ body.app-shell.page-onboarding .onboard-brand .brand-label {
             background:linear-gradient(135deg,var(--onboarding-illustration-gradient-start) 0%,var(--onboarding-illustration-gradient-middle) 52%,var(--onboarding-illustration-gradient-end) 100%);
             content:""; transform:translate(-50%,-50%) rotate(-6deg);
         }
-        body.app-shell.page-onboarding .step-panel[data-step="1"] .illustration::before {
+        body.app-shell.page-onboarding .step-panel[data-step="2"] .illustration::before {
             border-radius:31% 69% 48% 52% / 61% 32% 68% 39%;
             background:linear-gradient(135deg,var(--onboarding-illustration-gradient-start) 0%,var(--onboarding-illustration-gradient-middle) 52%,var(--onboarding-illustration-gradient-end) 100%);
             transform:translate(-50%,-50%) rotate(13deg);
-        }
-        body.app-shell.page-onboarding .step-panel[data-step="2"] .illustration::before {
-            border-radius:72% 28% 61% 39% / 35% 66% 34% 65%;
-            background:linear-gradient(135deg,var(--onboarding-illustration-gradient-start) 0%,var(--onboarding-illustration-gradient-middle) 52%,var(--onboarding-illustration-gradient-end) 100%);
-            transform:translate(-50%,-50%) rotate(-14deg);
         }
         body.app-shell.page-onboarding .step-panel[data-step="3"] .illustration::before {
             border-radius:43% 57% 29% 71% / 72% 41% 59% 28%;
@@ -3608,26 +3603,31 @@ body.app-shell.page-onboarding .onboard-brand .brand-label {
             transform:translate(-50%,-50%) rotate(19deg);
         }
         body.app-shell.page-onboarding .step-panel[data-step="4"] .illustration::before {
+            border-radius:72% 28% 61% 39% / 35% 66% 34% 65%;
+            background:linear-gradient(135deg,var(--onboarding-illustration-gradient-start) 0%,var(--onboarding-illustration-gradient-middle) 52%,var(--onboarding-illustration-gradient-end) 100%);
+            transform:translate(-50%,-50%) rotate(-14deg);
+        }
+        body.app-shell.page-onboarding .step-panel[data-step="5"] .illustration::before {
             border-radius:26% 74% 40% 60% / 49% 72% 28% 51%;
             background:linear-gradient(135deg,var(--onboarding-illustration-gradient-start) 0%,var(--onboarding-illustration-gradient-middle) 52%,var(--onboarding-illustration-gradient-end) 100%);
             transform:translate(-50%,-50%) rotate(-19deg);
         }
-        body.app-shell.page-onboarding .step-panel[data-step="5"] .illustration::before {
+        body.app-shell.page-onboarding .step-panel[data-step="6"] .illustration::before {
             border-radius:64% 36% 73% 27% / 31% 58% 42% 69%;
             background:linear-gradient(135deg,var(--onboarding-illustration-gradient-start) 0%,var(--onboarding-illustration-gradient-middle) 52%,var(--onboarding-illustration-gradient-end) 100%);
             transform:translate(-50%,-50%) rotate(23deg);
         }
-        body.app-shell.page-onboarding .step-panel[data-step="6"] .illustration::before {
+        body.app-shell.page-onboarding .step-panel[data-step="7"] .illustration::before {
             border-radius:35% 65% 24% 76% / 63% 27% 73% 37%;
             background:linear-gradient(135deg,var(--onboarding-illustration-gradient-start) 0%,var(--onboarding-illustration-gradient-middle) 52%,var(--onboarding-illustration-gradient-end) 100%);
             transform:translate(-50%,-50%) rotate(-24deg);
         }
-        body.app-shell.page-onboarding .step-panel[data-step="7"] .illustration::before {
+        body.app-shell.page-onboarding .step-panel[data-step="8"] .illustration::before {
             border-radius:78% 22% 55% 45% / 43% 73% 27% 57%;
             background:linear-gradient(135deg,var(--onboarding-illustration-gradient-start) 0%,var(--onboarding-illustration-gradient-middle) 52%,var(--onboarding-illustration-gradient-end) 100%);
             transform:translate(-50%,-50%) rotate(9deg);
         }
-        body.app-shell.page-onboarding .step-panel[data-step="8"] .illustration::before {
+        body.app-shell.page-onboarding .step-panel[data-step="0"] .illustration::before {
             border-radius:22% 78% 67% 33% / 76% 39% 61% 24%;
             background:linear-gradient(135deg,var(--onboarding-illustration-gradient-start) 0%,var(--onboarding-illustration-gradient-middle) 52%,var(--onboarding-illustration-gradient-end) 100%);
             transform:translate(-50%,-50%) rotate(-8deg);

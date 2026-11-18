@@ -30,146 +30,6 @@
             @csrf
 
             <section class="step-panel" data-step="0">
-                <h1 class="step-title">When were you born?</h1>
-                <p class="step-subtitle">This helps us personalize your learning experience.</p>
-                <div class="illustration"><img src="{{ asset('Images/Date of birth.png') }}" alt="Date of birth"></div>
-                <div>
-                    <label class="field-label" for="date_of_birth">Date of birth</label>
-                    <input class="field-control" id="date_of_birth" type="date" name="date_of_birth" value="{{ old('date_of_birth') }}" max="{{ now()->toDateString() }}" data-required>
-                </div>
-            </section>
-
-            <section class="step-panel" data-step="1" hidden>
-                <h1 class="step-title">How do you describe your gender?</h1>
-                <p class="step-subtitle">Choose the option you’re most comfortable sharing.</p>
-                <div class="illustration"><img src="{{ asset('Images/Gender.png') }}" alt="Gender"></div>
-                <div>
-                    <label class="field-label" for="gender">Gender</label>
-                    <select class="field-control" id="gender" name="gender" data-required>
-                        <option value="">Select your answer</option>
-                        @foreach (['Male', 'Female', 'Prefer not to say'] as $value)
-                            <option value="{{ $value }}" @selected(old('gender') === $value)>{{ $value }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </section>
-
-            <section class="step-panel" data-step="2" hidden>
-                <h1 class="step-title">Where did you study?</h1>
-                <p class="step-subtitle">Choose your school or university.</p>
-                <div class="illustration"><img src="{{ asset('Images/School or university.png') }}" alt="School or university"></div>
-                <div>
-                    <label class="field-label" for="school">School or university</label>
-                    <select class="field-control" id="school" name="school" data-required>
-                        <option value="">Select your school</option>
-                        @foreach (($schools ?? []) as $school)
-                            <option value="{{ $school }}" @selected(old('school') === $school)>{{ $school }}</option>
-                        @endforeach
-                        <option value="Other" @selected(old('school') === 'Other')>Other</option>
-                    </select>
-                    <div class="other-school" id="other-school-wrap" @if(old('school') !== 'Other') hidden @endif>
-                        <label class="field-label" for="school_other">Enter your school name</label>
-                        <input class="field-control" id="school_other" name="school_other" type="text" maxlength="255" value="{{ old('school_other') }}" data-required-when="other-school">
-                    </div>
-                </div>
-            </section>
-
-            <section class="step-panel" data-step="3" hidden>
-                <h1 class="step-title">Your education</h1>
-                <p class="step-subtitle">This helps us tailor the right starting point.</p>
-                <div class="illustration"><img src="{{ asset('Images/Highest education level.png') }}" alt="Highest education level"></div>
-                <div>
-                    <label class="field-label" for="education">Highest level of education</label>
-                    <select class="field-control" id="education" name="education" data-required>
-                        <option value="">Select education level</option>
-                        @foreach (['Senior High School','Vocational / Technical','Undergraduate (College)',"Bachelor's Degree","Master's Degree",'Doctorate / PhD'] as $value)
-                            <option value="{{ $value }}" @selected(old('education') === $value)>{{ $value }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </section>
-
-            <section class="step-panel" data-step="4" hidden>
-                <h1 class="step-title">Where are you based?</h1>
-                <p class="step-subtitle">Share the address you want associated with your profile.</p>
-                <div class="illustration"><img src="{{ asset('Images/Address.png') }}" alt="Address"></div>
-                <div class="address-fields">
-                    <div>
-                        <label class="field-label" for="address_province">Province</label>
-                        <select class="field-control" id="address_province" name="address_province" data-required>
-                            <option value="">Select your province</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="field-label" for="address_city">City / Municipality</label>
-                        <select class="field-control" id="address_city" name="address_city" data-required>
-                            <option value="">Select your city or municipality</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="field-label" for="address_barangay">Barangay</label>
-                        <select class="field-control" id="address_barangay" name="address_barangay" data-required>
-                            <option value="">Select your barangay</option>
-                        </select>
-                    </div>
-                    <input type="hidden" id="address" name="address" value="{{ old('address') }}">
-                    <p class="field-hint" id="address-status" role="status" aria-live="polite">Location options use PSGC data.</p>
-                    <button class="wizard-button secondary" type="button" id="address-retry" hidden>Retry loading locations</button>
-                </div>
-            </section>
-
-            <section class="step-panel" data-step="5" hidden>
-                <h1 class="step-title">What do you want to learn?</h1>
-                <p class="step-subtitle">Choose every skill area that sparks your curiosity.</p>
-                <div class="illustration"><img src="{{ asset('Images/Skills you want to learn.png') }}" alt="Skills you want to learn"></div>
-                <div class="skills-grid" data-skill-pager>
-                    @foreach (($skill_options ?? []) as $skill)
-                        <label class="skill-option" data-skill-option>
-                            <input type="checkbox" name="skills_want[]" value="{{ $skill }}" @checked(in_array($skill, (array) old('skills_want', []), true))>
-                            <span class="skill-bubble">{{ $skill }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                <button class="more-skills" type="button" data-more-skills>More +</button>
-                <p class="skills-count" data-skill-count aria-live="polite"></p>
-            </section>
-
-            <section class="step-panel" data-step="6" hidden>
-                <h1 class="step-title">What skills do you already have?</h1>
-                <p class="step-subtitle">Choose every skill you have some experience with.</p>
-                <div class="illustration"><img src="{{ asset('Images/Skills you already have.png') }}" alt="Skills you already have"></div>
-                <div class="skills-grid" data-skill-pager>
-                    @foreach (($skill_options ?? []) as $skill)
-                        <label class="skill-option" data-skill-option>
-                            <input type="checkbox" name="skills_have[]" value="{{ $skill }}" @checked(in_array($skill, (array) old('skills_have', []), true))>
-                            <span class="skill-bubble">{{ $skill }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                <button class="more-skills" type="button" data-more-skills>More +</button>
-                <p class="skills-count" data-skill-count aria-live="polite"></p>
-            </section>
-
-            <section class="step-panel" data-step="7" hidden>
-                <h1 class="step-title">What do you want to become?</h1>
-                <p class="step-subtitle">Tell us about the career goal you’re working toward.</p>
-                <div class="illustration"><img src="{{ asset('Images/Career goal.png') }}" alt="Career goal"></div>
-                <div>
-                    <label class="field-label" for="career_goal">Career goal</label>
-                    <select class="field-control career-goal-control" id="career_goal" name="career_goal" data-required>
-                        <option value="">Select a career goal</option>
-                        @foreach (($career_options ?? []) as $career)
-                            <option value="{{ $career }}" @selected(old('career_goal') === $career)>{{ $career }}</option>
-                        @endforeach
-                    </select>
-                    <div class="other-school" id="other-career-wrap" @if(old('career_goal') !== 'Other') hidden @endif>
-                        <label class="field-label" for="career_goal_other">Enter your career goal</label>
-                        <input class="field-control career-goal-control" id="career_goal_other" name="career_goal_other" type="text" maxlength="255" placeholder="e.g. Architect" value="{{ old('career_goal_other') }}" data-required-when="other-career">
-                    </div>
-                </div>
-            </section>
-
-            <section class="step-panel" data-step="8" hidden>
                 <h1 class="step-title">What is your reason for taking microcredentials?</h1>
                 <p class="step-subtitle">What is your main goal?</p>
                 <div class="illustration"><img src="{{ asset('Images/About you.png') }}" alt="About you"></div>
@@ -198,6 +58,146 @@
                 </div>
             </section>
 
+            <section class="step-panel" data-step="1" hidden>
+                <h1 class="step-title">When were you born?</h1>
+                <p class="step-subtitle">This helps us personalize your learning experience.</p>
+                <div class="illustration"><img src="{{ asset('Images/Date of birth.png') }}" alt="Date of birth"></div>
+                <div>
+                    <label class="field-label" for="date_of_birth">Date of birth</label>
+                    <input class="field-control" id="date_of_birth" type="date" name="date_of_birth" value="{{ old('date_of_birth') }}" max="{{ now()->toDateString() }}" data-required>
+                </div>
+            </section>
+
+            <section class="step-panel" data-step="2" hidden>
+                <h1 class="step-title">How do you describe your gender?</h1>
+                <p class="step-subtitle">Choose the option you’re most comfortable sharing.</p>
+                <div class="illustration"><img src="{{ asset('Images/Gender.png') }}" alt="Gender"></div>
+                <div>
+                    <label class="field-label" for="gender">Gender</label>
+                    <select class="field-control" id="gender" name="gender" data-required>
+                        <option value="">Select your answer</option>
+                        @foreach (['Male', 'Female', 'Prefer not to say'] as $value)
+                            <option value="{{ $value }}" @selected(old('gender') === $value)>{{ $value }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </section>
+
+            <section class="step-panel" data-step="3" hidden>
+                <h1 class="step-title">Your education</h1>
+                <p class="step-subtitle">This helps us tailor the right starting point.</p>
+                <div class="illustration"><img src="{{ asset('Images/Highest education level.png') }}" alt="Highest education level"></div>
+                <div>
+                    <label class="field-label" for="education">Highest level of education</label>
+                    <select class="field-control" id="education" name="education" data-required>
+                        <option value="">Select education level</option>
+                        @foreach (['No formal schooling', 'Elementary', 'High School', 'Senior High School', 'Vocational / Technical', 'Undergraduate (College)', "Bachelor's Degree", "Master's Degree", 'Doctorate / PhD'] as $value)
+                            <option value="{{ $value }}" @selected(old('education') === $value)>{{ $value }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </section>
+
+            <section class="step-panel" data-step="4" hidden>
+                <h1 class="step-title">Where did you study?</h1>
+                <p class="step-subtitle">Choose your school or university.</p>
+                <div class="illustration"><img src="{{ asset('Images/School or university.png') }}" alt="School or university"></div>
+                <div>
+                    <label class="field-label" for="school">School or university</label>
+                    <select class="field-control" id="school" name="school" data-required>
+                        <option value="">Select your school</option>
+                        @foreach (($schools ?? []) as $school)
+                            <option value="{{ $school }}" @selected(old('school') === $school)>{{ $school }}</option>
+                        @endforeach
+                        <option value="Other" @selected(old('school') === 'Other')>Other</option>
+                    </select>
+                    <div class="other-school" id="other-school-wrap" @if(old('school') !== 'Other') hidden @endif>
+                        <label class="field-label" for="school_other">Enter your school name</label>
+                        <input class="field-control" id="school_other" name="school_other" type="text" maxlength="255" value="{{ old('school_other') }}" data-required-when="other-school">
+                    </div>
+                </div>
+            </section>
+
+            <section class="step-panel" data-step="5" hidden>
+                <h1 class="step-title">Where are you based?</h1>
+                <p class="step-subtitle">Share the address you want associated with your profile.</p>
+                <div class="illustration"><img src="{{ asset('Images/Address.png') }}" alt="Address"></div>
+                <div class="address-fields">
+                    <div>
+                        <label class="field-label" for="address_province">Province</label>
+                        <select class="field-control" id="address_province" name="address_province" data-required>
+                            <option value="">Select your province</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label" for="address_city">City / Municipality</label>
+                        <select class="field-control" id="address_city" name="address_city" data-required>
+                            <option value="">Select your city or municipality</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label" for="address_barangay">Barangay</label>
+                        <select class="field-control" id="address_barangay" name="address_barangay" data-required>
+                            <option value="">Select your barangay</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="address" name="address" value="{{ old('address') }}">
+                    <p class="field-hint" id="address-status" role="status" aria-live="polite">Location options use PSGC data.</p>
+                    <button class="wizard-button secondary" type="button" id="address-retry" hidden>Retry loading locations</button>
+                </div>
+            </section>
+
+            <section class="step-panel" data-step="6" hidden>
+                <h1 class="step-title">What do you want to learn?</h1>
+                <p class="step-subtitle">Choose every skill area that sparks your curiosity.</p>
+                <div class="illustration"><img src="{{ asset('Images/Skills you want to learn.png') }}" alt="Skills you want to learn"></div>
+                <div class="skills-grid" data-skill-pager>
+                    @foreach (($skill_options ?? []) as $skill)
+                        <label class="skill-option" data-skill-option>
+                            <input type="checkbox" name="skills_want[]" value="{{ $skill }}" @checked(in_array($skill, (array) old('skills_want', []), true))>
+                            <span class="skill-bubble">{{ $skill }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                <button class="more-skills" type="button" data-more-skills>More +</button>
+                <p class="skills-count" data-skill-count aria-live="polite"></p>
+            </section>
+
+            <section class="step-panel" data-step="7" hidden>
+                <h1 class="step-title">What skills do you already have?</h1>
+                <p class="step-subtitle">Choose every skill you have some experience with.</p>
+                <div class="illustration"><img src="{{ asset('Images/Skills you already have.png') }}" alt="Skills you already have"></div>
+                <div class="skills-grid" data-skill-pager>
+                    @foreach (($skill_options ?? []) as $skill)
+                        <label class="skill-option" data-skill-option>
+                            <input type="checkbox" name="skills_have[]" value="{{ $skill }}" @checked(in_array($skill, (array) old('skills_have', []), true))>
+                            <span class="skill-bubble">{{ $skill }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                <button class="more-skills" type="button" data-more-skills>More +</button>
+                <p class="skills-count" data-skill-count aria-live="polite"></p>
+            </section>
+
+            <section class="step-panel" data-step="8" hidden>
+                <h1 class="step-title">What do you want to become?</h1>
+                <p class="step-subtitle">Tell us about the career goal you’re working toward.</p>
+                <div class="illustration"><img src="{{ asset('Images/Career goal.png') }}" alt="Career goal"></div>
+                <div>
+                    <label class="field-label" for="career_goal">Career goal</label>
+                    <select class="field-control career-goal-control" id="career_goal" name="career_goal" data-required>
+                        <option value="">Select a career goal</option>
+                        @foreach (($career_options ?? []) as $career)
+                            <option value="{{ $career }}" @selected(old('career_goal') === $career)>{{ $career }}</option>
+                        @endforeach
+                    </select>
+                    <div class="other-school" id="other-career-wrap" @if(old('career_goal') !== 'Other') hidden @endif>
+                        <label class="field-label" for="career_goal_other">Enter your career goal</label>
+                        <input class="field-control career-goal-control" id="career_goal_other" name="career_goal_other" type="text" maxlength="255" placeholder="e.g. Architect" value="{{ old('career_goal_other') }}" data-required-when="other-career">
+                    </div>
+                </div>
+            </section>
+
             <div class="wizard-actions">
                 <button class="wizard-button secondary" type="button" id="previous-step" hidden>Back</button>
                 <div class="right-actions">
@@ -213,6 +213,8 @@
         (function () {
             const form = document.getElementById('student-onboarding-form');
             const steps = Array.from(form.querySelectorAll('[data-step]'));
+            const educationSelect = document.getElementById('education');
+            const schoolStep = steps.find(step => step.dataset.step === '4');
             const backButton = document.getElementById('previous-step');
             const nextButton = document.getElementById('next-step');
             const finishButton = document.getElementById('finish-step');
@@ -226,7 +228,6 @@
             const barangaySelect = document.getElementById('address_barangay');
             const addressStatus = document.getElementById('address-status');
             const addressRetry = document.getElementById('address-retry');
-            const totalSteps = steps.length;
             let current = 0;
             let provincesLoaded = false;
             let provincesLoading = false;
@@ -236,6 +237,13 @@
                 barangay: @json(old('address_barangay')),
             };
             const serverErrors = @json($errors->keys());
+
+            function getActiveStepIndices() {
+                const skipSchoolStep = educationSelect.value === 'No formal schooling';
+                return steps
+                    .map((_, index) => index)
+                    .filter(index => !skipSchoolStep || steps[index] !== schoolStep);
+            }
 
             function setLocationOptions(select, locations, placeholder) {
                 select.replaceChildren(new Option(placeholder, ''));
@@ -355,7 +363,7 @@
                 const other = document.getElementById('school_other');
                 const shown = school.value === 'Other';
                 wrapper.hidden = !shown;
-                other.required = shown && !steps[2].hidden;
+                other.required = shown && !steps[4].hidden;
             }
 
             function careerOtherState() {
@@ -364,7 +372,7 @@
                 const other = document.getElementById('career_goal_other');
                 const shown = career.value === 'Other';
                 wrapper.hidden = !shown;
-                other.required = shown && !steps[7].hidden;
+                other.required = shown && !steps[8].hidden;
             }
 
             function mainGoalOtherState() {
@@ -373,11 +381,17 @@
                 const other = document.getElementById('main_goal_other');
                 const shown = selectedGoal?.value === 'Other';
                 wrapper.hidden = !shown;
-                other.required = shown && !steps[8].hidden;
+                other.required = shown && !steps[0].hidden;
             }
 
             function showStep(index) {
+                const activeStepIndices = getActiveStepIndices();
+                if (!activeStepIndices.includes(index)) {
+                    index = activeStepIndices.find(activeIndex => activeIndex > index)
+                        ?? activeStepIndices[activeStepIndices.length - 1];
+                }
                 current = index;
+                const progressIndex = activeStepIndices.indexOf(current);
                 steps.forEach((step, i) => {
                     step.hidden = i !== current;
                     step.querySelectorAll('[data-required]').forEach(control => {
@@ -396,16 +410,17 @@
                 schoolOtherState();
                 careerOtherState();
                 mainGoalOtherState();
-                backButton.hidden = current === 0;
-                nextButton.hidden = current === totalSteps - 1;
-                finishButton.hidden = current !== totalSteps - 1;
-                finishNote.hidden = current !== totalSteps - 1;
-                const percent = Math.round(((current + 1) / totalSteps) * 100);
+                backButton.hidden = progressIndex === 0;
+                nextButton.hidden = progressIndex === activeStepIndices.length - 1;
+                finishButton.hidden = progressIndex !== activeStepIndices.length - 1;
+                finishNote.hidden = progressIndex !== activeStepIndices.length - 1;
+                const percent = Math.round(((progressIndex + 1) / activeStepIndices.length) * 100);
                 progressFill.style.width = percent + '%';
-                stepCount.textContent = 'Step ' + (current + 1) + ' of ' + totalSteps;
+                stepCount.textContent = 'Step ' + (progressIndex + 1) + ' of ' + activeStepIndices.length;
                 percentText.textContent = percent + '% complete';
-                progressTrack.setAttribute('aria-valuenow', current + 1);
-                if (current === 4) {
+                progressTrack.setAttribute('aria-valuemax', activeStepIndices.length);
+                progressTrack.setAttribute('aria-valuenow', progressIndex + 1);
+                if (current === 5) {
                     loadProvinces();
                 }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -482,9 +497,17 @@
                     loadCities();
                 }
             });
-            backButton.addEventListener('click', () => showStep(Math.max(0, current - 1)));
+            backButton.addEventListener('click', () => {
+                const activeStepIndices = getActiveStepIndices();
+                const progressIndex = activeStepIndices.indexOf(current);
+                showStep(activeStepIndices[Math.max(0, progressIndex - 1)]);
+            });
             nextButton.addEventListener('click', () => {
-                if (stepIsValid(steps[current])) showStep(Math.min(totalSteps - 1, current + 1));
+                const activeStepIndices = getActiveStepIndices();
+                const progressIndex = activeStepIndices.indexOf(current);
+                if (stepIsValid(steps[current])) {
+                    showStep(activeStepIndices[Math.min(activeStepIndices.length - 1, progressIndex + 1)]);
+                }
             });
             form.addEventListener('submit', function (event) {
                 document.getElementById('address').value = [
@@ -492,17 +515,22 @@
                     citySelect.value,
                     provinceSelect.value,
                 ].filter(Boolean).join(', ');
-                for (let i = 0; i < totalSteps; i++) {
-                    steps[i].querySelectorAll('[data-required]').forEach(control => { control.required = true; });
+                const activeStepIndices = getActiveStepIndices();
+                for (let i = 0; i < steps.length; i++) {
+                    const isActiveStep = activeStepIndices.includes(i);
+                    steps[i].querySelectorAll('[data-required]').forEach(control => { control.required = isActiveStep; });
                     steps[i].querySelectorAll('[data-required-when="other-school"]').forEach(control => {
-                        control.required = document.getElementById('school').value === 'Other';
+                        control.required = isActiveStep && document.getElementById('school').value === 'Other';
                     });
                     steps[i].querySelectorAll('[data-required-when="other-career"]').forEach(control => {
-                        control.required = document.getElementById('career_goal').value === 'Other';
+                        control.required = isActiveStep && document.getElementById('career_goal').value === 'Other';
                     });
                     steps[i].querySelectorAll('[data-required-when="other-main-goal"]').forEach(control => {
-                        control.required = form.querySelector('input[name="main_goal"]:checked')?.value === 'Other';
+                        control.required = isActiveStep && form.querySelector('input[name="main_goal"]:checked')?.value === 'Other';
                     });
+                    if (!isActiveStep) {
+                        continue;
+                    }
                     if (!steps[i].checkValidity()) {
                         event.preventDefault();
                         showStep(i);
