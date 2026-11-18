@@ -980,6 +980,12 @@
             event.preventDefault();
             var kind = list.dataset.orderKind;
             var orderedItems = Array.from(list.querySelectorAll(':scope > [data-order-item]'));
+            if (kind === 'module-items') {
+                orderedItems.forEach(function (item, index) {
+                    var number = item.querySelector('.module-content-number');
+                    if (number) number.textContent = String(index + 1).padStart(2, '0');
+                });
+            }
             queuedItems = kind === 'assessments' || kind === 'module-items'
                 ? orderedItems.map(function (item) { return { type: item.dataset.orderType, id: Number(item.dataset.orderId) }; })
                 : orderedItems.map(function (item) { return Number(item.dataset.orderId); });
@@ -1005,6 +1011,11 @@
         var opening = box.style.display === 'none' || box.style.display === '';
         box.style.display = opening ? 'flex' : 'none';
         if (opening) {
+            var moduleBody = document.getElementById('module-body-' + moduleIdx);
+            var moduleToggle = moduleBody?.parentElement.querySelector('.module-collapse-toggle');
+            if (moduleBody?.hidden && moduleToggle) {
+                toggleModuleCollapse(moduleIdx, moduleToggle);
+            }
             var first = box.querySelector('input[name="module_title"]');
             if (first) first.focus();
         }
