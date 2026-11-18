@@ -303,7 +303,7 @@ class FacultyController extends Controller
             })
             ->when($statusFilter !== '', function ($query) use ($statusFilter): void {
                 match ($statusFilter) {
-                    'completed' => $query->where('completion_status', MicrocredentialCompletionService::STATUS_COMPLETED)->where('faculty_verification_status', 'verified'),
+                    'completed' => $query->where('completion_status', MicrocredentialCompletionService::STATUS_COMPLETED),
                     'review_pending' => $query->where(function ($statusQuery): void {
                         $statusQuery->where(function ($reviewQuery): void {
                             $reviewQuery->where('completion_status', MicrocredentialCompletionService::STATUS_AWAITING_FACULTY_VERIFICATION)
@@ -544,7 +544,7 @@ class FacultyController extends Controller
             ->with('user')
             ->when($statusFilter !== '', function ($query) use ($statusFilter): void {
                 match ($statusFilter) {
-                    'completed' => $query->where('completion_status', MicrocredentialCompletionService::STATUS_COMPLETED)->where('faculty_verification_status', 'verified'),
+                    'completed' => $query->where('completion_status', MicrocredentialCompletionService::STATUS_COMPLETED),
                     'review_pending' => $query->where('completion_status', MicrocredentialCompletionService::STATUS_AWAITING_FACULTY_VERIFICATION)->whereIn('faculty_verification_status', ['pending', 'not_required']),
                     'rejected' => $query->where('faculty_verification_status', 'rejected'),
                     'in_progress' => $query->where('completion_status', MicrocredentialCompletionService::STATUS_IN_PROGRESS)->where('faculty_verification_status', '!=', 'rejected'),

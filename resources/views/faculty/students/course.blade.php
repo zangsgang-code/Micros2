@@ -297,6 +297,8 @@
                         <td class="empty-cell" colspan="6">
                             @if($filter === 'needs_review')
                                 No learners are waiting for faculty verification in this course.
+                            @elseif($statusFilter !== '' || $search !== '')
+                                No students match the selected filters.
                             @else
                                 No students are enrolled in this course yet.
                             @endif

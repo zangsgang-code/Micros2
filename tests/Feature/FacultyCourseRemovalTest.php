@@ -144,3 +144,60 @@ test('faculty student roster supports search, alphabetical sorting, and removal 
         ]), false)
         ->assertDontSee('student-remove-button');
 });
+
+test('completed roster filter includes courses where faculty verification is not required', function () {
+    $faculty = User::factory()->faculty()->create();
+    $course = makeCourseForFacultyRemoval($faculty, 'Completed Filter Test');
+    $completedStudent = User::factory()->create(['first_name' => 'Completed']);
+    $inProgressStudent = User::factory()->create(['first_name' => 'In Progress']);
+
+    Enrollment::create([
+        'user_id' => $completedStudent->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+        'completion_status' => 'completed',
+        'faculty_verification_status' => 'not_required',
+        'academic_unit_confirmation_status' => 'confirmed',
+    ]);
+    enrollStudentForFacultyRemoval($course, $inProgressStudent);
+
+    $this->actingAs($faculty);
+
+    $this->get(route('faculty.students.course', [
+        'id' => $course->id,
+        'filter' => 'all',
+        'status' => 'completed',
+    ]))
+        ->assertOk()
+        ->assertSee($completedStudent->name)
+        ->assertDontSee($inProgressStudent->name)
+        ->assertDontSee('No students match the selected filters.')
+        ->assertDontSee('No students are enrolled in this course yet.');
+
+    $exportResponse = $this->get(route('faculty.students.course.export', [
+        'id' => $course->id,
+        'format' => 'excel',
+        'status' => 'completed',
+    ]));
+
+    expect($exportResponse->streamedContent())
+        ->toContain($completedStudent->name);
+    expect($exportResponse->streamedContent())
+        ->not->toContain($inProgressStudent->name);
+});
+
+test('empty filtered student roster explains that no students match the filters', function () {
+    $faculty = User::factory()->faculty()->create();
+    $course = makeCourseForFacultyRemoval($faculty, 'Empty Completed Filter Test');
+    enrollStudentForFacultyRemoval($course, User::factory()->create());
+
+    $this->actingAs($faculty)
+        ->get(route('faculty.students.course', [
+            'id' => $course->id,
+            'filter' => 'all',
+            'status' => 'completed',
+        ]))
+        ->assertOk()
+        ->assertSee('No students match the selected filters.')
+        ->assertDontSee('No students are enrolled in this course yet.');
+});
