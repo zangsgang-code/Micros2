@@ -26,10 +26,14 @@
 <style>
     .up-ckeditor-wrapper {
         width: 100%;
+        min-width: 0;
+        max-width: 100%;
     }
 
     .up-ckeditor-wrapper .ck-editor {
         width: 100%;
+        min-width: 0;
+        max-width: 100%;
     }
 
     .up-ckeditor-wrapper .ck-editor__main > .ck-editor__editable {
@@ -154,6 +158,11 @@
     @media (max-width: 900px) {
         .up-ckeditor-wrapper .ck.ck-toolbar {
             flex-wrap: wrap;
+        }
+
+        .up-ckeditor-wrapper .ck.ck-toolbar.ck-toolbar_grouping > .ck-toolbar__items {
+            flex-wrap: wrap;
+            min-width: 0;
         }
     }
 </style>
