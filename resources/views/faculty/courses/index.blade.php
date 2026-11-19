@@ -541,6 +541,7 @@
                                 'choices' => array_values((array) ($question['choices'] ?? [])),
                                 'correct' => $type === 'True or False' ? ($question['tf_correct'] ?? null) : ($question['correct'] ?? null),
                                 'answer' => $question['answer'] ?? '',
+                                'alternative_answers' => array_values((array) ($question['alternative_answers'] ?? [])),
                                 'lock_choice_order' => ! empty($question['lock_choice_order']),
                                 'answered' => (bool) ($knownQuestions[(string) $questionId]['answered'] ?? false),
                             ];
@@ -1474,6 +1475,79 @@
         });
     }
 
+    /*
+     * Post the whole question bank as ONE JSON field ("sets_payload").
+     * Each question card has about ten inputs, and PHP silently drops every
+     * field past max_input_vars (1000 by default). With 100+ questions that
+     * cut off the Settings tab, so the server reported "The quiz title field
+     * is required." even though a title was entered. The server expands the
+     * payload back into the same sets[s][questions][q] shape it validates.
+     */
+    function readQuestionPayload(card) {
+        var idInput = card.querySelector(':scope > input[type="hidden"][name$="[id]"]');
+        var mcCorrect = card.querySelector('.q-mc input[type="radio"][name$="[correct]"]:checked');
+        var tfCorrect = card.querySelector('.q-tf input[type="radio"][name$="[tf_correct]"]:checked');
+        var lockOrder = card.querySelector('.lock-choice-order input[type="checkbox"]');
+        var question = {
+            id: idInput ? idInput.value : '',
+            text: card.querySelector('.question-input').value,
+            type: card.querySelector('select[name$="[type]"]').value,
+            points: card.querySelector('.points').value,
+            choices: Array.from(card.querySelectorAll('.q-mc .choices input[type="text"]')).map(function (input) { return input.value; }),
+            answer: card.querySelector('.fac-identification-answer').value,
+            alternative_answers: Array.from(card.querySelectorAll('.alternative-answer-input')).map(function (input) { return input.value; })
+        };
+        if (mcCorrect) question.correct = mcCorrect.value;
+        if (tfCorrect) question.tf_correct = tfCorrect.value;
+        if (lockOrder && lockOrder.checked) question.lock_choice_order = '1';
+        return question;
+    }
+
+    function serializeQuestionBank(form) {
+        var container = document.getElementById('questions');
+        if (!container) return;
+
+        var sets = setPanels().map(function (panel) {
+            var key = panel.dataset.setKey;
+            var field = function (name) {
+                var input = panel.querySelector('input[name="sets[' + key + '][' + name + ']"]');
+                return input ? input.value : '';
+            };
+            return {
+                id: field('id'),
+                name: field('name'),
+                position: field('position'),
+                questions: panelCards(panel).map(readQuestionPayload)
+            };
+        });
+
+        var payload = form.querySelector('input[name="sets_payload"]');
+        if (!payload) {
+            payload = document.createElement('input');
+            payload.type = 'hidden';
+            payload.name = 'sets_payload';
+            form.appendChild(payload);
+        }
+        payload.value = JSON.stringify(sets);
+        payload.disabled = false;
+
+        // Disabled fields are not submitted, so only the payload is posted.
+        container.querySelectorAll('input[name], select[name], textarea[name]').forEach(function (field) {
+            field.disabled = true;
+            field.dataset.disabledForPayload = '1';
+        });
+    }
+
+    // Undo serializeQuestionBank() (e.g. the page is restored with Back).
+    function restoreQuestionBankInputs(form) {
+        document.querySelectorAll('[data-disabled-for-payload="1"]').forEach(function (field) {
+            field.disabled = false;
+            delete field.dataset.disabledForPayload;
+        });
+        var payload = form.querySelector('input[name="sets_payload"]');
+        if (payload) payload.remove();
+    }
+
     function quizFormSnapshot(form) {
         syncQuizRichText(form);
         var values = [];
@@ -1570,7 +1644,13 @@
                 });
                 return;
             }
+            serializeQuestionBank(form);
             allowNavigation = true;
+        });
+        window.addEventListener('pageshow', function (event) {
+            if (!event.persisted) return;
+            restoreQuestionBankInputs(form);
+            allowNavigation = false;
         });
         window.addEventListener('beforeunload', function (event) {
             if (allowNavigation || quizFormSnapshot(form) === initialSnapshot) return;
