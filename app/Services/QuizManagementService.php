@@ -133,6 +133,8 @@ class QuizManagementService
     /** @param array{module_id: int|null, lesson_id: int|null, is_summative: bool} $scope */
     private function persist(Request $request, Course $course, array $scope, ?Quiz $targetQuiz = null, bool $createNew = false): bool
     {
+        $this->expandSetsPayload($request);
+
         $validated = validator(['quiz_title' => $request->input('quiz_title')], [
             'quiz_title' => ['required', 'string', 'max:255'],
         ])->validate();
@@ -208,6 +210,51 @@ class QuizManagementService
         $quiz->touch();
 
         return $questionsChanged;
+    }
+
+    /**
+     * The quiz builder posts its whole question bank as ONE JSON field,
+     * "sets_payload". Posting every card input separately (about ten per
+     * question) ran past PHP's max_input_vars limit (1000 by default) at
+     * roughly 100+ questions; PHP then silently drops every later field,
+     * which included quiz_title on the Settings tab ("The quiz title field
+     * is required." even though a title was entered) and could also lose
+     * questions.
+     *
+     * Expand the payload back into the nested sets[s][questions][q] shape so
+     * validation, error keys and old() repopulation behave exactly as before.
+     * Requests that still post sets[...] directly are left untouched.
+     */
+    private function expandSetsPayload(Request $request): void
+    {
+        if (! $request->exists('sets_payload')) {
+            return;
+        }
+
+        $payload = $request->input('sets_payload');
+        // Never flash the raw JSON back to the session; "sets" is flashed instead.
+        $request->offsetUnset('sets_payload');
+
+        $decoded = is_string($payload) && $payload !== '' ? json_decode($payload, true) : null;
+        if (! is_array($decoded)) {
+            throw ValidationException::withMessages([
+                'sets' => 'The questions could not be read. Reload the page and try saving again.',
+            ]);
+        }
+
+        $sets = [];
+        foreach (array_values($decoded) as $set) {
+            if (! is_array($set)) {
+                continue;
+            }
+            $set['questions'] = array_values(array_filter(
+                is_array($set['questions'] ?? null) ? $set['questions'] : [],
+                'is_array',
+            ));
+            $sets[] = $set;
+        }
+
+        $request->merge(['sets' => $sets]);
     }
 
     /**
