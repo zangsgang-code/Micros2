@@ -751,7 +751,13 @@
                 <div class="card-actions">
                     {{-- ✅ Manage → Managing Course screen for THIS course (same blade, manage mode) --}}
                     <a href="{{ route('faculty.courses.manage', $course->id ?? 1) }}" class="btn-action primary">Manage</a>
-                    <a href="{{ route('faculty.activities.reviews', $course->id ?? 1) }}" class="btn-action">Activity Reviews</a>
+                    @php($pendingReviewCount = (int) ($course->to_grade ?? 0))
+                    <a href="{{ route('faculty.activities.reviews', $course->id ?? 1) }}" class="btn-action{{ $pendingReviewCount > 0 ? ' has-pending-reviews' : '' }}" @if($pendingReviewCount > 0) aria-label="Activity Reviews: {{ $pendingReviewCount }} {{ Illuminate\Support\Str::plural('submission', $pendingReviewCount) }} {{ $pendingReviewCount === 1 ? 'needs' : 'need' }} grading" @endif>
+                        Activity Reviews
+                        @if($pendingReviewCount > 0)
+                            <span class="activity-review-count" aria-hidden="true">{{ $pendingReviewCount }}</span>
+                        @endif
+                    </a>
                 </div>
             </div>
         @empty

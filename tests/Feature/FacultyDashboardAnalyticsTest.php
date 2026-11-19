@@ -167,6 +167,13 @@ test('faculty dashboard grading count matches the assignment review queue', func
         'approval_status' => 'draft',
         'is_published' => false,
     ]);
+    $courseWithoutPendingReviews = Course::create([
+        'title' => 'No pending reviews course',
+        'slug' => Str::uuid()->toString(),
+        'created_by' => $faculty->id,
+        'approval_status' => 'draft',
+        'is_published' => false,
+    ]);
     $module = CourseModule::create([
         'course_id' => $course->id,
         'title' => 'Module one',
@@ -212,6 +219,15 @@ test('faculty dashboard grading count matches the assignment review queue', func
         ->assertSee('Assignments awaiting review', false)
         ->assertSee(route('faculty.activities.reviews', $course->id), false)
         ->assertViewHas('courses', fn ($courses) => $courses->firstWhere('id', $course->id)?->to_grade === 2);
+
+    $this->get(route('faculty.courses'))
+        ->assertOk()
+        ->assertSee('aria-label="Activity Reviews: 2 submissions need grading"', false)
+        ->assertSee('class="activity-review-count" aria-hidden="true">2</span>', false)
+        ->assertDontSee('activity-review-dot', false)
+        ->assertDontSee('aria-label="Activity Reviews: 0 submissions need grading"', false)
+        ->assertViewHas('courses', fn ($courses) => $courses->firstWhere('id', $course->id)?->to_grade === 2
+            && $courses->firstWhere('id', $courseWithoutPendingReviews->id)?->to_grade === 0);
 
     $this->get(route('faculty.activities.reviews', $course->id))
         ->assertOk()

@@ -397,6 +397,10 @@ var _curLessonEl   = null;
 var _curSidebarStepEl = null;
 var _curModIdx     = 0;
 var _curLesIdx     = 0;
+var _coursePlayerLocationKey = 'upskill:course-player:{{ (int) auth()->id() }}:{{ (int) $course->id }}';
+var _currentModuleItemUrl = null;
+var _finalExamResultState = null;
+var _currentQuizViewRetakeOnly = false;
 var _moduleScores  = {};         // { modIdx: stored score percentage } - replaced on retake
 var _moduleAnswers = {};         // { modIdx: { questionId: letter } } - current attempt only
 var _moduleReview  = {};         // { modIdx: { questionId: {answer, correct, correct_answer} } } - saved on submit for view-only replay
@@ -411,6 +415,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (_serverProgressPercent >= 100 && HAS_COURSE_REVIEW) {
         reportCourseCompletion(false);
     }
+    restoreCoursePlayerLocation();
 });
 
 /* -- Helpers ------------------------------------------------ */
@@ -670,7 +675,131 @@ function saveProgress(immediate) {
     return null;
 }
 
+function currentCoursePlayerLocation() {
+    const isViewVisible = function (id) {
+        const view = document.getElementById(id);
+        return !!view && window.getComputedStyle(view).display !== 'none';
+    };
+
+    if (isViewVisible('view-final-exam-result') && _finalExamResultState) {
+        return Object.assign({ type: 'final-exam-result' }, _finalExamResultState);
+    }
+    if (isViewVisible('view-final-exam-instructions')) {
+        return { type: 'final-exam-instructions', moduleIndex: _curModIdx };
+    }
+    if (isViewVisible('view-course-evaluation')) {
+        return { type: 'course-evaluation' };
+    }
+    if (isViewVisible('view-course-recap')) {
+        return { type: 'course-recap' };
+    }
+    if (isViewVisible('view-quiz')) {
+        return {
+            type: 'module-quiz',
+            moduleIndex: _curModIdx,
+            retakeOnly: _currentQuizViewRetakeOnly
+        };
+    }
+    if (isViewVisible('view-lesson')) {
+        if (_currentModuleItemUrl) {
+            return { type: 'module-item', url: _currentModuleItemUrl };
+        }
+        if (_curSidebarStepEl && _curSidebarStepEl.classList.contains('lesson-assessment-link')) {
+            return { type: 'module-item', url: _curSidebarStepEl.href };
+        }
+        if (_curLessonEl && _curLessonEl.id) {
+            return { type: 'lesson', elementId: _curLessonEl.id };
+        }
+    }
+    if (isViewVisible('view-welcome')) {
+        return { type: 'module-welcome', moduleIndex: _curModIdx };
+    }
+
+    return null;
+}
+
+function persistCoursePlayerLocation() {
+    const location = currentCoursePlayerLocation();
+    if (!location) return;
+
+    try {
+        sessionStorage.setItem(_coursePlayerLocationKey, JSON.stringify(location));
+    } catch (error) {
+        console.warn('Could not save the course player location in this tab.', error);
+    }
+}
+
+function restoreCoursePlayerLocation() {
+    let location;
+    try {
+        const savedLocation = sessionStorage.getItem(_coursePlayerLocationKey);
+        if (!savedLocation) return;
+        location = JSON.parse(savedLocation);
+    } catch (error) {
+        console.warn('Could not restore the course player location in this tab.', error);
+        return;
+    }
+
+    if (!location || typeof location !== 'object') return;
+
+    const moduleIndex = Number(location.moduleIndex);
+    const moduleGroup = Number.isInteger(moduleIndex) ? document.getElementById('mg-' + moduleIndex) : null;
+    switch (location.type) {
+        case 'module-welcome': {
+            if (moduleGroup && !moduleGroup.classList.contains('module-locked')) {
+                document.getElementById('mta-' + moduleIndex)?.click();
+            }
+            break;
+        }
+        case 'lesson': {
+            const lesson = typeof location.elementId === 'string'
+                ? document.getElementById(location.elementId)
+                : null;
+            if (lesson && lesson.classList.contains('lesson-item') && !isSidebarStepLocked(lesson)) {
+                lesson.click();
+            }
+            break;
+        }
+        case 'module-item': {
+            if (typeof location.url !== 'string' || !location.url) break;
+            const targetUrl = new URL(location.url, window.location.href).href;
+            const step = Array.from(document.querySelectorAll('.lesson-assessment-link'))
+                .find(function (link) { return link.href === targetUrl; });
+            if (step && !isSidebarStepLocked(step)) step.click();
+            break;
+        }
+        case 'module-quiz': {
+            const quizButton = document.getElementById('qbtn-' + moduleIndex);
+            if (!quizButton || quizButton.classList.contains('locked')) break;
+            if (location.retakeOnly) {
+                showQuizView(moduleIndex, false, true);
+            } else {
+                handleQuizClick(moduleIndex);
+            }
+            break;
+        }
+        case 'final-exam-instructions': {
+            const quizButton = document.getElementById('qbtn-' + moduleIndex);
+            if (quizButton && !quizButton.classList.contains('locked')) showFinalExamInstructions(moduleIndex);
+            break;
+        }
+        case 'final-exam-result': {
+            if (moduleGroup && typeof location.passed === 'boolean') {
+                showFinalExamResult(moduleIndex, location.passed, Number(location.score), Number(location.total));
+            }
+            break;
+        }
+        case 'course-recap':
+            openCourseRecap();
+            break;
+        case 'course-evaluation':
+            if (COURSE_EVALUATION_ELIGIBLE || HAS_COURSE_REVIEW) showCourseEvaluation();
+            break;
+    }
+}
+
 window.addEventListener('pagehide', function () {
+    persistCoursePlayerLocation();
     if (!_pendingQuizSubmit || !navigator.sendBeacon) return;
 
     var payload = {
@@ -901,6 +1030,7 @@ function syncCourseEvaluationUnlock() {
 }
 
 function showCourseEvaluation() {
+    _currentModuleItemUrl = null;
     hideAllViews();
     document.getElementById('view-course-evaluation').style.display = 'flex';
     scrollLearningTop();
@@ -916,6 +1046,8 @@ function showFinalExamInstructions(modIdx) {
         return;
     }
 
+    _currentModuleItemUrl = null;
+    _finalExamResultState = null;
     _curModIdx = modIdx;
     document.getElementById('final-exam-title').textContent = quiz.title || 'Final Exam';
     const instructions = document.getElementById('final-exam-instructions-content');
@@ -932,6 +1064,9 @@ function startFinalExam() {
 }
 
 function showFinalExamResult(modIdx, passed, score, total) {
+    _currentModuleItemUrl = null;
+    _finalExamResultState = { moduleIndex: modIdx, passed: !!passed, score: Number(score), total: Number(total) };
+    _currentQuizViewRetakeOnly = false;
     const resultView = document.getElementById('view-final-exam-result');
     const resultMessage = document.getElementById('final-exam-result-message');
     const resultScore = document.getElementById('final-exam-result-score');
@@ -963,6 +1098,7 @@ function showFinalExamResult(modIdx, passed, score, total) {
 }
 
 function openCourseRecap() {
+    _currentModuleItemUrl = null;
     const dialog = document.getElementById('course-completion-dialog');
     if (dialog && dialog.open) dialog.close();
     renderCourseRecap();
@@ -1098,6 +1234,7 @@ function showModuleWelcome(title, lessonCount, modCount, assessmentCount, modIdx
         alert('Complete the previous module and its assessment first.');
         return;
     }
+    _currentModuleItemUrl = null;
     document.querySelectorAll('.module-title-area').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.lesson-item').forEach(el => el.classList.remove('active'));
     const ta = document.getElementById('mta-' + modIdx);
@@ -1500,6 +1637,7 @@ function loadLesson(type, title, desc, duration, modIdx, lesIdx, content) {
     // lessons, so run it first; the disabled-step check is a silent backstop.
     if (!checkLessonAccess(modIdx, lesIdx)) return;
     if (isSidebarStepLocked(step)) return;
+    _currentModuleItemUrl = null;
     _prepLesson(title, desc, duration, modIdx, lesIdx, content);
     syncSidebarStepAvailability();
     startLessonTracking();
@@ -1521,6 +1659,7 @@ function openLessonAssessmentFromSidebar(modIdx, lessonIdx, assessmentUrl) {
         _curSidebarStepEl = assessmentLink;
         updateLearningStepNavigation();
     }
+    _currentModuleItemUrl = assessmentUrl;
     showInlineAssessmentLoading(assessmentLink ? getLearningStepTitle(assessmentLink) : 'assessment');
     continueLesson(assessmentUrl);
 }
@@ -1537,6 +1676,7 @@ function openModuleItemFromSidebar(event, assessmentUrl, title, modIdx, moduleOr
     }
     if (isSidebarStepLocked(target)) return;
 
+    _currentModuleItemUrl = assessmentUrl;
     _curModIdx = modIdx;
     _curLessonEl = null;
     _moduleContentContext = { modIdx: modIdx, moduleOrder: Number(moduleOrder), nextUrl: null, pendingReview: false, retryRequired: false };
@@ -2202,6 +2342,8 @@ function handleQuizClick(modIdx) {
         alert('No quiz has been added to this module yet.');
         return;
     }
+    _currentModuleItemUrl = null;
+    _finalExamResultState = null;
     // Already answered (passed OR failed) -> open read-only review.
     // A score is the only proof the student sat THIS version of the quiz.
     // When faculty edits a quiz the server drops the saved score, so the
@@ -2223,6 +2365,7 @@ function handleQuizClick(modIdx) {
 ------------------------------------------------------------- */
 function showQuizView(modIdx, viewOnly, retakeOnly, serverStarted) {
     _curModIdx = modIdx;
+    _currentQuizViewRetakeOnly = retakeOnly === true;
     const data = QUIZ_DATA[modIdx];
     if (!data) return;
     const nextModuleButton = document.getElementById('btn-next-module');
@@ -2568,6 +2711,7 @@ function applyServerQuizSubmission(modIdx, submission) {
     const data = QUIZ_DATA[modIdx];
     if (!data) return;
 
+    _currentQuizViewRetakeOnly = false;
     _moduleScores[modIdx] = Number(submission.score || 0);
     _moduleReview[modIdx] = submission.answers || {};
     if (Array.isArray(submission.review_questions)) {

@@ -77,19 +77,7 @@ class FacultyController extends Controller
         $courseIds = $courses->modelKeys();
         $ownedCourseIds = $courseIds ?: [0];
 
-        $toGradeByCourse = DB::table('lesson_activity_submissions')
-            ->join('lesson_activities', 'lesson_activities.id', '=', 'lesson_activity_submissions.lesson_activity_id')
-            ->leftJoin('course_lessons', 'course_lessons.id', '=', 'lesson_activities.lesson_id')
-            ->leftJoin('course_modules', 'course_modules.id', '=', 'lesson_activities.module_id')
-            ->where(function ($query) use ($ownedCourseIds): void {
-                $query->whereIn('course_lessons.course_id', $ownedCourseIds)->orWhereIn('course_modules.course_id', $ownedCourseIds);
-            })
-            ->where('lesson_activities.is_active', true)
-            ->where('lesson_activities.activity_type', 'assignment')
-            ->where('lesson_activity_submissions.status', 'submitted')
-            ->groupByRaw('COALESCE(course_lessons.course_id, course_modules.course_id)')
-            ->selectRaw('COALESCE(course_lessons.course_id, course_modules.course_id) as course_id, COUNT(*) as submission_count')
-            ->pluck('submission_count', 'course_id');
+        $toGradeByCourse = $this->pendingActivityReviewCounts($ownedCourseIds);
 
         $verificationCourseIds = $courses
             ->filter(fn (Course $course) => $course->requires_faculty_verification)
@@ -1168,10 +1156,13 @@ class FacultyController extends Controller
     {
         $auth = Auth::user();
 
-        $courses = Course::where('created_by', $auth->id)
+        $courseModels = Course::where('created_by', $auth->id)
             ->withCount(['modules', 'lessons', 'enrollments'])
             ->latest()
-            ->get()
+            ->get();
+        $pendingReviewCounts = $this->pendingActivityReviewCounts($courseModels->modelKeys());
+
+        $courses = $courseModels
             ->map(fn (Course $c) => (object) [
                 'id' => $c->id,
                 'title' => $c->title,
@@ -1187,6 +1178,7 @@ class FacultyController extends Controller
                 'students_count' => (int) $c->enrollments_count,
                 'modules_count' => (int) $c->modules_count,
                 'lessons_count' => (int) $c->lessons_count,
+                'to_grade' => (int) ($pendingReviewCounts[$c->id] ?? 0),
                 'thumbnail_url' => $c->thumbnail_url,
             ])->values();
 
@@ -3105,6 +3097,25 @@ QUIK;
     private function ownedCourse(int $id): Course
     {
         return Course::where('created_by', Auth::id())->findOrFail($id);
+    }
+
+    private function pendingActivityReviewCounts(array $courseIds): Collection
+    {
+        $courseIds = $courseIds ?: [0];
+
+        return DB::table('lesson_activity_submissions')
+            ->join('lesson_activities', 'lesson_activities.id', '=', 'lesson_activity_submissions.lesson_activity_id')
+            ->leftJoin('course_lessons', 'course_lessons.id', '=', 'lesson_activities.lesson_id')
+            ->leftJoin('course_modules', 'course_modules.id', '=', 'lesson_activities.module_id')
+            ->where(function ($query) use ($courseIds): void {
+                $query->whereIn('course_lessons.course_id', $courseIds)->orWhereIn('course_modules.course_id', $courseIds);
+            })
+            ->where('lesson_activities.is_active', true)
+            ->where('lesson_activities.activity_type', 'assignment')
+            ->where('lesson_activity_submissions.status', 'submitted')
+            ->groupByRaw('COALESCE(course_lessons.course_id, course_modules.course_id)')
+            ->selectRaw('COALESCE(course_lessons.course_id, course_modules.course_id) as course_id, COUNT(*) as submission_count')
+            ->pluck('submission_count', 'course_id');
     }
 
     /** Keep submitted or published courses private when their content changes. */
