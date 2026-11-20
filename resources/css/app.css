@@ -4612,13 +4612,344 @@ body.app-shell.page-lesson-activity .activity-card {
     margin-bottom: 18px;
 }
 
-body.app-shell.page-lesson-activity .activity-note {
-    border-radius: 10px;
+body.app-shell.page-lesson-activity .activity-shell {
+    display: grid;
+    width: calc(100% - 32px);
+    max-width: 860px;
+    gap: 16px;
+    margin: clamp(24px, 5vw, 56px) auto;
+    padding: 0;
+}
+
+body.app-shell.page-lesson-activity .activity-back-link {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 8px;
+    color: var(--ui-brand-blue);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+body.app-shell.page-lesson-activity .activity-back-link:hover {
+    color: var(--ui-brand-blue-hover);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+body.app-shell.page-lesson-activity .activity-card {
+    margin: 0;
+    padding: clamp(20px, 4vw, 32px);
+}
+
+body.app-shell.page-lesson-activity .activity-overview {
+    display: grid;
+    gap: 16px;
+}
+
+body.app-shell.page-lesson-activity .activity-eyebrow {
+    margin: 0;
+    color: var(--ui-text-muted);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+body.app-shell.page-lesson-activity .activity-context {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin: -10px 0 0;
+    color: var(--ui-text-muted);
+    font-size: 14px;
+}
+
+body.app-shell.page-lesson-activity .activity-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+body.app-shell.page-lesson-activity .activity-heading h1 {
+    margin: 0;
+    color: var(--assessment-ink);
+    font-size: clamp(24px, 4vw, 32px);
+    line-height: 1.2;
+}
+
+body.app-shell.page-lesson-activity .activity-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+body.app-shell.page-lesson-activity .activity-meta span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    border: 1px solid var(--assessment-card-border);
+    border-radius: 999px;
+    background: #f8fafc;
+    padding: 4px 10px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+body.app-shell.page-lesson-activity .activity-status-pill {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    min-height: 28px;
+    border-radius: 999px;
+    background: #e8eefc;
+    padding: 5px 11px;
+    color: #1d3b8f;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+body.app-shell.page-lesson-activity .activity-status-pill.is-passed,
+body.app-shell.page-lesson-activity .activity-status-pill.is-completed {
+    background: var(--assessment-pass-background);
+    color: var(--assessment-pass-color);
+}
+
+body.app-shell.page-lesson-activity .activity-status-pill.is-needs-revision {
+    background: #fff3d6;
+    color: #8a4b08;
+}
+
+body.app-shell.page-lesson-activity .activity-instructions {
+    border-top: 1px solid var(--assessment-divider);
+    padding-top: 16px;
+}
+
+body.app-shell.page-lesson-activity .activity-instructions h2,
+body.app-shell.page-lesson-activity .activity-form-heading h2 {
+    margin: 0 0 8px;
+    color: var(--assessment-ink);
+    font-size: 16px;
+}
+
+body.app-shell.page-lesson-activity .activity-instructions .ck-content > :last-child {
+    margin-bottom: 0;
+}
+
+body.app-shell.page-lesson-activity .activity-feedback {
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding: 16px 18px;
+}
+
+body.app-shell.page-lesson-activity .activity-feedback > :first-child {
+    display: block;
+    margin: 0 0 4px;
+    font-size: 15px;
+}
+
+body.app-shell.page-lesson-activity .activity-feedback p {
+    margin: 4px 0 0;
+    line-height: 1.55;
+}
+
+body.app-shell.page-lesson-activity .activity-feedback a {
+    display: inline-flex;
+    margin: 10px 12px 0 0;
+    color: inherit;
+    font-weight: 800;
+    text-underline-offset: 3px;
+}
+
+body.app-shell.page-lesson-activity .activity-feedback--success {
+    border-color: #bbf7d0;
+    background: var(--assessment-pass-background);
+    color: var(--assessment-pass-color);
+}
+
+body.app-shell.page-lesson-activity .activity-feedback--pending,
+body.app-shell.page-lesson-activity .activity-feedback--info {
+    border-color: #cfe0ff;
     background: var(--assessment-note-background);
+    color: #1e3a8a;
+}
+
+body.app-shell.page-lesson-activity .activity-feedback--warning {
+    border-color: #fed7aa;
+    background: var(--assessment-fail-background);
+    color: var(--assessment-fail-color);
+}
+
+body.app-shell.page-lesson-activity .activity-form {
+    display: grid;
+    gap: 12px;
+    border-top: 1px solid var(--assessment-divider);
+    padding-top: 20px;
+}
+
+body.app-shell.page-lesson-activity .activity-form-heading p {
+    margin: 0;
+    color: var(--ui-text-muted);
+    font-size: 14px;
+}
+
+body.app-shell.page-lesson-activity .activity-form label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+    color: var(--assessment-ink);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+body.app-shell.page-lesson-activity .activity-form label span {
+    color: var(--ui-text-muted);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+body.app-shell.page-lesson-activity .activity-input {
+    min-height: 150px;
+    resize: vertical;
+    line-height: 1.55;
+}
+
+body.app-shell.page-lesson-activity .activity-form input[type="file"] {
+    width: 100%;
+    border: 1px dashed var(--assessment-field-border);
+    border-radius: 10px;
+    background: #f8fafc;
     padding: 12px;
+    color: var(--ui-text-body);
+}
+
+body.app-shell.page-lesson-activity .activity-submit {
+    width: fit-content;
+    cursor: pointer;
+    transition: background-color .15s ease, transform .15s ease;
+}
+
+body.app-shell.page-lesson-activity .activity-submit:hover {
+    background: var(--ui-brand-blue-hover);
+}
+
+body.app-shell.page-lesson-activity .activity-history-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+body.app-shell.page-lesson-activity .activity-history-heading h2 {
+    margin: 0;
+    color: var(--assessment-ink);
+    font-size: 19px;
+}
+
+body.app-shell.page-lesson-activity .activity-history-heading p {
+    margin: 5px 0 0;
+    color: var(--ui-text-muted);
+    font-size: 13px;
+}
+
+body.app-shell.page-lesson-activity .activity-history-heading > span {
+    color: var(--ui-text-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+body.app-shell.page-lesson-activity .activity-row {
+    scroll-margin-top: 24px;
+    padding: 18px 0;
+}
+
+body.app-shell.page-lesson-activity .activity-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+body.app-shell.page-lesson-activity .activity-attempt-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+}
+
+body.app-shell.page-lesson-activity .activity-attempt-heading > strong {
+    color: var(--assessment-ink);
+    font-size: 15px;
+}
+
+body.app-shell.page-lesson-activity .activity-attempt-heading time {
+    margin-left: auto;
+    color: var(--ui-text-muted);
+    font-size: 12px;
+}
+
+body.app-shell.page-lesson-activity .activity-score {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 14px;
+    border-radius: 10px;
+    background: #f8fafc;
+    padding: 9px 12px;
+    color: var(--ui-text-muted);
+    font-size: 13px;
+}
+
+body.app-shell.page-lesson-activity .activity-score strong {
+    color: var(--assessment-ink);
+    font-size: 16px;
+}
+
+body.app-shell.page-lesson-activity .activity-score strong span {
+    color: var(--ui-text-muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+body.app-shell.page-lesson-activity .activity-review-feedback {
+    margin-top: 12px;
+    border-left: 3px solid #93a8dc;
+    background: #f8fafc;
+    padding: 10px 12px;
+}
+
+body.app-shell.page-lesson-activity .activity-review-feedback strong {
+    color: var(--ui-text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+body.app-shell.page-lesson-activity .activity-review-feedback p {
+    margin: 4px 0 0;
+    color: var(--assessment-ink);
+    line-height: 1.5;
+}
+
+body.app-shell.page-lesson-activity .activity-file-link {
+    display: inline-flex;
+    margin-top: 12px;
+    color: var(--ui-brand-blue);
+    font-size: 13px;
+    font-weight: 700;
+    text-underline-offset: 3px;
 }
 
 body.app-shell.page-lesson-activity .activity-error {
+    border-radius: 10px;
+    background: var(--assessment-error-background);
+    padding: 12px 14px;
     color: var(--assessment-error-color);
 }
 
@@ -4636,6 +4967,22 @@ body.app-shell.page-quiz #shared-back-to-top,
 body.app-shell.page-lesson-activity #shared-back-to-top {
     visibility: hidden;
     pointer-events: none;
+}
+
+@media (max-width: 600px) {
+    body.app-shell.page-lesson-activity .activity-heading {
+        flex-direction: column-reverse;
+        align-items: flex-start;
+    }
+
+    body.app-shell.page-lesson-activity .activity-attempt-heading time {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    body.app-shell.page-lesson-activity .activity-submit {
+        width: 100%;
+    }
 }
 }
 

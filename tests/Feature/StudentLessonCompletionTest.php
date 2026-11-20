@@ -5,6 +5,7 @@ use App\Models\CourseLesson;
 use App\Models\CourseModule;
 use App\Models\Enrollment;
 use App\Models\LessonActivity;
+use App\Models\LessonActivitySubmission;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use App\Models\User;
@@ -220,6 +221,57 @@ test('the course player can open the selected reflection and lesson quiz from th
     $quizResponse = $this->getJson(route('quiz.show', $quiz->id))
         ->assertOk();
     expect($quizResponse->json('html'))->toContain('Lesson Quiz');
+});
+
+test('passed module assignments show their result without pending-review guidance', function () {
+    $faculty = User::factory()->faculty()->create();
+    $student = User::factory()->create();
+    $course = Course::create([
+        'title' => 'Passed assignment course',
+        'slug' => 'passed-assignment-'.uniqid(),
+        'created_by' => $faculty->id,
+        'is_published' => true,
+    ]);
+    $module = CourseModule::create([
+        'course_id' => $course->id,
+        'title' => 'Module One',
+        'order' => 1,
+    ]);
+    $activity = LessonActivity::create([
+        'module_id' => $module->id,
+        'module_order' => 1,
+        'title' => 'Module assignment',
+        'activity_type' => 'assignment',
+        'is_required' => true,
+        'max_points' => 10,
+        'is_active' => true,
+    ]);
+    Enrollment::create([
+        'user_id' => $student->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+        'progress_percent' => 0,
+        'progress_state' => [],
+    ]);
+    LessonActivitySubmission::create([
+        'lesson_activity_id' => $activity->id,
+        'user_id' => $student->id,
+        'attempt_number' => 1,
+        'response_text' => 'My response',
+        'status' => 'passed',
+        'score' => 10,
+        'feedback' => 'Well done.',
+        'submitted_at' => now(),
+        'reviewed_at' => now(),
+    ]);
+
+    $this->actingAs($student)
+        ->get(route('lesson-activities.show', $activity->id))
+        ->assertOk()
+        ->assertSee('Assignment passed')
+        ->assertSee('Required for module completion')
+        ->assertSee('Instructor feedback')
+        ->assertDontSee('waiting for faculty review');
 });
 
 test('lesson quiz header shows the number of questions in the attempt instead of the pool size', function () {
