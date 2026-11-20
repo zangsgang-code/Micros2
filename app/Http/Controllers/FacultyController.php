@@ -2929,7 +2929,6 @@ QUIK;
         return redirect()->route('faculty.activities.reviews', [
             'id' => $course->id,
             'status' => 'pending',
-            'activity_id' => $activity->id,
         ])->with('success', 'Submission reviewed and feedback saved.');
     }
 

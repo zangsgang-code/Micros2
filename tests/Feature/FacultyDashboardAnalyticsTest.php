@@ -234,6 +234,78 @@ test('faculty dashboard grading count matches the assignment review queue', func
         ->assertViewHas('pendingCount', 2);
 });
 
+test('reviewing an assignment returns to the full pending queue on refresh', function () {
+    $faculty = User::factory()->faculty()->create();
+    $student = User::factory()->create();
+    $course = Course::create([
+        'title' => 'Assignment review course',
+        'slug' => Str::uuid()->toString(),
+        'created_by' => $faculty->id,
+        'approval_status' => 'draft',
+        'is_published' => false,
+    ]);
+    $module = CourseModule::create([
+        'course_id' => $course->id,
+        'title' => 'Module one',
+    ]);
+    $lesson = CourseLesson::create([
+        'course_id' => $course->id,
+        'module_id' => $module->id,
+        'title' => 'Lesson one',
+    ]);
+    $reviewedActivity = LessonActivity::create([
+        'lesson_id' => $lesson->id,
+        'title' => 'Reviewed activity',
+        'activity_type' => 'assignment',
+        'is_active' => true,
+        'max_points' => 100,
+    ]);
+    $newActivity = LessonActivity::create([
+        'lesson_id' => $lesson->id,
+        'title' => 'New activity',
+        'activity_type' => 'assignment',
+        'is_active' => true,
+    ]);
+    $submission = LessonActivitySubmission::create([
+        'lesson_activity_id' => $reviewedActivity->id,
+        'user_id' => $student->id,
+        'attempt_number' => 1,
+        'status' => 'submitted',
+        'submitted_at' => now(),
+    ]);
+
+    $reviewResponse = $this->actingAs($faculty)
+        ->post(route('faculty.lesson-activity.review', [
+            $course->id,
+            $reviewedActivity->id,
+            $submission->id,
+        ]), [
+            'score' => 80,
+            'feedback' => 'Good work.',
+        ]);
+
+    $reviewResponse->assertRedirect(route('faculty.activities.reviews', [
+        'id' => $course->id,
+        'status' => 'pending',
+    ]));
+
+    LessonActivitySubmission::create([
+        'lesson_activity_id' => $newActivity->id,
+        'user_id' => $student->id,
+        'attempt_number' => 1,
+        'status' => 'submitted',
+        'submitted_at' => now(),
+    ]);
+
+    $this->get(route('faculty.activities.reviews', [
+        'id' => $course->id,
+        'status' => 'pending',
+    ]))
+        ->assertOk()
+        ->assertSee('New activity')
+        ->assertViewHas('pendingCount', 1);
+});
+
 test('faculty sidebar flags learners awaiting faculty verification', function () {
     $faculty = User::factory()->faculty()->create();
     $course = Course::create([
