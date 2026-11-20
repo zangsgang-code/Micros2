@@ -599,7 +599,7 @@
     :where(html[data-faculty-page="faculty-create"]) .layout{display:grid;grid-template-columns:264px 1fr;min-height:calc(100vh - 74px);align-items:start;}
     :where(html[data-faculty-page="faculty-create"]) .side-divider{border:none;border-top:1px solid rgba(255,255,255,0.25);margin:18px 6px;}
     :where(html[data-faculty-page="faculty-create"]) .main{min-width:0;width:100%;padding:32px 36px 24px;}
-    :where(html[data-faculty-page="faculty-create"]) .build-shell{width:100%;max-width:920px;margin-inline:auto;}
+    :where(html[data-faculty-page="faculty-create"]) .build-shell{width:100%;max-width:none;margin-inline:0;}
     :where(html[data-faculty-page="faculty-create"]) .build-form{min-width:0;font-family:Inter,Arial,sans-serif;font-size:14px;line-height:1.5;color:var(--f-text);}
     :where(html[data-faculty-page="faculty-create"]) .build-form button, :where(html[data-faculty-page="faculty-create"]) .build-form input, :where(html[data-faculty-page="faculty-create"]) .build-form select, :where(html[data-faculty-page="faculty-create"]) .build-form textarea{font:inherit;}
 
@@ -2029,7 +2029,7 @@
     :where(html[data-faculty-page="faculty-courses-create"]) .layout{display:grid;grid-template-columns:264px 1fr;min-height:calc(100vh - 74px);align-items:start;}
     :where(html[data-faculty-page="faculty-courses-create"]) .side-divider{border:none;border-top:1px solid rgba(255,255,255,0.25);margin:18px 6px;}
     :where(html[data-faculty-page="faculty-courses-create"]) .main{min-width:0;width:100%;padding:32px 36px 24px;}
-    :where(html[data-faculty-page="faculty-courses-create"]) .build-shell{width:100%;max-width:920px;margin-inline:auto;}
+    :where(html[data-faculty-page="faculty-courses-create"]) .build-shell{width:100%;max-width:none;margin-inline:0;}
     :where(html[data-faculty-page="faculty-courses-create"]) .build-form{min-width:0;font-family:Inter,Arial,sans-serif;font-size:14px;line-height:1.5;color:var(--f-text);}
     :where(html[data-faculty-page="faculty-courses-create"]) .build-form button, :where(html[data-faculty-page="faculty-courses-create"]) .build-form input, :where(html[data-faculty-page="faculty-courses-create"]) .build-form select, :where(html[data-faculty-page="faculty-courses-create"]) .build-form textarea{font:inherit;}
 
@@ -3118,7 +3118,7 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
     .faculty-sidebar-layout.sidebar-collapsed .side-link{justify-content:center;gap:0;padding-left:8px;padding-right:8px;}
     .faculty-sidebar-layout.sidebar-collapsed .side-label{width:0;opacity:0;}
     .faculty-sidebar-layout.sidebar-collapsed .sidebar-section-label{display:none;}
-    .faculty-sidebar-layout > .main{padding:28px 32px 48px;min-width:0;transition:padding .25s ease;}
+    .faculty-sidebar-layout > .main{padding:32px clamp(20px,3vw,44px) 56px;min-width:0;transition:padding .25s ease;}
     .faculty-sidebar-layout .page-head h1,.faculty-sidebar-layout .page-head h2{font-size:26px;}
     .faculty-sidebar-layout .page-head p{font-size:14px;}
     @media (max-width:1024px){
@@ -3133,7 +3133,6 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
         .faculty-sidebar .sidebar-section-label{display:none;}
         .faculty-sidebar .side-label,.faculty-sidebar-layout.sidebar-collapsed .side-label{width:auto;opacity:1;}
         .faculty-sidebar-layout.sidebar-collapsed .side-link{justify-content:flex-start;gap:15px;padding:10px 14px;}
-        .faculty-sidebar-layout > .main{padding:24px 22px 42px;}
     }
     /* Phones and tablets: the links move into the floating circle menu
        (built by components/responsive), so the horizontal bar is hidden. */
@@ -3142,6 +3141,7 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
         .layout.faculty-sidebar-layout{align-content:start;}
     }
 @media (max-width:640px){
+    .faculty-sidebar-layout > .main{padding:20px 14px 48px;}
     :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-panel--add{padding:18px 16px;}
 }
 

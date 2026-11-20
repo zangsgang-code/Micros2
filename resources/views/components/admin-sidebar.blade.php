@@ -215,6 +215,7 @@
         transition:
             background .15s ease,
             color .15s ease,
+            box-shadow .2s ease,
             transform .15s ease;
     }
 
@@ -240,6 +241,8 @@
     aside.shared-admin-sidebar .sb-item:not(.active):hover {
         background: var(--admin-hover) !important;
         color: var(--admin-hover-text) !important;
+        box-shadow: 0 10px 22px rgba(11, 27, 69, .14) !important;
+        transform: translateY(-3px) !important;
     }
 
     aside.shared-admin-sidebar .sb-item:not(.active):hover .sb-item-icon {
@@ -275,6 +278,17 @@
         border-radius: 0 8px 8px 0 !important;
     }
 
+    aside.shared-admin-sidebar .sb-item.active:hover {
+        box-shadow: 0 10px 22px rgba(11, 27, 69, .14) !important;
+        transform: translateY(-3px) !important;
+    }
+
+    aside.shared-admin-sidebar .sb-item:not(.active):active,
+    aside.shared-admin-sidebar .sb-item.active:active {
+        box-shadow: 0 2px 6px rgba(11, 27, 69, .12) !important;
+        transform: translateY(1px) scale(.98) !important;
+    }
+
     /* Blue highlight accent at the left edge. */
     aside.shared-admin-sidebar .sb-item.active::before {
         content: "" !important;
@@ -304,17 +318,34 @@
 
         width: calc(100% - var(--admin-sidebar-width)) !important;
 
+        max-width: 1280px !important;
+
+        margin-right: auto !important;
+
         min-width: 0 !important;
 
         box-sizing: border-box !important;
+
+        padding: 32px clamp(18px, 3vw, 40px) 56px !important;
     }
 
     /* Pages using a .wrap instead of .main */
 
     body:has(aside.shared-admin-sidebar) .wrap {
-        margin-left: calc(var(--admin-sidebar-width) + 30px) !important;
-        margin-right: 30px !important;
+        margin-left: var(--admin-sidebar-width) !important;
+        margin-right: 0 !important;
         max-width: none !important;
+        padding: 32px clamp(18px, 3vw, 40px) 56px !important;
+    }
+
+    body[data-admin-page="admin-courses-index"] .main .page-wrap,
+    body[data-admin-page="admin-enrollments"] .main .enrollment-content,
+    body[data-admin-page="admin-courses-enrollments"] .main .enrollment-content,
+    body[data-admin-page="admin-pathways"] .main .pathway-page,
+    body[data-admin-page="admin-academic-credit-recognition"] .main .recognition-content,
+    body[data-admin-page="admin-analytics-report"] .main .analytics-page {
+        max-width: none !important;
+        margin: 0 !important;
     }
 
     /* =========================================================
@@ -337,8 +368,21 @@
         }
 
         body:has(aside.shared-admin-sidebar) .wrap {
-            margin-left: 16px !important;
-            margin-right: 16px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+    }
+
+    @media (max-width: 600px) {
+        body:has(aside.shared-admin-sidebar) .layout > .main,
+        body:has(aside.shared-admin-sidebar) main.main {
+            padding: 22px 14px 40px !important;
+        }
+
+        body:has(aside.shared-admin-sidebar) .wrap {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding: 22px 14px 40px !important;
         }
     }
 
@@ -515,10 +559,20 @@
     // Open the section containing the active item, and keep the collapse
     // behaviour working on pages whose own toggleSection() expects it.
     document.addEventListener('DOMContentLoaded', function () {
-        var active = document.querySelector('.sidebar .sb-item.active');
+        var sidebar = document.querySelector('aside.shared-admin-sidebar');
+        var active = sidebar ? sidebar.querySelector('.sb-item.active') : null;
         if (active) {
             var section = active.closest('.sb-section');
             if (section) section.classList.add('open');
+
+            var sidebarBounds = sidebar.getBoundingClientRect();
+            var activeBounds = active.getBoundingClientRect();
+            var visibleBottom = sidebarBounds.bottom - 24;
+            if (activeBounds.top < sidebarBounds.top) {
+                sidebar.scrollTop -= sidebarBounds.top - activeBounds.top;
+            } else if (activeBounds.bottom > visibleBottom) {
+                sidebar.scrollTop += activeBounds.bottom - visibleBottom;
+            }
         }
 
         // Any section with no active item still opens on click; if a page

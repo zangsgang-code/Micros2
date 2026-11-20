@@ -4,11 +4,21 @@
        faculty sidebar is styled in resources/css/faculty.css; !important
        makes sure this hover wins over anything set there. */
     aside.faculty-sidebar .side-link {
-        transition: background-color .2s ease, color .2s ease, transform .15s ease;
+        transition: background-color .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
     }
     aside.faculty-sidebar .side-link:not(.active):hover {
         background: #f2f7ff !important;
         color: #0d1b6e !important;
+        box-shadow: 0 10px 22px rgba(11, 27, 69, .14);
+        transform: translateY(-3px);
+    }
+    aside.faculty-sidebar .side-link.active:hover {
+        transform: translateY(-3px);
+    }
+    aside.faculty-sidebar .side-link:not(.active):active,
+    aside.faculty-sidebar .side-link.active:active {
+        box-shadow: 0 2px 6px rgba(11, 27, 69, .12);
+        transform: translateY(1px) scale(.98);
     }
     aside.faculty-sidebar .side-link .side-icon-svg {
         transition: color .2s ease;

@@ -97,6 +97,7 @@
         transition:
             background-color .2s ease,
             color .2s ease,
+            box-shadow .2s ease,
             transform .15s ease;
     }
 
@@ -106,6 +107,8 @@
     .student-sidebar .side-link:not(.active):hover {
         background: #f2f7ff;
         color: #0d1b6e;
+        box-shadow: 0 10px 22px rgba(11, 27, 69, .14);
+        transform: translateY(-3px);
     }
 
     .student-sidebar .side-link:not(.active):active {
@@ -162,6 +165,7 @@
     .student-sidebar .side-link.active:hover {
         background: transparent;
         color: #071550;
+        transform: translateY(-3px);
     }
 
 
