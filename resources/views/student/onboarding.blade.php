@@ -185,12 +185,19 @@
                 <div class="illustration"><img src="{{ asset('Images/Career goal.png') }}" alt="Career goal"></div>
                 <div>
                     <label class="field-label" for="career_goal">Career goal</label>
-                    <select class="field-control career-goal-control" id="career_goal" name="career_goal" data-required>
-                        <option value="">Select a career goal</option>
+                    <select class="field-control career-goal-control" id="career_goal" name="career_goal" aria-describedby="career-goal-hint" data-required>
+                        <option value="">{{ empty(old('skills_want', [])) ? 'Choose skills to see related career goals' : 'Select a related career goal' }}</option>
                         @foreach (($career_options ?? []) as $career)
                             <option value="{{ $career }}" @selected(old('career_goal') === $career)>{{ $career }}</option>
                         @endforeach
                     </select>
+                    <p class="field-hint" id="career-goal-hint" role="status" aria-live="polite">
+                        @if(empty(old('skills_want', [])))
+                            Choose one or more skills you want to learn to see matching careers. You can always enter your own goal with Other.
+                        @else
+                            Suggestions are based on the skills you selected. Choose Other to enter a different goal.
+                        @endif
+                    </p>
                     <div class="other-school" id="other-career-wrap" @if(old('career_goal') !== 'Other') hidden @endif>
                         <label class="field-label" for="career_goal_other">Enter your career goal</label>
                         <input class="field-control career-goal-control" id="career_goal_other" name="career_goal_other" type="text" maxlength="255" placeholder="e.g. Architect" value="{{ old('career_goal_other') }}" data-required-when="other-career">
@@ -228,6 +235,10 @@
             const barangaySelect = document.getElementById('address_barangay');
             const addressStatus = document.getElementById('address-status');
             const addressRetry = document.getElementById('address-retry');
+            const careerGoalSelect = document.getElementById('career_goal');
+            const careerGoalHint = document.getElementById('career-goal-hint');
+            const allCareerOptions = @json($all_career_options ?? []);
+            const careerOptionsBySkill = @json($career_options_by_skill ?? []);
             let current = 0;
             let provincesLoaded = false;
             let provincesLoading = false;
@@ -367,12 +378,34 @@
             }
 
             function careerOtherState() {
-                const career = document.getElementById('career_goal');
                 const wrapper = document.getElementById('other-career-wrap');
                 const other = document.getElementById('career_goal_other');
-                const shown = career.value === 'Other';
+                const shown = careerGoalSelect.value === 'Other';
                 wrapper.hidden = !shown;
                 other.required = shown && !steps[8].hidden;
+            }
+
+            function updateCareerOptions() {
+                const selectedSkills = Array.from(form.querySelectorAll('input[name="skills_want[]"]:checked'))
+                    .map(control => control.value);
+                const relatedGoals = new Set();
+                selectedSkills.forEach(skill => {
+                    (careerOptionsBySkill[skill] || []).forEach(goal => relatedGoals.add(goal));
+                });
+
+                const availableGoals = allCareerOptions.filter(goal => goal === 'Other' || relatedGoals.has(goal));
+                const previousSelection = careerGoalSelect.value;
+                careerGoalSelect.replaceChildren(new Option(
+                    selectedSkills.length ? 'Select a related career goal' : 'Choose skills to see related career goals',
+                    ''
+                ));
+                availableGoals.forEach(goal => careerGoalSelect.add(new Option(goal, goal)));
+                careerGoalSelect.value = availableGoals.includes(previousSelection) ? previousSelection : '';
+
+                careerGoalHint.textContent = selectedSkills.length
+                    ? 'Suggestions are based on the skills you selected. Choose Other to enter a different goal.'
+                    : 'Choose one or more skills you want to learn to see matching careers. You can always enter your own goal with Other.';
+                careerOtherState();
             }
 
             function mainGoalOtherState() {
@@ -480,8 +513,11 @@
                 updateSkills();
             });
 
+            form.querySelectorAll('input[name="skills_want[]"]').forEach(control => {
+                control.addEventListener('change', updateCareerOptions);
+            });
             document.getElementById('school').addEventListener('change', schoolOtherState);
-            document.getElementById('career_goal').addEventListener('change', careerOtherState);
+            careerGoalSelect.addEventListener('change', careerOtherState);
             form.querySelectorAll('input[name="main_goal"]').forEach(control => {
                 control.addEventListener('change', mainGoalOtherState);
             });
@@ -497,6 +533,7 @@
                     loadCities();
                 }
             });
+            updateCareerOptions();
             backButton.addEventListener('click', () => {
                 const activeStepIndices = getActiveStepIndices();
                 const progressIndex = activeStepIndices.indexOf(current);

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\CareerGoalCatalog;
 
 test('opening the profile completion endpoint redirects to onboarding', function () {
     $student = User::factory()->create();
@@ -21,6 +22,9 @@ test('onboarding renders the cascading address dropdowns', function () {
         ->assertSee('id="address_barangay"', false)
         ->assertSee('id="career_goal"', false)
         ->assertSee('id="career_goal_other"', false)
+        ->assertSee('Choose skills to see related career goals')
+        ->assertSee('value="Other"', false)
+        ->assertDontSee('value="Software Engineer"', false)
         ->assertSee('name="main_goal"', false)
         ->assertSee('id="main_goal_other"', false)
         ->assertSee('No formal schooling')
@@ -36,6 +40,31 @@ test('onboarding renders the cascading address dropdowns', function () {
             'Where did you study?',
             'Where are you based?',
         ]);
+});
+
+test('onboarding career options match the selected skills to learn', function () {
+    $student = User::factory()->create();
+
+    $this->actingAs($student)
+        ->withSession(['_old_input' => ['skills_want' => ['Web Development']]])
+        ->get(route('onboarding.show'))
+        ->assertOk()
+        ->assertSee('value="Web Developer"', false)
+        ->assertSee('value="Front-End Developer"', false)
+        ->assertSee('value="Other"', false)
+        ->assertDontSee('value="Nurse"', false);
+});
+
+test('career goal catalog combines roles related to each selected skill', function () {
+    $careerOptions = CareerGoalCatalog::forSkills(['Cybersecurity', 'Databases']);
+
+    expect($careerOptions)
+        ->toContain('Cybersecurity Specialist')
+        ->toContain('Information Security Analyst')
+        ->toContain('Database Administrator')
+        ->toContain('Data Engineer')
+        ->toContain('Other')
+        ->not->toContain('Nurse');
 });
 
 test('onboarding saves the selected province city and barangay as the profile address', function () {

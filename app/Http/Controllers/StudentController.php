@@ -31,6 +31,7 @@ use App\Services\QuizAttemptService;
 use App\Services\StackingProgressService;
 use App\Services\StudentProgressService;
 use App\Services\UserNotificationService;
+use App\Support\CareerGoalCatalog;
 use App\Support\CertificateBuilder;
 use App\Support\CourseEvaluationTemplate;
 use App\Support\SchoolCatalog;
@@ -59,19 +60,6 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class StudentController extends Controller
 {
-    private const CAREER_GOALS = [
-        'Software Engineer',
-        'Teacher',
-        'Nurse',
-        'Accountant',
-        'Civil Engineer',
-        'Data Analyst',
-        'Graphic Designer',
-        'Entrepreneur',
-        'Cybersecurity Specialist',
-        'Other',
-    ];
-
     private const ONBOARDING_MAIN_GOALS = [
         'Advance my career',
         'Start a new career',
@@ -111,7 +99,9 @@ class StudentController extends Controller
             'user' => UserPresenter::student($auth),
             'schools' => SchoolCatalog::all(),
             'skill_options' => SkillCatalog::all(),
-            'career_options' => self::CAREER_GOALS,
+            'career_options' => CareerGoalCatalog::forSkills((array) old('skills_want', [])),
+            'all_career_options' => CareerGoalCatalog::all(),
+            'career_options_by_skill' => CareerGoalCatalog::bySkill(),
         ]);
     }
 
@@ -400,7 +390,7 @@ class StudentController extends Controller
             'address_province' => ['required', 'string', 'max:150'],
             'address_city' => ['required', 'string', 'max:150'],
             'address_barangay' => ['required', 'string', 'max:150'],
-            'career_goal' => ['required', 'string', Rule::in(self::CAREER_GOALS)],
+            'career_goal' => ['required', 'string', Rule::in(CareerGoalCatalog::all())],
             'career_goal_other' => ['required_if:career_goal,Other', 'nullable', 'string', 'max:255'],
             'main_goal' => ['required', 'string', Rule::in(self::ONBOARDING_MAIN_GOALS)],
             'main_goal_other' => ['required_if:main_goal,Other', 'nullable', 'string', 'max:255'],
