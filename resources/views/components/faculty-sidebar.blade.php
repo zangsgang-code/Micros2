@@ -1,4 +1,4 @@
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,1,0" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
 <style>
     /* Sidebar hover = the student sidebar hover (student-sidebar.blade.php),
        so every role's sidebar reacts with the same colour. The rest of the

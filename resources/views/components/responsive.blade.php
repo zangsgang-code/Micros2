@@ -60,7 +60,7 @@
 
     /* ── iPhone-style floating menu pill (hidden on desktop) ────────── */
     .nav-toggle {
-        display: none; position: fixed; right: 16px; bottom: 16px; z-index: 1600;
+        display: none; position: fixed !important; right: 16px !important; bottom: 16px !important; z-index: 1600;
         width: 54px; height: 54px; border-radius: 50%; border: none; cursor: pointer;
         background: linear-gradient(160deg, #1a2190 0%, #13176b 100%);
         color: #fff; font-size: 23px; line-height: 1;
@@ -186,7 +186,7 @@
            Student and faculty sidebars stay visible as horizontal rows and
            use their own topbar toggle buttons. */
         aside.sidebar, aside[class~="sidebar"] { display: none !important; }
-        .nav-toggle { display: flex; }
+        .nav-toggle { display: flex !important; }
 
         /* Admin pages indent .main by the sidebar width — remove it */
         .main, main.main { margin-left: 0 !important; padding-left: 16px !important; padding-right: 16px !important; }
@@ -425,12 +425,18 @@
     // DOM for desktop; on small screens it is hidden via CSS.
     var UNREAD_NOTIFICATIONS = {{ (int) ($unreadNotificationCount ?? 0) }};
 
-    document.addEventListener('DOMContentLoaded', function () {
+    function initializeResponsiveLayer() {
         buildBackToTop();
         buildNavPill();
         watchModals();
         markUnreadBell();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeResponsiveLayer, { once: true });
+    } else {
+        initializeResponsiveLayer();
+    }
 
     /* ── Unread dot ─────────────────────────────────────────────────
        Pages wire their bells differently — some render a badge, most
