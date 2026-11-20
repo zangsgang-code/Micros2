@@ -37,6 +37,21 @@ import 'ckeditor5/ckeditor5.css';
 
 const editorInstances = new Map();
 
+function updateEditorViewportOffsets() {
+    const topbarHeight = document
+        .querySelector('.auth-topbar')
+        ?.getBoundingClientRect().height ?? 0;
+
+    editorInstances.forEach((editor) => {
+        editor.ui.viewportOffset = {
+            ...editor.ui.viewportOffset,
+            top: topbarHeight,
+        };
+    });
+}
+
+window.addEventListener('resize', updateEditorViewportOffsets);
+
 class UpskillFileUploadAdapter {
     constructor(loader) {
         this.loader = loader;
@@ -853,6 +868,7 @@ function initializeEditors(root = document) {
             .create(target, getEditorConfig(target))
             .then((editor) => {
                 editorInstances.set(target, editor);
+                updateEditorViewportOffsets();
 
                 const form = target.closest('form');
 
