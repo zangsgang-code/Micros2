@@ -94,16 +94,38 @@
             text-align: center;
         }
 
+        .register-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
         /* Two-col row */
         .field-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0.85rem;
-            margin-bottom: 0.85rem;
+            min-width: 0;
         }
 
         /* Single field */
-        .field { margin-bottom: 0.85rem; }
+        .field { min-width: 0; }
+
+        .field label {
+            display: block;
+            margin-bottom: 0.35rem;
+            color: var(--gold);
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .field-required { color: #ff6b6b; }
+        .field-optional {
+            color: rgba(255,255,255,0.55);
+            font-size: 0.72rem;
+            font-weight: 500;
+        }
 
         .field input {
             width: 100%;
@@ -122,9 +144,33 @@
             border-color: var(--gold);
             background: rgba(255,255,255,0.10);
         }
+        .password-field { position: relative; }
+        .password-field input { padding-right: 3rem; }
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 0.75rem;
+            display: grid;
+            place-items: center;
+            width: 1.8rem;
+            height: 1.8rem;
+            padding: 0;
+            transform: translateY(-50%);
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255,255,255,0.55);
+            cursor: pointer;
+        }
+        .password-toggle:hover { color: var(--white); }
+        .password-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+        .password-toggle svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .password-toggle__icon--hide,
+        .password-toggle[aria-pressed="true"] .password-toggle__icon--show { display: none; }
+        .password-toggle[aria-pressed="true"] .password-toggle__icon--hide { display: block; }
 
         .password-checklist {
-            margin: -0.2rem 0 0.9rem;
+            margin: 0;
             padding: 0.75rem 0.9rem;
             list-style: none;
             border-radius: 10px;
@@ -177,8 +223,7 @@
             cursor: pointer;
             transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
             letter-spacing: 0.02em;
-            margin-top: 0.5rem;
-            margin-bottom: 1.2rem;
+            margin: 0 0 1.2rem;
         }
         .register-submit:not(:disabled):hover {
             background: var(--gold-light);
@@ -198,7 +243,7 @@
             display: flex;
             align-items: flex-start;
             gap: 0.65rem;
-            margin: 0.1rem 0 0.4rem;
+            margin: 0;
         }
         .terms-agree__box {
             flex: 0 0 auto;
@@ -663,22 +708,24 @@
                 </div>
             @endif -->
 
-            <form method="POST" action="{{ url('/register') }}">
+            <form class="register-form" method="POST" action="{{ url('/register') }}">
                 @csrf
 
                 {{-- Name row --}}
                 <div class="field-row">
                     <div class="field">
-                        <input type="text" name="first_name"
+                        <label for="first-name">First Name <span class="field-required" aria-hidden="true">*</span></label>
+                        <input id="first-name" type="text" name="first_name"
                             value="{{ old('first_name') }}"
-                            placeholder="First Name"
+                            placeholder="Enter your first name"
                             required>
                         @error('first_name')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div class="field">
-                        <input type="text" name="middle_name"
+                        <label for="middle-name">Middle Name <span class="field-optional">(Optional)</span></label>
+                        <input id="middle-name" type="text" name="middle_name"
                             value="{{ old('middle_name') }}"
-                            placeholder="Middle Name">
+                            placeholder="Enter your middle name">
                         @error('middle_name')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                 </div>
@@ -686,25 +733,28 @@
                 {{-- Last Name + Suffix --}}
                 <div class="field-row">
                     <div class="field">
-                        <input type="text" name="last_name"
+                        <label for="last-name">Last Name <span class="field-required" aria-hidden="true">*</span></label>
+                        <input id="last-name" type="text" name="last_name"
                             value="{{ old('last_name') }}"
-                            placeholder="Last Name"
+                            placeholder="Enter your last name"
                             required>
                         @error('last_name')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div class="field">
-                        <input type="text" name="suffix"
+                        <label for="suffix">Suffix <span class="field-optional">(Optional)</span></label>
+                        <input id="suffix" type="text" name="suffix"
                             value="{{ old('suffix') }}"
-                            placeholder="Suffix ( optional )">
+                            placeholder="e.g. Jr., III">
                         @error('suffix')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
                 {{-- Email --}}
                 <div class="field">
-                    <input type="email" name="email"
+                    <label for="email">Email <span class="field-required" aria-hidden="true">*</span></label>
+                    <input id="email" type="email" name="email"
                         value="{{ old('email') }}"
-                        placeholder="Email"
+                        placeholder="Enter your email address"
                         autocomplete="email"
                         required>
                     @error('email')<p class="form-error">{{ $message }}</p>@enderror
@@ -712,9 +762,10 @@
 
                 {{-- Username --}}
                 <div class="field">
-                    <input type="text" name="username"
+                    <label for="username">Username <span class="field-required" aria-hidden="true">*</span></label>
+                    <input id="username" type="text" name="username"
                         value="{{ old('username') }}"
-                        placeholder="Username"
+                        placeholder="Choose a username"
                         autocomplete="username"
                         required>
                     @error('username')<p class="form-error">{{ $message }}</p>@enderror
@@ -723,18 +774,48 @@
                 {{-- Password + Confirm --}}
                 <div class="field-row">
                     <div class="field">
-                        <input type="password" name="password"
-                            data-password-strength
-                            placeholder="Password"
-                            autocomplete="new-password"
-                            required>
+                        <label for="password">Password <span class="field-required" aria-hidden="true">*</span></label>
+                        <div class="password-field">
+                            <input id="password" type="password" name="password"
+                                data-password-strength
+                                placeholder="Create a password"
+                                autocomplete="new-password"
+                                required>
+                            <button class="password-toggle" type="button" data-password-toggle
+                                aria-controls="password" aria-label="Show password" aria-pressed="false">
+                                <svg class="password-toggle__icon--show" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg class="password-toggle__icon--hide" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="m3 3 18 18"/>
+                                </svg>
+                            </button>
+                        </div>
                         @error('password')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div class="field">
-                        <input type="password" name="password_confirmation"
-                            placeholder="Confirm Password"
-                            autocomplete="new-password"
-                            required>
+                        <label for="password-confirmation">Confirm Password <span class="field-required" aria-hidden="true">*</span></label>
+                        <div class="password-field">
+                            <input id="password-confirmation" type="password" name="password_confirmation"
+                                placeholder="Re-enter your password"
+                                autocomplete="new-password"
+                                required>
+                            <button class="password-toggle" type="button" data-password-toggle
+                                aria-controls="password-confirmation" aria-label="Show password" aria-pressed="false">
+                                <svg class="password-toggle__icon--show" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg class="password-toggle__icon--hide" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="m3 3 18 18"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <ul class="password-checklist" data-password-checklist aria-label="Password requirements">
@@ -864,6 +945,18 @@
 </div>
 
 <script>
+    document.querySelectorAll('[data-password-toggle]').forEach(toggle => {
+        const passwordInput = document.getElementById(toggle.getAttribute('aria-controls'));
+        if (!passwordInput) return;
+
+        toggle.addEventListener('click', () => {
+            const isVisible = passwordInput.type === 'text';
+            passwordInput.type = isVisible ? 'password' : 'text';
+            toggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+            toggle.setAttribute('aria-pressed', String(!isVisible));
+        });
+    });
+
     const slides   = document.querySelectorAll('.slide');
     const dots     = document.querySelectorAll('.slider__dot');
     const captions = [

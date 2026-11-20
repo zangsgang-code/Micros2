@@ -26,22 +26,24 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('faculty.register.store') }}">
+            <form class="register-form" method="POST" action="{{ route('faculty.register.store') }}">
                 @csrf
 
                 {{-- Name row --}}
                 <div class="field-row">
                     <div class="field">
-                        <input type="text" name="first_name"
+                        <label for="faculty-first-name">First Name <span class="field-required" aria-hidden="true">*</span></label>
+                        <input id="faculty-first-name" type="text" name="first_name"
                             value="{{ old('first_name') }}"
-                            placeholder="First Name"
+                            placeholder="Enter your first name"
                             required>
                         @error('first_name')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div class="field">
-                        <input type="text" name="middle_name"
+                        <label for="faculty-middle-name">Middle Name <span class="field-optional">(Optional)</span></label>
+                        <input id="faculty-middle-name" type="text" name="middle_name"
                             value="{{ old('middle_name') }}"
-                            placeholder="Middle Name">
+                            placeholder="Enter your middle name">
                         @error('middle_name')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                 </div>
@@ -49,25 +51,28 @@
                 {{-- Last Name + Suffix --}}
                 <div class="field-row">
                     <div class="field">
-                        <input type="text" name="last_name"
+                        <label for="faculty-last-name">Last Name <span class="field-required" aria-hidden="true">*</span></label>
+                        <input id="faculty-last-name" type="text" name="last_name"
                             value="{{ old('last_name') }}"
-                            placeholder="Last Name"
+                            placeholder="Enter your last name"
                             required>
                         @error('last_name')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div class="field">
-                        <input type="text" name="suffix"
+                        <label for="faculty-suffix">Suffix <span class="field-optional">(Optional)</span></label>
+                        <input id="faculty-suffix" type="text" name="suffix"
                             value="{{ old('suffix') }}"
-                            placeholder="Suffix ( optional )">
+                            placeholder="e.g. Jr., III">
                         @error('suffix')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
                 {{-- Email --}}
                 <div class="field">
-                    <input type="email" name="email"
+                    <label for="faculty-email">Email <span class="field-required" aria-hidden="true">*</span></label>
+                    <input id="faculty-email" type="email" name="email"
                         value="{{ old('email') }}"
-                        placeholder="Email"
+                        placeholder="Enter your email address"
                         autocomplete="email"
                         required>
                     @error('email')<p class="form-error">{{ $message }}</p>@enderror
@@ -75,9 +80,10 @@
 
                 {{-- Username --}}
                 <div class="field">
-                    <input type="text" name="username"
+                    <label for="faculty-username">Username <span class="field-required" aria-hidden="true">*</span></label>
+                    <input id="faculty-username" type="text" name="username"
                         value="{{ old('username') }}"
-                        placeholder="Username"
+                        placeholder="Choose a username"
                         autocomplete="username"
                         required>
                     @error('username')<p class="form-error">{{ $message }}</p>@enderror
@@ -85,9 +91,10 @@
 
                 {{-- Faculty Code Number (issued by the Admin) --}}
                 <div class="field">
-                    <input type="text" name="faculty_code"
+                    <label for="faculty-code">Faculty Code <span class="field-required" aria-hidden="true">*</span></label>
+                    <input id="faculty-code" type="text" name="faculty_code"
                         value="{{ old('faculty_code') }}"
-                        placeholder="Faculty Code Number"
+                        placeholder="Enter your admin-issued faculty code"
                         autocomplete="off"
                         required>
                     @error('faculty_code')<p class="form-error">{{ $message }}</p>@enderror
@@ -96,18 +103,48 @@
                 {{-- Password + Confirm --}}
                 <div class="field-row">
                     <div class="field">
-                        <input type="password" name="password"
-                            data-password-strength
-                            placeholder="Password"
-                            autocomplete="new-password"
-                            required>
+                        <label for="faculty-password">Password <span class="field-required" aria-hidden="true">*</span></label>
+                        <div class="password-field">
+                            <input id="faculty-password" type="password" name="password"
+                                data-password-strength
+                                placeholder="Create a password"
+                                autocomplete="new-password"
+                                required>
+                            <button class="password-toggle" type="button" data-password-toggle
+                                aria-controls="faculty-password" aria-label="Show password" aria-pressed="false">
+                                <svg class="password-toggle__icon--show" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg class="password-toggle__icon--hide" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="m3 3 18 18"/>
+                                </svg>
+                            </button>
+                        </div>
                         @error('password')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div class="field">
-                        <input type="password" name="password_confirmation"
-                            placeholder="Confirm Password"
-                            autocomplete="new-password"
-                            required>
+                        <label for="faculty-password-confirmation">Confirm Password <span class="field-required" aria-hidden="true">*</span></label>
+                        <div class="password-field">
+                            <input id="faculty-password-confirmation" type="password" name="password_confirmation"
+                                placeholder="Re-enter your password"
+                                autocomplete="new-password"
+                                required>
+                            <button class="password-toggle" type="button" data-password-toggle
+                                aria-controls="faculty-password-confirmation" aria-label="Show password" aria-pressed="false">
+                                <svg class="password-toggle__icon--show" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg class="password-toggle__icon--hide" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="m3 3 18 18"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <ul class="password-checklist" data-password-checklist aria-label="Password requirements">
@@ -165,6 +202,18 @@
 </div>
 
 <script>
+    document.querySelectorAll('[data-password-toggle]').forEach(toggle => {
+        const passwordInput = document.getElementById(toggle.getAttribute('aria-controls'));
+        if (!passwordInput) return;
+
+        toggle.addEventListener('click', () => {
+            const isVisible = passwordInput.type === 'text';
+            passwordInput.type = isVisible ? 'password' : 'text';
+            toggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+            toggle.setAttribute('aria-pressed', String(!isVisible));
+        });
+    });
+
     const slides   = document.querySelectorAll('.slide');
     const dots     = document.querySelectorAll('.slider__dot');
     const captions = [

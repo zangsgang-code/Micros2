@@ -236,6 +236,30 @@
             background: rgba(255,255,255,0.10);
         }
         .field input::placeholder { color: rgba(255,255,255,0.3); }
+        .password-field { position: relative; }
+        .password-field input { padding-right: 3rem; }
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 0.75rem;
+            display: grid;
+            place-items: center;
+            width: 1.8rem;
+            height: 1.8rem;
+            padding: 0;
+            transform: translateY(-50%);
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255,255,255,0.55);
+            cursor: pointer;
+        }
+        .password-toggle:hover { color: var(--white); }
+        .password-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+        .password-toggle svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .password-toggle__icon--hide,
+        .password-toggle[aria-pressed="true"] .password-toggle__icon--show { display: none; }
+        .password-toggle[aria-pressed="true"] .password-toggle__icon--hide { display: block; }
 
         /* Forgot */
         .login-forgot {
@@ -394,9 +418,23 @@
 
                 <div class="field">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password"
-                        placeholder="Enter your password"
-                        autocomplete="current-password" required>
+                    <div class="password-field">
+                        <input type="password" id="password" name="password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password" required>
+                        <button class="password-toggle" type="button" data-password-toggle
+                            aria-controls="password" aria-label="Show password" aria-pressed="false">
+                            <svg class="password-toggle__icon--show" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg class="password-toggle__icon--hide" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="m3 3 18 18"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 @if (Route::has('password.request'))
@@ -418,6 +456,18 @@
 </div>
 
 <script>
+    document.querySelectorAll('[data-password-toggle]').forEach(toggle => {
+        const passwordInput = document.getElementById(toggle.getAttribute('aria-controls'));
+        if (!passwordInput) return;
+
+        toggle.addEventListener('click', () => {
+            const isVisible = passwordInput.type === 'text';
+            passwordInput.type = isVisible ? 'password' : 'text';
+            toggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+            toggle.setAttribute('aria-pressed', String(!isVisible));
+        });
+    });
+
     const slides   = document.querySelectorAll('.slide');
     const dots     = document.querySelectorAll('.slider__dot');
     const captions = [
