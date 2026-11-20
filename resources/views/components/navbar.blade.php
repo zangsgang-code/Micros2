@@ -92,6 +92,9 @@
     transform: scaleX(.72);
     transition: opacity var(--transition), transform var(--transition);
 }
+.navbar--public .navbar__categories-toggle::after {
+    right: calc(0.8rem + 16px);
+}
 .navbar--public .navbar__link:hover::after,
 .navbar--public .navbar__link.active::after { opacity: .9; transform: scaleX(1); }
 .navbar--public .navbar__hamburger span { background: #fff; }

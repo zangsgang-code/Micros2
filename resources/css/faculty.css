@@ -2729,6 +2729,7 @@
             color: var(--white);
             letter-spacing: 0.05em;
         }
+        :where(html[data-faculty-page="faculty-register"]) .slider__brand-skill { color: #f6cb3b; }
 
         :where(html[data-faculty-page="faculty-register"]) .slider__seals {
             position: absolute;
@@ -3113,7 +3114,7 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
     .faculty-sidebar .side-link:not(.active):hover .side-icon-svg{color:#061a45;}
     .faculty-sidebar .side-link.active .side-icon-svg{color:#071550;}
     .faculty-sidebar .side-label{flex:0 0 auto;overflow:hidden;opacity:1;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.25;transition:opacity .18s ease,width .25s ease;}
-    .faculty-sidebar .sidebar-section-label{flex:0 0 auto;margin:12px 14px 3px;color:#64748b;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:.09em;line-height:1.3;text-transform:uppercase;white-space:nowrap;}
+    .faculty-sidebar .sidebar-section-label{flex:0 0 auto;margin:12px 14px 3px;color:#64748b;font-family:Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;line-height:1.3;text-transform:uppercase;white-space:nowrap;}
     .faculty-sidebar .side-divider{width:100%;border:0;border-top:1px solid rgba(9,37,95,.22);margin:10px 0;}
     .faculty-sidebar-layout.sidebar-collapsed .side-link{justify-content:center;gap:0;padding-left:8px;padding-right:8px;}
     .faculty-sidebar-layout.sidebar-collapsed .side-label{width:0;opacity:0;}
@@ -3145,16 +3146,15 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
     :where(html[data-faculty-page="faculty-courses-index"]) .fac-final-exam-panel--add{padding:18px 16px;}
 }
 
-:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-drawer{position:fixed;z-index:1100;top:50%;left:244px;display:flex;align-items:center;gap:0;transform:translateY(-50%);transition:left .25s ease;}
-:where(html[data-faculty-page="faculty-courses-index"]) .layout.faculty-sidebar-layout.sidebar-collapsed .course-outline-drawer{left:78px;}
-:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-toggle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;width:42px;height:138px;padding:12px 8px;border:1px solid #d5dced;border-left:0;border-radius:0 12px 12px 0;background:linear-gradient(120deg,var(--banner) 0%,#13176b 100%);color:#fff;box-shadow:0 8px 24px rgba(7,21,80,.2);font:700 12px Inter,sans-serif;cursor:pointer;}
-:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-toggle svg{width:18px;height:18px;flex:0 0 18px;}
-:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-toggle span{writing-mode:vertical-rl;letter-spacing:.04em;}
-:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-toggle:hover{background:#12277a;}
+:where(html[data-faculty-page="faculty-courses-index"]) .modules-section-actions{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto;}
+:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-drawer{position:static;z-index:30;display:flex;align-items:center;flex:0 0 auto;}
+:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-toggle{display:flex;align-items:center;justify-content:center;gap:0;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.72);border-radius:12px;background:linear-gradient(135deg,#243bb4,var(--navy));color:#fff;box-shadow:0 6px 16px rgba(19,23,107,.28),0 0 0 3px rgba(19,23,107,.08);font:600 13px Inter,sans-serif;cursor:pointer;transition:background .18s ease,box-shadow .18s ease,transform .18s ease;}
+:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-toggle svg{width:20px;height:20px;flex:0 0 20px;}
+:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-toggle:hover{border-color:#fff;background:var(--navy-deep);box-shadow:0 8px 20px rgba(19,23,107,.34),0 0 0 3px rgba(19,23,107,.12);transform:translateY(-1px);}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-toggle:focus-visible,
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-close:focus-visible,
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-link:focus-visible{outline:3px solid #f4c430;outline-offset:2px;}
-:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-panel{display:flex;flex-direction:column;width:min(320px,calc(100vw - 120px));max-height:min(76vh,640px);overflow:hidden;border:1px solid #dce3f0;border-radius:0 14px 14px 0;background:#fff;box-shadow:0 12px 36px rgba(16,24,40,.2);}
+:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-panel{position:absolute;top:calc(100% + 8px);right:0;left:auto;z-index:1101;display:flex;flex-direction:column;width:min(360px,calc(100vw - 32px));max-height:min(76vh,640px);overflow:hidden;border:1px solid #dce3f0;border-radius:12px;background:#fff;box-shadow:0 12px 36px rgba(16,24,40,.2);}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-panel[hidden]{display:none;}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px;border-bottom:1px solid #e6eaf2;}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-heading>div{display:grid;gap:4px;min-width:0;}
@@ -3164,7 +3164,7 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-close svg{width:16px;height:16px;}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-list,
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-items{margin:0;padding:8px;list-style:none;}
-:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-list{overflow-y:auto;overscroll-behavior:contain;}
+:where(html[data-faculty-page="faculty-courses-index"]) .course-outline-list{overflow-y:auto;overscroll-behavior:auto;}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-list>li{padding-bottom:6px;border-bottom:1px solid #edf0f5;}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-list>li:last-child{padding-bottom:0;border-bottom:0;}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-items{padding:2px 0 4px 12px;}
@@ -3174,9 +3174,13 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-empty{padding:10px;color:#667085;font-size:13px;}
 :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-target{scroll-margin-top:88px;}
 @media (max-width:1024px){
-    :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-drawer{left:0;}
-    :where(html[data-faculty-page="faculty-courses-index"]) .layout.faculty-sidebar-layout.sidebar-collapsed .course-outline-drawer{left:0;}
-    :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-panel{width:min(320px,calc(100vw - 48px));}
+    :where(html[data-faculty-page="faculty-courses-index"]) .course-outline-panel{max-height:min(65vh,560px);}
+    :where(html[data-faculty-page="faculty-courses-index"]) .main.manage-course-page{padding-bottom:112px;}
+}
+@media (max-width:640px){
+    :where(html[data-faculty-page="faculty-courses-index"]) .modules-section-actions{width:100%;}
+    :where(html[data-faculty-page="faculty-courses-index"]) .module-collapse-toggle{top:15px;left:6px;}
+    :where(html[data-faculty-page="faculty-courses-index"]) .module-drag-handle{top:44px;left:7px;}
 }
 
 .quiz-builder-tabs { display: flex; gap: 8px; border-bottom: 1px solid #dfe5ef; margin: 0 0 18px; }
@@ -3206,3 +3210,327 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
 .lock-choice-order { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; font-size: .88rem; color: #182b4d; cursor: pointer; }
 .lock-choice-order small { display: block; color: #526078; }
 .question-answered-note { margin-top: 10px; color: #8a5a00; font-size: .8rem; }
+
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-head {
+    margin-bottom: 22px;
+    color: #0b1b45;
+    font: 800 clamp(26px, 3vw, 34px)/1.2 "Plus Jakarta Sans", Inter, sans-serif;
+    letter-spacing: -.035em;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .back-link {
+    min-height: 34px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: background-color .18s ease, color .18s ease;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .back-link:hover {
+    background: #eaf0fb;
+    color: #0b1b45;
+    text-decoration: none;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-builder-tabs {
+    width: fit-content;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f1f5f9;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-builder-tab {
+    min-height: 40px;
+    padding: 8px 18px;
+    border: 0;
+    border-radius: 8px;
+    transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-builder-tab[aria-selected="true"] {
+    background: #fff;
+    color: #123b7a;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .12);
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-builder-notice {
+    padding: 13px 16px;
+    border: 1px solid #f4d58c;
+    border-left: 4px solid #b45309;
+    border-radius: 10px;
+    line-height: 1.5;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar {
+    margin-bottom: 16px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar h3 {
+    color: #0b1b45;
+    font-size: 17px;
+    font-weight: 750;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar #toggle-question-cards,
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar .quiz-add-menu summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 15px;
+    border: 1px solid var(--navy);
+    border-radius: 10px;
+    background: var(--navy);
+    color: #fff;
+    font: 600 13px Inter, "Segoe UI", sans-serif;
+    cursor: pointer;
+    transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar #toggle-question-cards:hover,
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar .quiz-add-menu summary:hover {
+    border-color: var(--navy-deep);
+    background: var(--navy-deep);
+    box-shadow: 0 4px 10px rgba(11, 27, 69, .08);
+    transform: translateY(-1px);
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar #toggle-question-cards {
+    border-color: #c9d3e3;
+    background: #fff;
+    color: var(--navy);
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-bank-toolbar #toggle-question-cards:hover {
+    border-color: #9aacc8;
+    background: #f8faff;
+    color: var(--navy);
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-bulk-tools {
+    padding: 13px 16px;
+    border-color: #e1e8f2;
+    border-radius: 12px;
+    background: #f8fafc;
+    line-height: 1.45;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .set-cards {
+    display: grid;
+    gap: 14px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-card.question-card {
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border-color: #dfe6f0;
+    border-radius: 16px;
+    box-shadow: 0 3px 12px rgba(11, 27, 69, .06);
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-card.question-card:hover {
+    border-color: #c6d2e3;
+    box-shadow: 0 8px 22px rgba(11, 27, 69, .1);
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-card[data-collapsed="true"] {
+    margin: 0;
+    padding: 0;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-card-summary-row {
+    min-height: 72px;
+    gap: 12px;
+    padding: 14px 18px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-card[data-collapsed="false"] .question-card-summary-row {
+    border-bottom: 1px solid #e8edf4;
+    background: #f8fafc;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-card-summary__copy {
+    gap: 5px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-card-summary__text {
+    color: #0b1b45;
+    font-size: 15px;
+    line-height: 1.4;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-card-summary__meta {
+    align-items: center;
+    gap: 6px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-card-summary__meta > span {
+    padding: 3px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    background: #fff;
+    color: #526078;
+    font-size: 11px;
+    font-weight: 650;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-card-summary__meta > span:first-child {
+    border-color: #dbeafe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-card-body {
+    padding: 20px 22px 22px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .q-head {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) auto minmax(190px, 230px) 110px auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #edf1f6;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .q-head h3 {
+    color: #0b1b45;
+    font-size: 18px;
+    font-weight: 800;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .q-head .type-label {
+    margin-left: 0;
+    color: #526078;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .q-head .sel-wrap {
+    min-width: 0;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .q-head .points {
+    width: 100%;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .q-head .field-help {
+    margin: 0;
+    color: #64748b;
+    font-size: 11px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .question-input {
+    max-width: none;
+    min-height: 44px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .choice-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .choice-letter {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 13px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .choice-row .input-outline {
+    max-width: none;
+    min-width: 0;
+    min-height: 44px;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .mark-correct {
+    min-height: 42px;
+    padding: 8px 11px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    transition: border-color .18s ease, background-color .18s ease, color .18s ease;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .mark-correct:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .mark-correct:has(input:checked) {
+    border-color: #86efac;
+    background: #f0fdf4;
+    color: #166534;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .q-tf .choice-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .tf-label {
+    max-width: none;
+    border-color: #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .btn-add-choice {
+    min-height: 44px;
+    border-color: #cbd8ea;
+    background: #f8faff;
+    color: #123b7a;
+    transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .btn-add-choice:hover {
+    border-color: #7892bd;
+    background: #eff6ff;
+    box-shadow: 0 3px 10px rgba(11, 27, 69, .06);
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .lock-choice-order {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: 1px solid #e8edf4;
+    border-radius: 10px;
+    background: #f8fafc;
+    line-height: 1.45;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-add-question-bottom {
+    min-height: 48px;
+    border-color: #c6d4e8;
+    border-radius: 12px;
+    background: #f8faff;
+    transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-add-question-bottom:hover {
+    border-color: #7892bd;
+    background: #eff6ff;
+    box-shadow: 0 4px 12px rgba(11, 27, 69, .07);
+}
+:where(html[data-faculty-page="faculty-courses-index"]) .quiz-empty-state {
+    border-radius: 12px;
+    background: #f8fafc;
+    line-height: 1.5;
+}
+:where(html[data-faculty-page="faculty-courses-index"]) #quiz-builder-form .save-quiz-row {
+    border-color: #d9e2ef;
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(11, 27, 69, .16);
+}
+:where(html[data-faculty-page="faculty-courses-index"]) #quiz-builder-form .save-quiz-row .btn-save-lesson {
+    min-height: 42px;
+    padding-inline: 20px;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(19, 23, 107, .16);
+}
+
+@media (max-width: 760px) {
+    :where(html[data-faculty-page="faculty-courses-index"]) .q-head {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .q-head h3 {
+        grid-column: 1 / -1;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .q-head .sel-wrap {
+        width: 100%;
+    }
+}
+@media (max-width: 560px) {
+    :where(html[data-faculty-page="faculty-courses-index"]) .question-card-summary-row {
+        min-height: 64px;
+        gap: 8px;
+        padding: 12px;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .question-card-body {
+        padding: 16px 14px;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .question-card-actions {
+        gap: 4px;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .q-head {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .q-head > * {
+        grid-column: 1;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .choice-row {
+        grid-template-columns: 26px minmax(0, 1fr);
+        gap: 8px;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .choice-row .mark-correct {
+        grid-column: 2;
+        justify-self: start;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .q-tf .choice-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+    :where(html[data-faculty-page="faculty-courses-index"]) .q-tf .mark-correct {
+        grid-column: auto;
+    }
+}

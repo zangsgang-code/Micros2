@@ -150,6 +150,7 @@
             color: var(--white);
             letter-spacing: 0.05em;
         }
+        .slider__brand-skill { color: #f6cb3b; }
 
         /* Seals top-right */
         .slider__seals {
@@ -359,7 +360,7 @@
         {{-- ── LEFT: Image Slider ── --}}
         <div class="slider" id="slider">
 
-            <div class="slider__brand">UPSKILL</div>
+            <div class="slider__brand"><span>UP</span><span class="slider__brand-skill">SKILL</span></div>
 
             <div class="slider__seals">
                 <div class="slider__seal">

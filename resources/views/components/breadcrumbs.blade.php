@@ -25,7 +25,7 @@
         gap: 8px;
         padding: 0 0 18px;
         color: #6b7280;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 700;
     }
 
@@ -36,13 +36,12 @@
 
     .student-breadcrumbs a:hover {
         color: #c4930f;
-        text-decoration: underline;
-        text-underline-offset: 3px;
+        text-decoration: none;
     }
 
     .student-breadcrumbs__separator {
-        width: 15px;
-        height: 15px;
+        width: 16px;
+        height: 16px;
         color: #9ca3af;
         flex: 0 0 auto;
     }
@@ -70,7 +69,7 @@
     @media (max-width: 640px) {
         .student-breadcrumbs {
             padding-bottom: 14px;
-            font-size: 12px;
+            font-size: 13px;
         }
 
         .student-breadcrumbs--detail {

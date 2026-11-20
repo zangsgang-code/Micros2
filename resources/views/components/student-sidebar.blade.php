@@ -226,10 +226,10 @@
         flex: 0 0 auto;
         margin: 12px 14px 3px;
         color: #64748b;
-        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: .09em;
+        font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: .08em;
         line-height: 1.3;
         text-transform: uppercase;
         white-space: nowrap;

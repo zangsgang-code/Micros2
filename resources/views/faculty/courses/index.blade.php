@@ -53,61 +53,6 @@
     <main class="main {{ $mode === 'manage' ? 'manage-course-page' : '' }}">
 
     @if ($mode === 'manage')
-        <aside class="course-outline-drawer" data-course-outline aria-label="Course content navigation">
-            <button class="course-outline-toggle" type="button" data-course-outline-toggle aria-controls="course-outline-panel" aria-expanded="false" aria-label="Open course outline">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-            <nav class="course-outline-panel" id="course-outline-panel" aria-label="Course outline" hidden>
-                <div class="course-outline-heading">
-                    <div>
-                        <span>Course outline</span>
-                        <strong>{{ $course->title }}</strong>
-                    </div>
-                    <button class="course-outline-close" type="button" data-course-outline-close aria-label="Close course outline">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                <ol class="course-outline-list">
-                    @forelse($modules as $outlineModule)
-                        <li>
-                            <a class="course-outline-link" href="#course-outline-module-{{ $outlineModule->idx }}" data-course-outline-link>
-                                <span class="course-outline-kind">Module {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
-                                <span>{{ $outlineModule->title }}</span>
-                            </a>
-                            @if($outlineModule->outline_items->isNotEmpty() || $outlineModule->quiz)
-                                <ul class="course-outline-items">
-                                    @foreach($outlineModule->outline_items as $outlineItem)
-                                        <li>
-                                            <a class="course-outline-link" href="#course-outline-{{ $outlineItem->type }}-{{ $outlineModule->idx }}-{{ $outlineItem->id }}" data-course-outline-link>
-                                                <span class="course-outline-kind">{{ Illuminate\Support\Str::headline($outlineItem->type) }}</span>
-                                                <span>{{ $outlineItem->title }}</span>
-                                            </a>
-                                        </li>
-                                    @endforeach
-                                    @if($outlineModule->quiz)
-                                        <li>
-                                            <a class="course-outline-link" href="#quiz-row-{{ $outlineModule->idx }}" data-course-outline-link>
-                                                <span class="course-outline-kind">Summative assessment</span>
-                                                <span>{{ $outlineModule->quiz->title }}</span>
-                                            </a>
-                                        </li>
-                                    @endif
-                                </ul>
-                            @endif
-                        </li>
-                    @empty
-                        <li class="course-outline-empty">No modules have been added yet.</li>
-                    @endforelse
-                    <li>
-                        <a class="course-outline-link" href="#course-outline-final-exam" data-course-outline-link>
-                            <span class="course-outline-kind">Final exam</span>
-                            <span>{{ $finalModule ? ($finalModule->quiz->title ?? 'Final Exam') : 'Add final exam' }}</span>
-                        </a>
-                    </li>
-                </ol>
-            </nav>
-        </aside>
-
         @include('components.breadcrumbs', ['breadcrumbClass' => 'faculty-breadcrumbs', 'items' => [
             ['label' => 'My Courses', 'url' => route('faculty.courses')],
             ['label' => $course->title ?? 'Course Management'],
@@ -199,9 +144,65 @@
                         <h3 class="section-title">Course Modules</h3>
                         <p class="section-caption">Organize the lessons, activities, and assessments in this course.</p>
                     </div>
-                    @if($modules->isNotEmpty())
-                        <button class="btn-secondary-action module-toggle-all" type="button" aria-expanded="false" onclick="toggleAllModules(this)">Expand All</button>
-                    @endif
+                    <div class="modules-section-actions">
+                        <aside class="course-outline-drawer" data-course-outline aria-label="Course content navigation">
+                            <button class="course-outline-toggle" type="button" data-course-outline-toggle aria-controls="course-outline-panel" aria-expanded="false" aria-label="Open course outline" title="Open course outline">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1" fill="currentColor" stroke="none"/></svg>
+                            </button>
+                            <nav class="course-outline-panel" id="course-outline-panel" aria-label="Course outline" hidden>
+                                <div class="course-outline-heading">
+                                    <div>
+                                        <span>Course outline</span>
+                                        <strong>{{ $course->title }}</strong>
+                                    </div>
+                                    <button class="course-outline-close" type="button" data-course-outline-close aria-label="Close course outline">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                                <ol class="course-outline-list">
+                                    @forelse($modules as $outlineModule)
+                                        <li>
+                                            <a class="course-outline-link" href="#course-outline-module-{{ $outlineModule->idx }}" data-course-outline-link>
+                                                <span class="course-outline-kind">Module {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                                                <span>{{ $outlineModule->title }}</span>
+                                            </a>
+                                            @if($outlineModule->outline_items->isNotEmpty() || $outlineModule->quiz)
+                                                <ul class="course-outline-items">
+                                                    @foreach($outlineModule->outline_items as $outlineItem)
+                                                        <li>
+                                                            <a class="course-outline-link" href="#course-outline-{{ $outlineItem->type }}-{{ $outlineModule->idx }}-{{ $outlineItem->id }}" data-course-outline-link>
+                                                                <span class="course-outline-kind">{{ Illuminate\Support\Str::headline($outlineItem->type) }}</span>
+                                                                <span>{{ $outlineItem->title }}</span>
+                                                            </a>
+                                                        </li>
+                                                    @endforeach
+                                                    @if($outlineModule->quiz)
+                                                        <li>
+                                                            <a class="course-outline-link" href="#quiz-row-{{ $outlineModule->idx }}" data-course-outline-link>
+                                                                <span class="course-outline-kind">Summative assessment</span>
+                                                                <span>{{ $outlineModule->quiz->title }}</span>
+                                                            </a>
+                                                        </li>
+                                                    @endif
+                                                </ul>
+                                            @endif
+                                        </li>
+                                    @empty
+                                        <li class="course-outline-empty">No modules have been added yet.</li>
+                                    @endforelse
+                                    <li>
+                                        <a class="course-outline-link" href="#course-outline-final-exam" data-course-outline-link>
+                                            <span class="course-outline-kind">Final exam</span>
+                                            <span>{{ $finalModule ? ($finalModule->quiz->title ?? 'Final Exam') : 'Add final exam' }}</span>
+                                        </a>
+                                    </li>
+                                </ol>
+                            </nav>
+                        </aside>
+                        @if($modules->isNotEmpty())
+                            <button class="btn-secondary-action module-toggle-all" type="button" aria-expanded="false" onclick="toggleAllModules(this)">Expand All</button>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="sortable-list module-sort-list" data-order-kind="modules" data-order-url="{{ route('faculty.modules.reorder', $course->id) }}">

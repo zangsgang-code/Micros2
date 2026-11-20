@@ -2771,7 +2771,7 @@ body.app-shell.page-dashboard .student-dashboard .course-info h4{font-size:var(-
 body.app-shell.page-dashboard .student-dashboard .pct{font-size:var(--text-xs)}
 body.app-shell.page-dashboard .student-dashboard .btn-start{font-size:var(--text-sm);color:var(--ui-surface)}
 body.app-shell.page-dashboard .student-dashboard .btn-start:hover{color:var(--ui-text-strong)}
-body.app-shell.page-dashboard .student-dashboard .courses-head h3{font-size:var(--dash-type-heading)}
+body.app-shell.page-dashboard .student-dashboard .courses-head h3{font-family:var(--font-display);font-size:var(--dash-type-heading)}
 body.app-shell.page-dashboard .student-dashboard .panel-head{font-size:var(--dash-type-subheading)}
 body.app-shell.page-dashboard .student-dashboard .courses-head .enroll-more{font-size:var(--dash-type-meta)}
 body.app-shell.page-dashboard .student-dashboard .panel-body, body.app-shell.page-dashboard .student-dashboard .empty-state{line-height:1.618}

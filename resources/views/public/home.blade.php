@@ -1096,35 +1096,109 @@
 
     .cta-banner {
         position: relative;
-        padding: 5rem 0;
-        text-align: center;
-        background: var(--landing-gold) url('{{ asset('Images/PSU_Front_Building.png') }}') center/cover no-repeat;
+        isolation: isolate;
+        overflow: hidden;
+        padding: clamp(4rem, 7vw, 6rem) 0;
+        background: var(--landing-navy) url('{{ asset('Images/PSU_Front_Building.png') }}') center/cover no-repeat;
     }
 
     .cta-banner::before {
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, rgba(246,203,59,.92), rgba(246,203,59,.82));
+        z-index: 0;
+        background:
+            radial-gradient(ellipse at 88% 50%, rgba(246,203,59,.14), transparent 38%),
+            linear-gradient(105deg, rgba(7,20,63,.96), rgba(7,20,63,.88) 58%, rgba(7,20,63,.78));
+    }
+
+    .cta-banner::after {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        top: 50%;
+        right: clamp(1.5rem, 9vw, 9rem);
+        width: clamp(16rem, 27vw, 24rem);
+        aspect-ratio: 1;
+        border: 1px solid rgba(246,203,59,.22);
+        border-radius: 50%;
+        box-shadow: 0 0 0 2.25rem rgba(246,203,59,.045);
+        pointer-events: none;
+        transform: translateY(-50%);
     }
 
     .cta-banner > .container {
         position: relative;
         z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: clamp(2rem, 5vw, 5rem);
+    }
+
+    .cta-banner__content {
+        max-width: 48rem;
     }
 
     .cta-banner__title {
         font-family: var(--font-display);
-        font-size: clamp(2.2rem, 5vw, 3.4rem);
-        color: var(--navy-dark);
-        margin-bottom: 0.75rem;
+        font-size: clamp(2.1rem, 4.5vw, 3.3rem);
+        line-height: 1.12;
+        color: var(--landing-white);
+        margin: 0 0 0.8rem;
         letter-spacing: -0.04em;
     }
 
     .cta-banner__sub {
-        font-size: 1.08rem;
-        color: rgba(10,31,110,0.78);
-        margin-bottom: 2rem;
+        max-width: 52ch;
+        margin: 0;
+        font-size: clamp(1rem, 1.4vw, 1.1rem);
+        line-height: 1.65;
+        color: rgba(255,255,255,.82);
+    }
+
+    .cta-banner__button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .65rem;
+        padding: .95rem 1.35rem;
+        font-size: .95rem;
+        font-weight: 700;
+        white-space: nowrap;
+        box-shadow: 0 12px 28px rgba(0,0,0,.22);
+    }
+
+    .cta-banner__button svg {
+        width: 18px;
+        height: 18px;
+        transition: transform .18s ease;
+    }
+
+    .cta-banner__button:hover svg {
+        transform: translateX(3px);
+    }
+
+    @media (max-width: 768px) {
+        .cta-banner > .container {
+            grid-template-columns: minmax(0, 1fr);
+            justify-items: center;
+            gap: 1.6rem;
+            text-align: center;
+        }
+
+        .cta-banner__sub {
+            margin-inline: auto;
+        }
+
+        .cta-banner__button {
+            justify-self: center;
+        }
+
+        .cta-banner::after {
+            right: -8rem;
+            opacity: .65;
+        }
     }
 
     @media (max-width: 980px) {
@@ -1589,9 +1663,16 @@
 
 <section class="cta-banner scroll-reveal">
     <div class="container">
-        <h2 class="cta-banner__title">Ready to grow with PSU?</h2>
-        <p class="cta-banner__sub">Join the UpSkill community and build the next step in your learning journey.</p>
-        <a href="{{ url('/register') }}" class="btn btn-navy">Create free account</a>
+        <div class="cta-banner__content">
+            <h2 class="cta-banner__title">Ready to grow with PSU?</h2>
+            <p class="cta-banner__sub">Join the UpSkill community and build the next step in your learning journey.</p>
+        </div>
+        <a href="{{ url('/register') }}" class="btn btn-gold cta-banner__button">
+            Create free account
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+        </a>
     </div>
 </section>
 
