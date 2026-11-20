@@ -56,8 +56,8 @@
     :where(html[data-faculty-page="faculty-dashboard"]) .course-info h4{margin:0 0 10px;font-size:17px;color:var(--navy);}
     :where(html[data-faculty-page="faculty-dashboard"]) .course-meta{display:flex;align-items:center;gap:22px;flex-wrap:wrap;}
     :where(html[data-faculty-page="faculty-dashboard"]) .status-pill{display:inline-block;font-size:12px;font-weight:700;padding:6px 18px;border-radius:999px;}
-    :where(html[data-faculty-page="faculty-dashboard"]) .status-pill.published{background:#ccfbf1;color:#0f766e;}
-    :where(html[data-faculty-page="faculty-dashboard"]) .status-pill.draft{background:#ffedd5;color:#c2410c;}
+    :where(html[data-faculty-page="faculty-dashboard"]) .status-pill.published{background:#EEF2FF;color:#2447D4;}
+    :where(html[data-faculty-page="faculty-dashboard"]) .status-pill.draft{background:#FFF5D1;color:#0B1B45;}
     :where(html[data-faculty-page="faculty-dashboard"]) .meta-item{text-align:center;font-size:12px;color:var(--muted);line-height:1.3;}
     :where(html[data-faculty-page="faculty-dashboard"]) .meta-item .meta-num{display:block;font-weight:800;font-size:15px;color:var(--navy);}
     :where(html[data-faculty-page="faculty-dashboard"]) .btn-manage{background:#fff;border:1.5px solid var(--navy);color:var(--navy);font-weight:700;padding:10px 22px;border-radius:10px;font-size:15px;flex-shrink:0;}
@@ -132,8 +132,8 @@
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .course-info h4{font-size:13px;font-weight:700;color:var(--dash-ink)}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .course-meta{gap:14px}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill{padding:5px 10px;font-size:10px}
-:where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill.published{background:#ccfbf1;color:#0f766e}
-:where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill.draft{background:#ffedd5;color:#c2410c}
+:where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill.published{background:#EEF2FF;color:#2447D4}
+:where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill.draft{background:#FFF5D1;color:#0B1B45}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .meta-item{font-size:10px;color:var(--dash-muted)}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .meta-item .meta-num{font-size:12px;color:var(--dash-ink)}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .btn-manage{border:1px solid var(--dash-line);border-radius:999px;padding:9px 14px;background:#fff;color:var(--dash-navy);font-size:11px;font-weight:700}
@@ -171,9 +171,9 @@
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .attention-label{font-size:11px;color:var(--dash-muted);line-height:1.4}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .attention-feedback{font-size:10px;color:var(--dash-muted);line-height:1.45}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .attention-empty{padding:14px;border-radius:12px;background:var(--dash-canvas);color:var(--dash-muted);font-size:12px}
-:where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill.pending{background:#ffedd5;color:#c2410c}
+:where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill.pending{background:#FFF5D1;color:#0B1B45}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill.returned{background:#FEE2E2;color:#991B1B}
-:where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill.draft{background:#ffedd5;color:#c2410c}
+:where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .status-pill.draft{background:#FFF5D1;color:#0B1B45}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .to-grade-badge{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:#DBEAFE;color:#1E40AF;font-size:10px;font-weight:700;text-decoration:none}
 :where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .to-grade-badge:hover{background:#BFDBFE}
 @media(max-width:980px){:where(html[data-faculty-page="faculty-dashboard"]) main.faculty-dashboard .content-grid{grid-template-columns:1fr}}
@@ -3098,7 +3098,7 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
     .layout.faculty-sidebar-layout.sidebar-collapsed{grid-template-columns:78px minmax(0,1fr);}
     .layout.faculty-sidebar-layout .faculty-sidebar{background:#fff;padding:24px 10px 20px;display:flex;flex-direction:column;gap:5px;border-right:1px solid #e5e7eb;height:calc(100vh - var(--faculty-topbar-height));position:sticky;top:var(--faculty-topbar-height);z-index:900;align-self:start;overflow-x:hidden;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;transition:padding .25s ease,width .25s ease;}
     .layout.faculty-sidebar-layout .faculty-sidebar::-webkit-scrollbar{display:none;}
-    .faculty-sidebar .side-link{display:flex;align-items:center;flex:0 0 56px;gap:15px;padding:10px 14px;border-radius:13px;color:#061a45;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.25;text-decoration:none;white-space:nowrap;overflow:hidden;transition:background-color .2s ease,color .2s ease,transform .15s ease;}
+    .faculty-sidebar .side-link{display:flex;align-items:center;flex:0 0 56px;gap:15px;padding:10px 14px;border-radius:13px;color:#334155;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.25;text-decoration:none;white-space:nowrap;overflow:hidden;transition:background-color .2s ease,color .2s ease,transform .15s ease;}
     .faculty-sidebar .side-link:not(.active):hover{background:#fffbe6;color:#061a45;}
     .faculty-sidebar .side-link:not(.active):active{transform:scale(.98);}
     .faculty-sidebar .side-link.active{position:relative;margin-left:-10px;padding:7px 14px 7px 24px;border-radius:0 13px 13px 0;background:transparent;color:#071550;font-weight:600;box-shadow:none;overflow:visible;}
@@ -3108,12 +3108,12 @@ html,body{scrollbar-width:none;-ms-overflow-style:none;}
     .faculty-sidebar .side-link.active:hover{background:transparent;color:#071550;}
     .faculty-sidebar .side-icon-box{width:30px;height:30px;flex:0 0 30px;display:flex;align-items:center;justify-content:center;background:transparent !important;border:0;border-radius:0;}
     .faculty-sidebar .side-alert-dot{display:inline-block;width:8px;height:8px;flex:0 0 8px;margin-left:auto;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.16);}
-    .faculty-sidebar .side-icon-box .material-symbols-rounded{font-family:"Material Symbols Rounded";font-weight:normal;font-style:normal;width:24px;height:24px;font-size:24px;line-height:1;font-feature-settings:"liga";font-variation-settings:"FILL" 0;-webkit-font-smoothing:antialiased;transition:color .2s ease,transform .2s ease;}
-    .faculty-sidebar .side-link:not(.active) .side-icon-box .material-symbols-rounded{color:#061a45;}
-    .faculty-sidebar .side-link:not(.active):hover .side-icon-box .material-symbols-rounded{color:#061a45;}
-    .faculty-sidebar .side-link.active .side-icon-box .material-symbols-rounded{color:#071550;}
+    .faculty-sidebar .side-icon-svg{width:18px;height:18px;flex:0 0 18px;color:inherit;transition:color .2s ease,transform .2s ease;}
+    .faculty-sidebar .side-link:not(.active) .side-icon-svg{color:#334155;}
+    .faculty-sidebar .side-link:not(.active):hover .side-icon-svg{color:#061a45;}
+    .faculty-sidebar .side-link.active .side-icon-svg{color:#071550;}
     .faculty-sidebar .side-label{flex:0 0 auto;overflow:hidden;opacity:1;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.25;transition:opacity .18s ease,width .25s ease;}
-    .faculty-sidebar .sidebar-section-label{flex:0 0 auto;margin:12px 14px 3px;color:#56627a;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:.09em;line-height:1.3;text-transform:uppercase;white-space:nowrap;}
+    .faculty-sidebar .sidebar-section-label{flex:0 0 auto;margin:12px 14px 3px;color:#64748b;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:.09em;line-height:1.3;text-transform:uppercase;white-space:nowrap;}
     .faculty-sidebar .side-divider{width:100%;border:0;border-top:1px solid rgba(9,37,95,.22);margin:10px 0;}
     .faculty-sidebar-layout.sidebar-collapsed .side-link{justify-content:center;gap:0;padding-left:8px;padding-right:8px;}
     .faculty-sidebar-layout.sidebar-collapsed .side-label{width:0;opacity:0;}
