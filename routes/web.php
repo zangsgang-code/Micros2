@@ -202,6 +202,8 @@ Route::middleware([PreventBackHistory::class, RoleBasedAccess::class.':admin', R
         ->whereNumber('id')->name('admin.facultycodes.delete');
 
     Route::get('/Admin-courses', [AdminController::class, 'courses'])->name('admin.courses');
+    Route::get('/Admin-courses/updates', [AdminController::class, 'courseUpdates'])
+        ->middleware('throttle:30,1')->name('admin.courses.updates');
     Route::get('/Admin-enrollments', [AdminController::class, 'enrollmentReviews'])->name('admin.enrollments');
     Route::get('/Admin-enrollments/{enrollment}', [AdminController::class, 'showEnrollmentReview'])
         ->whereNumber('enrollment')->name('admin.enrollments.show');

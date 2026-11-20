@@ -42,129 +42,20 @@
 
         <x-flash-toast :message="session('success') ?? $errors->first('feature')" :type="session('success') ? 'success' : 'error'" />
 
-        @if ($courses->isEmpty())
-            <div class="empty-state">No courses yet. Courses created by faculty will appear here for review.</div>
-        @else
-            <div class="course-grid" id="course-grid">
-                @foreach ($courses as $course)
-                    <div class="course-card {{ $course->status_key === 'pending' ? 'is-pending' : '' }}"
-                         data-status="{{ $course->status_key }}"
-                         data-search="{{ strtolower($course->title . ' ' . ($course->instructor ?? '')) }}"
-                         onclick="window.location='{{ route('admin.courses.show', $course->id) }}'">
+        <div class="course-grid" id="course-grid"
+             data-poll-url="{{ route('admin.courses.updates', [], false) }}"
+             data-since-at="{{ $coursesCheckedAt->toIso8601String() }}">
+            @foreach ($courses as $course)
+                @include('admin.courses.card', ['course' => $course])
+            @endforeach
+        </div>
 
-                        {{-- 1 · Status --}}
-                        <div class="card-top">
-                            <div class="card-status-group">
-                                @if ($course->status_key !== 'approved')
-                                    <span class="status status-{{ $course->status_key }}">
-                                        <span class="dot"></span>{{ $course->status }}
-                                    </span>
-                                @endif
-                                @if ($course->can_toggle_publish)
-                                    <span class="publication-status adm-publication-{{ $course->is_published ? 'published' : 'unpublished' }}">{{ $course->is_published ? 'Published' : 'Unpublished' }}</span>
-                                @endif
-                            </div>
-
-                            @if ($course->can_toggle_feature || $course->is_featured)
-                                <form class="star-form" method="POST" action="{{ route('admin.courses.feature', $course->id) }}" onclick="event.stopPropagation();">
-                                    @csrf
-                                    <button type="submit"
-                                            class="star-btn {{ $course->is_featured ? 'is-on' : '' }}"
-                                            aria-label="{{ $course->is_featured ? 'Unfeature course' : 'Feature course on homepage' }}"
-                                            title="{{ $course->is_featured ? 'Shown on the homepage. Click to unfeature.' : 'Feature this course on the homepage' }}">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-
-                        {{-- 2 · Identity --}}
-                        <div class="course-intro">
-                            @if ($course->thumbnail_url)
-                                <img class="course-thumb" src="{{ $course->thumbnail_url }}" alt="" loading="lazy">
-                            @else
-                                <div class="course-thumb-placeholder" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m2 9 10-5 10 5-10 5L2 9Z"/><path d="M6 11v5c3.5 2.5 8.5 2.5 12 0v-5M22 9v6"/></svg>
-                                </div>
-                            @endif
-                            <div class="course-intro-copy">
-                                <div class="course-title">{{ $course->title }}</div>
-                                <div class="course-by">By {{ $course->instructor ?? 'Faculty' }}</div>
-                                <div class="course-stats">{{ $course->faculty }} faculty &middot; {{ $course->students }} students</div>
-                            </div>
-                        </div>
-
-                        {{-- 3 · Details --}}
-                        <div class="details">
-                            <div class="detail-row">
-                                <span class="detail-label">Badge</span>
-                                <div class="detail-value {{ $course->badge_icon || $course->badge ? '' : 'off' }}">
-                                    @if ($course->badge_icon)
-                                        <img src="{{ $course->badge_icon }}" alt="">
-                                    @elseif ($course->badge)
-                                        <span class="blank"></span>
-                                    @endif
-                                    <span>{{ $course->badge ?: 'No badge yet' }}</span>
-                                </div>
-                            </div>
-
-                            <div class="detail-row">
-                                <span class="detail-label">Certificate</span>
-                                <div class="detail-value {{ $course->certificate_enabled ? '' : 'off' }}">
-                                    <span>
-                                        @if (! $course->certificate_enabled)
-                                            None
-                                        @else
-                                            {{ $course->certificate_mode === 'upload' ? 'Uploaded' : 'Auto-generated' }}
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
-
-                            @if (! empty($course->related_skills))
-                                <div class="detail-row">
-                                    <span class="detail-label">Related</span>
-                                    <div class="detail-value">
-                                        <span>
-                                            {{ implode(', ', array_slice($course->related_skills, 0, 3)) }}
-                                            @if (count($course->related_skills) > 3) +{{ count($course->related_skills) - 3 }} @endif
-                                        </span>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- 4 · Progress --}}
-                        <div class="course-progress">
-                            <div class="progress-head"><span>Completion</span><strong>{{ $course->percent }}%</strong></div>
-                            <div class="progress-track"><div class="progress-fill" style="width: {{ $course->percent }}%"></div></div>
-                        </div>
-
-                        {{-- 5 · Action --}}
-                        @if ($course->status_key === 'pending')
-                            <div class="actions" onclick="event.stopPropagation();">
-                                <a href="{{ route('admin.courses.show', $course->id) }}" class="btn btn-approve">Review course</a>
-                            </div>
-                        @elseif ($course->can_toggle_publish)
-                            <div class="actions" onclick="event.stopPropagation();">
-                                <form method="POST" action="{{ route('admin.courses.publish', $course->id) }}">
-                                    @csrf
-                                    <button type="submit" class="btn {{ $course->is_published ? 'btn-unpublish' : 'btn-publish' }}">
-                                        {{ $course->is_published ? 'Unpublish' : 'Publish' }}
-                                    </button>
-                                </form>
-                            </div>
-                        @else
-                            <div class="actions" onclick="event.stopPropagation();">
-                                <a href="{{ route('admin.courses.show', $course->id) }}" class="btn">View details</a>
-                            </div>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-
-            <div class="empty-state adm-inline-admin-courses-index-1" id="no-match">No courses match your filter.</div>
-        @endif
+        <div class="empty-state" id="course-empty" @if($courses->isNotEmpty()) hidden @endif>
+            No courses yet. Courses created by faculty will appear here for review.
+        </div>
+        <div class="empty-state adm-inline-admin-courses-index-1" id="no-match" style="display:none;">
+            No courses match your filter.
+        </div>
 
     </div>
     </main>
@@ -173,13 +64,15 @@
 <script>
     (function () {
         var tabs = document.querySelectorAll('.tab');
-        var cards = document.querySelectorAll('.course-card');
+        var courseGrid = document.getElementById('course-grid');
         var search = document.getElementById('course-search');
         var none = document.getElementById('no-match');
+        var empty = document.getElementById('course-empty');
         var filter = 'all';
 
         function apply() {
-            var q = (search.value || '').trim().toLowerCase();
+            var cards = courseGrid.querySelectorAll('.course-card');
+            var q = (search ? search.value : '').trim().toLowerCase();
             var shown = 0;
             cards.forEach(function (card) {
                 var ok = (filter === 'all' || card.dataset.status === filter) &&
@@ -187,7 +80,168 @@
                 card.style.display = ok ? '' : 'none';
                 if (ok) shown++;
             });
-            if (none) none.style.display = shown ? 'none' : 'block';
+            if (empty) empty.hidden = cards.length > 0;
+            if (none) none.style.display = cards.length > 0 && !shown ? 'block' : 'none';
+        }
+
+        function adjustTabCount(name, amount) {
+            var count = document.querySelector('.tab[data-filter="' + name + '"] .n');
+            if (!count) return;
+            count.textContent = String(Math.max(0, Number(count.textContent) + amount));
+        }
+
+        function findCourseCard(courseId) {
+            return Array.from(courseGrid.querySelectorAll('.course-card[data-course-id]'))
+                .find(function (existing) { return existing.dataset.courseId === String(courseId); }) || null;
+        }
+
+        function placeCourseCard(card) {
+            var isPending = card.dataset.status === 'pending';
+            var sortTitle = card.dataset.sortTitle || '';
+            var cardsInGroup = Array.from(courseGrid.querySelectorAll('.course-card'))
+                .filter(function (existing) { return (existing.dataset.status === 'pending') === isPending; });
+            var before = cardsInGroup.find(function (existing) {
+                return (existing.dataset.sortTitle || '').localeCompare(sortTitle) > 0;
+            });
+            if (!before && isPending) {
+                before = courseGrid.querySelector('.course-card:not([data-status="pending"])');
+            }
+
+            courseGrid.insertBefore(card, before);
+        }
+
+        function reconcileCourseUpdates(draftIds, html) {
+            var changed = false;
+            draftIds.forEach(function (courseId) {
+                var existing = findCourseCard(courseId);
+                if (!existing) return;
+
+                adjustTabCount('all', -1);
+                adjustTabCount(existing.dataset.status, -1);
+                existing.remove();
+                changed = true;
+            });
+
+            var template = document.createElement('template');
+            template.innerHTML = html;
+            var cards = Array.from(template.content.querySelectorAll('.course-card[data-course-id]'));
+
+            cards.forEach(function (card) {
+                if (card.dataset.status === 'draft') return;
+
+                var existing = findCourseCard(card.dataset.courseId);
+                var previousStatus = existing ? existing.dataset.status : null;
+                if (existing) existing.remove();
+                placeCourseCard(card);
+
+                if (previousStatus === null) {
+                    adjustTabCount('all', 1);
+                } else if (previousStatus !== card.dataset.status) {
+                    adjustTabCount(previousStatus, -1);
+                }
+                if (previousStatus !== card.dataset.status) {
+                    adjustTabCount(card.dataset.status, 1);
+                }
+                changed = true;
+            });
+
+            if (changed) apply();
+        }
+
+        if (!courseGrid) return;
+
+        var coursePollIntervalMs = 5000;
+        var maxBackoffMs = 60000;
+        var nextDelayMs = coursePollIntervalMs;
+        var sinceAt = courseGrid.dataset.sinceAt;
+        var timerId = null;
+        var requestInFlight = false;
+        var resumeAfterRequest = false;
+        var disposed = false;
+        var hasReportedError = false;
+        var activeRequest = null;
+
+        function clearTimer() {
+            if (timerId === null) return;
+            window.clearTimeout(timerId);
+            timerId = null;
+        }
+
+        function scheduleNextPoll(delayMs) {
+            clearTimer();
+            timerId = window.setTimeout(function () {
+                timerId = null;
+                pollForCourseUpdates();
+            }, delayMs);
+        }
+
+        async function pollForCourseUpdates() {
+            if (disposed || document.hidden || requestInFlight) return;
+            requestInFlight = true;
+            activeRequest = new AbortController();
+
+            try {
+                var url = new URL(courseGrid.dataset.pollUrl, window.location.href);
+                url.searchParams.set('sinceAt', sinceAt);
+                var response = await fetch(url.toString(), {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                    signal: activeRequest.signal,
+                });
+                if (!response.ok) throw new Error('Course approval poll returned HTTP ' + response.status);
+
+                var data = await response.json();
+                if (typeof data.courses_html !== 'string'
+                    || typeof data.checked_at !== 'string'
+                    || !Array.isArray(data.draft_ids)
+                    || !data.draft_ids.every(function (courseId) {
+                        return Number.isSafeInteger(Number(courseId)) && Number(courseId) > 0;
+                    })
+                    || !Number.isSafeInteger(Number(data.course_count))) {
+                    throw new Error('Course approval poll returned an invalid response.');
+                }
+
+                reconcileCourseUpdates(data.draft_ids, data.courses_html);
+                sinceAt = data.checked_at;
+                nextDelayMs = coursePollIntervalMs;
+                hasReportedError = false;
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    if (!hasReportedError) {
+                        console.error('Unable to poll course approvals.', error);
+                        hasReportedError = true;
+                    }
+                    nextDelayMs = Math.min(nextDelayMs * 2, maxBackoffMs);
+                }
+            } finally {
+                requestInFlight = false;
+                activeRequest = null;
+                if (disposed || document.hidden) return;
+
+                var delayMs = resumeAfterRequest ? 0 : nextDelayMs;
+                resumeAfterRequest = false;
+                scheduleNextPoll(delayMs);
+            }
+        }
+
+        function onVisibilityChange() {
+            if (document.hidden) {
+                clearTimer();
+                return;
+            }
+            if (requestInFlight) {
+                resumeAfterRequest = true;
+                return;
+            }
+            scheduleNextPoll(0);
+        }
+
+        function cleanup() {
+            disposed = true;
+            clearTimer();
+            if (activeRequest) activeRequest.abort();
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('pagehide', cleanup);
         }
 
         tabs.forEach(function (tab) {
@@ -198,6 +252,10 @@
             });
         });
         if (search) search.addEventListener('input', apply);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('pagehide', cleanup);
+        apply();
+        pollForCourseUpdates();
     })();
 </script>
 

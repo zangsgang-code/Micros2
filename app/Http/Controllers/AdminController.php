@@ -1000,12 +1000,13 @@ class AdminController extends Controller
 
     // ── Courses & Badges ──────────────────────────────────────────────────
 
-    public function courses()
+    public function courses(): View
     {
         // Pending submissions first so the admin always sees what needs
         // review, then everything else alphabetically.
         // Drafts are the faculty member's private workspace — they have not
         // been submitted for review, so the admin never sees them.
+        $coursesCheckedAt = now();
         $courses = Course::query()
             ->where('approval_status', '!=', 'draft')
             ->withCount('enrollments')
@@ -1013,35 +1014,71 @@ class AdminController extends Controller
             ->orderByRaw("CASE WHEN approval_status = 'pending' THEN 0 ELSE 1 END")
             ->orderBy('title')
             ->get()
-            ->map(fn (Course $c) => (object) [
-                'id' => $c->id,
-                'title' => $c->title,
-                'thumbnail_url' => $c->thumbnail_url,
-                'students' => (int) $c->enrollments_count,
-                'faculty' => 1,
-                'badge' => $c->badge->name ?? '—',
-                // Small badge thumbnail and a certificate flag for the card.
-                'badge_icon' => $c->badge->icon_url ?? null,
-                'certificate_enabled' => (bool) $c->certificate_enabled,
-                'certificate_mode' => $c->certificate_mode,
-                'instructor' => $c->creator->name ?? $c->instructor,
-                'status' => $c->statusLabel(),
-                'status_key' => $this->statusKey($c),
-                'percent' => (int) round((float) DB::table('enrollments')->where('course_id', $c->id)->avg('progress_percent')),
-                'is_published' => (bool) $c->is_published,
-                'can_toggle_publish' => $c->approval_status === 'approved' && (bool) $c->is_approved,
-                'is_featured' => (bool) $c->is_featured,
-                'can_toggle_feature' => $c->isEligibleForFeaturing(),
-                // "Subject is Related on" — faculty/admin only, never shown
-                // to students. Lets an admin see what a submitted course
-                // will be recommended against before approving it.
-                'related_skills' => FacultyController::relatedSkillsOf($c),
-            ])
+            ->map(fn (Course $course): object => $this->courseSummary($course))
             ->values();
 
         $featuredCourseCount = Course::where('is_featured', true)->count();
 
-        return view('admin.courses.index', compact('courses', 'featuredCourseCount'));
+        return view('admin.courses.index', compact('courses', 'featuredCourseCount', 'coursesCheckedAt'));
+    }
+
+    public function courseUpdates(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'sinceAt' => ['required', 'date'],
+        ]);
+        $sinceAt = Carbon::parse($validated['sinceAt'])->subSeconds(2);
+        $checkedAt = now();
+        $courses = Course::query()
+            ->where('updated_at', '>=', $sinceAt)
+            ->withCount('enrollments')
+            ->with(['badge', 'creator'])
+            ->orderByRaw("CASE WHEN approval_status = 'pending' THEN 0 ELSE 1 END")
+            ->orderBy('title')
+            ->get();
+        $draftCourseIds = $courses
+            ->where('approval_status', 'draft')
+            ->pluck('id')
+            ->values();
+        $visibleCourses = $courses
+            ->reject(fn (Course $course): bool => $course->approval_status === 'draft')
+            ->map(fn (Course $course): object => $this->courseSummary($course))
+            ->values();
+
+        $coursesHtml = $visibleCourses
+            ->map(fn (object $course): string => view('admin.courses.card', compact('course'))->render())
+            ->implode('');
+
+        return response()->json([
+            'courses_html' => $coursesHtml,
+            'draft_ids' => $draftCourseIds,
+            'checked_at' => $checkedAt->toIso8601String(),
+            'course_count' => $courses->count(),
+        ]);
+    }
+
+    private function courseSummary(Course $course): object
+    {
+        return (object) [
+            'id' => $course->id,
+            'title' => $course->title,
+            'thumbnail_url' => $course->thumbnail_url,
+            'students' => (int) $course->enrollments_count,
+            'faculty' => 1,
+            'badge' => $course->badge->name ?? '—',
+            'badge_icon' => $course->badge->icon_url ?? null,
+            'certificate_enabled' => (bool) $course->certificate_enabled,
+            'certificate_mode' => $course->certificate_mode,
+            'instructor' => $course->creator->name ?? $course->instructor,
+            'status' => $course->statusLabel(),
+            'status_key' => $this->statusKey($course),
+            'percent' => (int) round((float) DB::table('enrollments')->where('course_id', $course->id)->avg('progress_percent')),
+            'is_published' => (bool) $course->is_published,
+            'can_toggle_publish' => $course->approval_status === 'approved' && (bool) $course->is_approved,
+            'is_featured' => (bool) $course->is_featured,
+            'can_toggle_feature' => $course->isEligibleForFeaturing(),
+            'related_skills' => FacultyController::relatedSkillsOf($course),
+        ];
     }
 
     /**
