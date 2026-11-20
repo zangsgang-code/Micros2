@@ -587,11 +587,60 @@
     :where(body[data-admin-page="admin-complaints"]) .thread-filter-empty{display:none;padding:20px 14px;color:var(--muted);font-size:13px;text-align:center;}
     :where(body[data-admin-page="admin-complaints"]) .thread-filter-empty.is-visible{display:block;}
     :where(body[data-admin-page="admin-complaints"]) .thread[hidden]{display:none;}
+    :where(body[data-admin-page="admin-complaints"]) .thread-list-scroll{max-height:min(52vh,520px);overflow-y:auto;overscroll-behavior-y:auto;}
+    :where(body[data-admin-page="admin-complaints"]) .thread-page-hidden{display:none!important;}
+    :where(body[data-admin-page="admin-complaints"]) .thread-pagination{display:flex;align-items:center;justify-content:space-between;gap:8px;
+        padding:9px 12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);}
+    :where(body[data-admin-page="admin-complaints"]) .thread-pagination[hidden]{display:none;}
+    :where(body[data-admin-page="admin-complaints"]) .thread-page-button{border:1px solid var(--line);border-radius:7px;padding:6px 9px;
+        background:#fff;color:var(--navy);font:inherit;font-weight:700;cursor:pointer;}
+    :where(body[data-admin-page="admin-complaints"]) .thread-page-button:disabled{opacity:.45;cursor:default;}
     :where(body[data-admin-page="admin-complaints"]) .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .page-heading{font-size:1.75rem;letter-spacing:-.035em;color:#000;}
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .page-sub{margin-bottom:0;line-height:1.55;}
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .grid{margin-top:22px;}
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .detail-hd{background:#f8faff;}
+    @media(min-width:1001px){
+        :where(body[data-admin-page="admin-complaints"]) .wrap.inbox-page{
+            display:flex;
+            flex-direction:column;
+            height:calc(100vh - var(--admin-topbar-height,66px));
+            height:calc(100dvh - var(--admin-topbar-height,66px));
+            min-height:0;
+        }
+        :where(body[data-admin-page="admin-complaints"]) .inbox-page .grid{
+            flex:1 1 auto;
+            min-height:0;
+            align-items:stretch;
+        }
+        :where(body[data-admin-page="admin-complaints"]) .inbox-page [data-inbox-thread-list]{
+            display:flex;
+            height:100%;
+            min-height:0;
+            flex-direction:column;
+        }
+        :where(body[data-admin-page="admin-complaints"]) .inbox-page .thread-list-scroll{
+            flex:1 1 auto;
+            min-height:0;
+            max-height:none;
+        }
+        :where(body[data-admin-page="admin-complaints"]) .inbox-page .grid > .panel:last-child{
+            display:flex;
+            height:100%;
+            min-height:0;
+            flex-direction:column;
+        }
+        :where(body[data-admin-page="admin-complaints"]) .inbox-page .msgs{
+            flex:1 1 auto;
+            min-height:0;
+            max-height:none;
+            overflow-y:auto;
+            overscroll-behavior-y:auto;
+        }
+        :where(body[data-admin-page="admin-complaints"]) .inbox-page .reply-box{
+            flex:0 0 auto;
+        }
+    }
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .detail-hd h2{font-size:18px;line-height:1.35;color:#111a3c;}
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .detail-hd-top{display:flex;align-items:center;justify-content:space-between;gap:16px;}
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .detail-hd-top h2{min-width:0;margin:0;}
@@ -616,7 +665,25 @@
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .reply-field-compose .mail-note{grid-column:1/-1;}
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .reply-attachment-preview{margin-top:8px;}
     :where(body[data-admin-page="admin-complaints"]) .inbox-page .reply-attachment-preview img{display:block;max-width:180px;max-height:140px;border:1px solid var(--line);border-radius:8px;}
-    @media(max-width:1000px){:where(body[data-admin-page="admin-complaints"]) .inbox-page .grid{grid-template-columns:1fr;}}
+    @media(max-width:1000px){
+        :where(body[data-admin-page="admin-complaints"]) .wrap.inbox-page{
+            height:auto;
+            min-height:calc(100vh - var(--admin-topbar-height,66px));
+        }
+        :where(body[data-admin-page="admin-complaints"]) .inbox-page .grid{
+            grid-template-columns:1fr;
+            align-items:start;
+        }
+        :where(body[data-admin-page="admin-complaints"]) .inbox-page .grid > .panel:last-child{
+            display:block;
+            height:auto;
+            min-height:0;
+        }
+        :where(body[data-admin-page="admin-complaints"]) .inbox-page .msgs{
+            min-height:180px;
+            max-height:55vh;
+        }
+    }
     @media(max-width:680px){
         :where(body[data-admin-page="admin-complaints"]) .wrap{padding:20px 0 32px;}
         :where(body[data-admin-page="admin-complaints"]) .msg .bubble{max-width:88%;}

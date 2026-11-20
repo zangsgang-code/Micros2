@@ -234,12 +234,12 @@ class PageController extends Controller
 
         // Signed-in learners and faculty can follow their thread in Inbox.
         if ($auth && $auth->isStudent()) {
-            return redirect()->route('inbox.index', ['thread' => $complaint->id])
+            return redirect()->to(route('inbox.index', ['thread' => $complaint->id]).'#thread-messages')
                 ->with('success', 'Your message was sent to the administrators.');
         }
 
         if ($auth && $auth->isFaculty()) {
-            return redirect()->route('faculty.inbox', ['thread' => $complaint->id])
+            return redirect()->to(route('faculty.inbox', ['thread' => $complaint->id]).'#thread-messages')
                 ->with('success', 'Your message was sent to the administrators.');
         }
 

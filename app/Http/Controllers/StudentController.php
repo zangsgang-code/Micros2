@@ -39,6 +39,8 @@ use App\Support\SkillCatalog;
 use App\Support\UserPresenter;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -3379,6 +3381,54 @@ class StudentController extends Controller
         ]);
     }
 
+    /** Return new replies from one of the authenticated user's inbox threads. */
+    public function complaintRepliesSince(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'sinceId' => ['nullable', 'integer', 'min:0'],
+        ]);
+        $user = Auth::user();
+        $complaint = Complaint::query()
+            ->where('user_id', $user->id)
+            ->findOrFail($id);
+        $messages = ComplaintReply::query()
+            ->where('complaint_id', $complaint->id)
+            ->where('id', '>', (int) ($validated['sinceId'] ?? 0))
+            ->with('author')
+            ->orderBy('id')
+            ->get();
+
+        if ($messages->isNotEmpty() && $complaint->unreadForSender()) {
+            $complaint->student_read_at = now();
+            $complaint->save();
+        }
+
+        $unreadCount = Complaint::query()
+            ->where('user_id', $user->id)
+            ->where(function (Builder $query): void {
+                $query->whereNull('student_read_at')
+                    ->orWhereRaw('student_read_at < COALESCE(last_reply_at, created_at)');
+            })
+            ->count();
+
+        return response()->json([
+            'messages' => $messages->map(fn (ComplaintReply $message): array => [
+                'id' => (int) $message->id,
+                'is_admin' => (bool) $message->is_admin,
+                'author' => $message->is_admin ? 'Administrator' : 'You',
+                'time_ago' => $message->created_at?->diffForHumans(),
+                'body' => $message->body,
+                'body_html' => null,
+                'attachment_url' => $message->attachment_url
+                    ? route('complaint-replies.attachment', $message->id)
+                    : null,
+                'attachment_name' => $message->attachment_name,
+                'attachment_is_image' => $message->attachmentIsImage(),
+            ])->values(),
+            'unread_count' => $unreadCount,
+        ]);
+    }
+
     /** Raise a new complaint from the Help Centre. */
     public function storeComplaint(Request $request)
     {
@@ -3424,7 +3474,7 @@ class StudentController extends Controller
 
         $inboxRoute = Auth::user()->isFaculty() ? 'faculty.inbox' : 'inbox.index';
 
-        return redirect()->route($inboxRoute, ['thread' => $complaint->id])
+        return redirect()->to(route($inboxRoute, ['thread' => $complaint->id]).'#thread-messages')
             ->with('success', 'Your message was sent to the administrators.');
     }
 
@@ -3472,8 +3522,13 @@ class StudentController extends Controller
         $complaint->save();
 
         $inboxRoute = $user->isFaculty() ? 'faculty.inbox' : 'inbox.index';
+        $redirectParameters = ['thread' => $complaint->id];
+        $threadPage = max(1, (int) $request->input('threadPage', 1));
+        if ($threadPage > 1) {
+            $redirectParameters['threadPage'] = $threadPage;
+        }
 
-        return redirect()->route($inboxRoute, ['thread' => $complaint->id]);
+        return redirect()->to(route($inboxRoute, $redirectParameters).'#thread-messages');
     }
 
     /**

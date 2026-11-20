@@ -27,10 +27,14 @@
 
     <div class="grid">
         {{-- ── Thread list ── --}}
-        <nav class="panel" aria-label="Message threads">
+        <nav class="panel" aria-label="Message threads"
+             data-inbox-thread-list
+             data-poll-url="{{ route('admin.complaints.updates') }}"
+             data-updates-since="{{ now()->toIso8601String() }}">
             <div class="panel-hd">
                 <span>Messages</span>
-                @if ($unreadCount > 0)<span class="count-pill">{{ $unreadCount }} new</span>@endif
+                <span class="count-pill" data-inbox-unread-count data-unread-suffix=" new"
+                      @if($unreadCount === 0) style="display:none" @endif>{{ $unreadCount }} new</span>
             </div>
             <div class="thread-filters" role="search" aria-label="Filter message threads">
                 <label for="thread-search" class="sr-only">Search messages</label>
@@ -56,39 +60,19 @@
                 </div>
             </div>
 
-            @forelse ($threads as $t)
-                <a class="thread {{ $selected && $selected->id === $t->id ? 'active' : '' }}"
-                   data-subject="{{ $t->subject }}"
-                   data-sender="{{ $t->senderName() }} {{ $t->senderContact() }}"
-                   data-status="{{ strtolower($t->status) }}"
-                   data-origin="{{ strtolower($t->senderRoleLabel()) }}"
-                   @if($selected && $selected->id === $t->id) aria-current="page" @endif
-                   href="{{ route('admin.complaints', ['thread' => $t->id]) }}">
-                    <div class="thread-top">
-                        <span class="thread-subject">{{ $t->subject }}</span>
-                        @if ($t->unreadForAdmin())<span class="dot"></span>@endif
-                    </div>
-                    {{-- Badges on their own line, then the sender and time.
-                         Mixing all four inline made them wrap mid-row. --}}
-                    <div class="thread-badges">
-                        <span class="origin {{ strtolower($t->senderRoleLabel()) }}">
-                            {{ $t->senderRoleLabel() }}
-                        </span>
-                        <span class="status {{ $t->status }}">{{ ucfirst($t->status) }}</span>
-                        @if ($t->attachment_url)
-                            <span class="clip" title="Has an attachment">📎</span>
-                        @endif
-                    </div>
-                    <div class="thread-meta">
-                        <span class="thread-who">{{ $t->senderName() }}</span>
-                        <span class="thread-dot">·</span>
-                        <span>{{ $t->lastActivityAt()?->diffForHumans() }}</span>
-                    </div>
-                </a>
-            @empty
-                <div class="empty">No messages yet.</div>
-            @endforelse
-            <div class="thread-filter-empty" id="thread-filter-empty">No messages match these filters.</div>
+            <div class="thread-list-scroll" data-thread-scroll>
+                @forelse ($threads as $t)
+                    @include('admin.complaints.thread-item', ['thread' => $t, 'selected' => $selected && $selected->id === $t->id])
+                @empty
+                    <div class="empty" data-empty-threads>No messages yet.</div>
+                @endforelse
+                <div class="thread-filter-empty" id="thread-filter-empty">No messages match these filters.</div>
+            </div>
+            <div class="thread-pagination" data-thread-pagination role="group" aria-label="Message thread pages" hidden>
+                <button class="thread-page-button" type="button" data-thread-page-prev disabled>Previous</button>
+                <span data-thread-page-status aria-live="polite"></span>
+                <button class="thread-page-button" type="button" data-thread-page-next disabled>Next</button>
+            </div>
         </nav>
 
         {{-- ── Selected thread ── --}}
@@ -99,6 +83,7 @@
                         <h2>{{ $selected->subject }}</h2>
                         <form class="resolve-form" method="POST" action="{{ route('admin.complaints.resolve', $selected->id) }}">
                             @csrf
+                            <input type="hidden" name="threadPage" value="{{ request()->query('threadPage', 1) }}">
                             <button type="submit" class="btn-ghost">
                                 {{ $selected->status === 'resolved' ? 'Reopen conversation' : 'Mark as resolved' }}
                             </button>
@@ -121,7 +106,8 @@
                     </div>
                 </div>
 
-                <div class="msgs">
+                <div class="msgs" id="thread-messages" data-inbox-message-stream data-own-message-class="from-admin"
+                     data-thread-id="{{ $selected->id }}">
                     {{-- Opening message --}}
                     <div class="msg from-student">
                         <div>
@@ -148,7 +134,7 @@
                     </div>
 
                     @foreach ($selected->replies as $reply)
-                        <div class="msg {{ $reply->is_admin ? 'from-admin' : 'from-student' }}">
+                        <div class="msg {{ $reply->is_admin ? 'from-admin' : 'from-student' }}" data-message-id="{{ $reply->id }}">
                             <div>
                                 <div class="msg-who" style="{{ $reply->is_admin ? 'text-align:right;' : '' }}">
                                     {{ $reply->is_admin ? 'Administrator' : ($reply->author->name ?? 'Student') }}
@@ -177,6 +163,7 @@
                 <div class="reply-box">
                     <form class="inbox-reply-compose {{ $selected->isFromVisitor() ? 'visitor-reply-compose' : 'reply-field-compose' }}" method="POST" enctype="multipart/form-data" action="{{ route('admin.complaints.reply', $selected->id) }}">
                         @csrf
+                        <input type="hidden" name="threadPage" value="{{ request()->query('threadPage', 1) }}">
                         @if ($selected->isFromVisitor())
                             <x-rich-text-editor
                                 id="admin-reply"
@@ -234,8 +221,47 @@
         var count = document.getElementById('thread-result-count');
         var noResults = document.getElementById('thread-filter-empty');
         var threads = Array.prototype.slice.call(document.querySelectorAll('.thread[data-status]'));
+        var threadScroll = document.querySelector('[data-thread-scroll]');
+        var pagination = document.querySelector('[data-thread-pagination]');
+        var pageStatus = document.querySelector('[data-thread-page-status]');
+        var previousPage = document.querySelector('[data-thread-page-prev]');
+        var nextPage = document.querySelector('[data-thread-page-next]');
+        var requestedPage = Number(new URLSearchParams(window.location.search).get('threadPage'));
+        var currentPage = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+        var threadsPerPage = 10;
 
-        function applyThreadFilters() {
+        function applyThreadPagination() {
+            var matchingThreads = threads.filter(function (thread) {
+                return !thread.hidden;
+            });
+            var pageCount = Math.max(1, Math.ceil(matchingThreads.length / threadsPerPage));
+            currentPage = Math.min(currentPage, pageCount);
+
+            var firstIndex = (currentPage - 1) * threadsPerPage;
+            var lastIndex = Math.min(firstIndex + threadsPerPage, matchingThreads.length);
+            matchingThreads.forEach(function (thread, index) {
+                thread.classList.toggle('thread-page-hidden', index < firstIndex || index >= lastIndex);
+            });
+
+            pagination.hidden = matchingThreads.length <= threadsPerPage;
+            pageStatus.textContent = matchingThreads.length
+                ? 'Showing ' + (firstIndex + 1) + '-' + lastIndex + ' of ' + matchingThreads.length
+                : 'Showing 0 threads';
+            previousPage.disabled = currentPage === 1;
+            nextPage.disabled = currentPage === pageCount;
+            threads.forEach(function (thread) {
+                var url = new URL(thread.href);
+                if (currentPage > 1) {
+                    url.searchParams.set('threadPage', String(currentPage));
+                } else {
+                    url.searchParams.delete('threadPage');
+                }
+                thread.href = url.toString();
+            });
+        }
+
+        function applyThreadFilters(keepCurrentPage) {
+            if (keepCurrentPage !== true) currentPage = 1;
             var query = search.value.trim().toLocaleLowerCase();
             var visibleCount = 0;
 
@@ -252,17 +278,37 @@
 
             count.textContent = 'Showing ' + visibleCount + ' of ' + threads.length;
             noResults.classList.toggle('is-visible', threads.length > 0 && visibleCount === 0);
+            applyThreadPagination();
         }
 
         search.addEventListener('input', applyThreadFilters);
         status.addEventListener('change', applyThreadFilters);
         origin.addEventListener('change', applyThreadFilters);
+        previousPage.addEventListener('click', function () {
+            if (currentPage <= 1) return;
+            currentPage -= 1;
+            applyThreadPagination();
+            threadScroll.scrollTop = 0;
+        });
+        nextPage.addEventListener('click', function () {
+            var pageCount = Math.max(1, Math.ceil(threads.filter(function (thread) {
+                return !thread.hidden;
+            }).length / threadsPerPage));
+            if (currentPage >= pageCount) return;
+            currentPage += 1;
+            applyThreadPagination();
+            threadScroll.scrollTop = 0;
+        });
         clear.addEventListener('click', function () {
             search.value = '';
             status.value = '';
             origin.value = '';
             applyThreadFilters();
             search.focus();
+        });
+        window.addEventListener('admin-inbox:threads-updated', function () {
+            threads = Array.prototype.slice.call(document.querySelectorAll('.thread[data-status]'));
+            applyThreadFilters(true);
         });
 
         applyThreadFilters();

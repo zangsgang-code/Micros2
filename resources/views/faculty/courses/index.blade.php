@@ -56,7 +56,6 @@
         <aside class="course-outline-drawer" data-course-outline aria-label="Course content navigation">
             <button class="course-outline-toggle" type="button" data-course-outline-toggle aria-controls="course-outline-panel" aria-expanded="false" aria-label="Open course outline">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                <span>Jump to</span>
             </button>
             <nav class="course-outline-panel" id="course-outline-panel" aria-label="Course outline" hidden>
                 <div class="course-outline-heading">

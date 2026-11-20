@@ -34,6 +34,7 @@ import {
 } from 'ckeditor5';
 
 import 'ckeditor5/ckeditor5.css';
+import './inbox-polling.js';
 
 const editorInstances = new Map();
 

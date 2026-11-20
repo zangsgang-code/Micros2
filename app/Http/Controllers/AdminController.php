@@ -40,8 +40,10 @@ use App\Support\UserPresenter;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -720,6 +722,127 @@ class AdminController extends Controller
         ]);
     }
 
+    /** Return only new replies for an administrator's selected inbox thread. */
+    public function complaintRepliesSince(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'sinceId' => ['nullable', 'integer', 'min:0'],
+        ]);
+        $complaint = Complaint::findOrFail($id);
+        $messages = ComplaintReply::query()
+            ->where('complaint_id', $complaint->id)
+            ->where('id', '>', (int) ($validated['sinceId'] ?? 0))
+            ->with('author')
+            ->orderBy('id')
+            ->get();
+
+        if ($messages->isNotEmpty() && $complaint->unreadForAdmin()) {
+            $complaint->admin_read_at = now();
+            $complaint->save();
+        }
+
+        $unreadCount = Complaint::query()
+            ->where(function (Builder $query): void {
+                $query->whereNull('admin_read_at')
+                    ->orWhereRaw('admin_read_at < COALESCE(last_reply_at, created_at)');
+            })
+            ->count();
+
+        return response()->json([
+            'messages' => $messages->map(fn (ComplaintReply $message): array => [
+                'id' => (int) $message->id,
+                'is_admin' => (bool) $message->is_admin,
+                'author' => $message->is_admin ? 'Administrator' : ($message->author->name ?? 'Student'),
+                'time_ago' => $message->created_at?->diffForHumans(),
+                'body' => $message->body,
+                'body_html' => $complaint->isFromVisitor() && $message->is_admin
+                    ? RichTextSanitizer::sanitize((string) $message->body)
+                    : null,
+                'attachment_url' => $message->attachment_url
+                    ? route('complaint-replies.attachment', $message->id)
+                    : null,
+                'attachment_name' => $message->attachment_name,
+                'attachment_is_image' => $message->attachmentIsImage(),
+            ])->values(),
+            'unread_count' => $unreadCount,
+        ]);
+    }
+
+    /** Return updated inbox rows and replies for the currently open thread. */
+    public function complaintInboxUpdates(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'sinceUpdatedAt' => ['nullable', 'date'],
+            'threadId' => ['nullable', 'integer', 'min:1'],
+            'sinceId' => ['nullable', 'integer', 'min:0'],
+        ]);
+        $checkedAt = now();
+        $sinceUpdatedAt = isset($validated['sinceUpdatedAt'])
+            ? Carbon::parse($validated['sinceUpdatedAt'])
+            : $checkedAt->copy()->subMinute();
+        $selectedThreadId = isset($validated['threadId']) ? (int) $validated['threadId'] : null;
+        $selectedThread = null;
+        $messages = collect();
+
+        if ($selectedThreadId !== null) {
+            $selectedThread = Complaint::findOrFail($selectedThreadId);
+            $messages = ComplaintReply::query()
+                ->where('complaint_id', $selectedThread->id)
+                ->where('id', '>', (int) ($validated['sinceId'] ?? 0))
+                ->with('author')
+                ->orderBy('id')
+                ->get();
+
+            if ($messages->isNotEmpty() && $selectedThread->unreadForAdmin()) {
+                $selectedThread->admin_read_at = now();
+                $selectedThread->save();
+            }
+        }
+
+        $threads = Complaint::query()
+            ->with('user')
+            ->where('updated_at', '>=', $sinceUpdatedAt)
+            ->orderByRaw('COALESCE(last_reply_at, created_at) DESC')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (Complaint $thread): array => [
+                'id' => (int) $thread->id,
+                'html' => view('admin.complaints.thread-item', [
+                    'thread' => $thread,
+                    'selected' => $thread->id === $selectedThreadId,
+                ])->render(),
+            ])
+            ->values();
+
+        $unreadCount = Complaint::query()
+            ->where(function (Builder $query): void {
+                $query->whereNull('admin_read_at')
+                    ->orWhereRaw('admin_read_at < COALESCE(last_reply_at, created_at)');
+            })
+            ->count();
+
+        return response()->json([
+            'threads' => $threads,
+            'messages' => $messages->map(fn (ComplaintReply $message): array => [
+                'id' => (int) $message->id,
+                'is_admin' => (bool) $message->is_admin,
+                'author' => $message->is_admin ? 'Administrator' : ($message->author->name ?? 'Student'),
+                'time_ago' => $message->created_at?->diffForHumans(),
+                'body' => $message->body,
+                'body_html' => $selectedThread && $selectedThread->isFromVisitor() && $message->is_admin
+                    ? RichTextSanitizer::sanitize((string) $message->body)
+                    : null,
+                'attachment_url' => $message->attachment_url
+                    ? route('complaint-replies.attachment', $message->id)
+                    : null,
+                'attachment_name' => $message->attachment_name,
+                'attachment_is_image' => $message->attachmentIsImage(),
+            ])->values(),
+            'unread_count' => $unreadCount,
+            'checked_at' => $checkedAt->toIso8601String(),
+        ]);
+    }
+
     public function replyComplaint(Request $request, int $id)
     {
         $complaint = Complaint::findOrFail($id);
@@ -767,6 +890,12 @@ class AdminController extends Controller
         $complaint->admin_read_at = now();   // the admin has obviously read it
         $complaint->status = 'open';
         $complaint->save();
+        $redirectParameters = ['thread' => $complaint->id];
+        $threadPage = max(1, (int) $request->input('threadPage', 1));
+        if ($threadPage > 1) {
+            $redirectParameters['threadPage'] = $threadPage;
+        }
+        $redirectToThread = route('admin.complaints', $redirectParameters).'#thread-messages';
 
         // A visitor has no inbox, so the reply is emailed to them.
         // The send happens AFTER the reply is stored and is wrapped in a
@@ -781,7 +910,7 @@ class AdminController extends Controller
                     adminName: Auth::user()->name ?? 'UPSKILL Administrator',
                 ));
 
-                return redirect()->route('admin.complaints', ['thread' => $complaint->id])
+                return redirect()->to($redirectToThread)
                     ->with('success', 'Reply sent and emailed to '.$complaint->guest_email.'.');
             } catch (\Throwable $e) {
                 report($e);
@@ -789,7 +918,7 @@ class AdminController extends Controller
                 // No green "sent" flash here — showing success beside a
                 // failure warning is contradictory. The warning says the
                 // reply was saved.
-                return redirect()->route('admin.complaints', ['thread' => $complaint->id])
+                return redirect()->to($redirectToThread)
                     ->withErrors([
                         'mail' => 'Your reply was saved, but the email could not be delivered to '
                             .$complaint->guest_email.'. Reason: '.$e->getMessage(),
@@ -797,7 +926,7 @@ class AdminController extends Controller
             }
         }
 
-        return redirect()->route('admin.complaints', ['thread' => $complaint->id])
+        return redirect()->to($redirectToThread)
             ->with('success', 'Reply sent.');
     }
 

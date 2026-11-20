@@ -2,6 +2,7 @@
     $isFacultyInbox = $isFacultyInbox ?? false;
     $inboxIndexRoute = $isFacultyInbox ? 'faculty.inbox' : 'inbox.index';
     $inboxReplyRoute = $isFacultyInbox ? 'faculty.inbox.reply' : 'inbox.reply';
+    $inboxPollRoute = $isFacultyInbox ? 'faculty.inbox.replies' : 'inbox.replies';
     $newMessageRoute = $isFacultyInbox ? 'help.store' : 'inbox.store';
 @endphp
 {{--
@@ -67,27 +68,37 @@
 
     <div class="grid">
         {{-- â”€â”€ Threads â”€â”€ --}}
-        <nav class="panel ui-card-surface" aria-label="Your message threads">
+        <nav class="panel ui-card-surface" aria-label="Your message threads" data-user-thread-list>
             <div class="panel-hd ui-card-header">
                 <span class="ui-card-header__title">My Messages</span>
-                @if (($unreadCount ?? 0) > 0)<span class="count-pill">{{ $unreadCount }}</span>@endif
+                <span class="count-pill" data-inbox-unread-count
+                      @if(($unreadCount ?? 0) === 0) style="display:none" @endif>{{ $unreadCount ?? 0 }}</span>
             </div>
-            @forelse ($threads as $t)
-                <a class="thread {{ $selected && $selected->id === $t->id ? 'active' : '' }}"
-                   @if($selected && $selected->id === $t->id) aria-current="page" @endif
-                   href="{{ route($inboxIndexRoute, ['thread' => $t->id]) }}">
-                    <div class="thread-top">
-                        <span class="thread-subject">{{ $t->subject }}</span>
-                        @if ($t->unreadForStudent())<span class="dot" role="img" aria-label="Unread message" title="Unread message"></span>@endif
-                    </div>
-                    <div class="thread-meta">
-                        {{ $t->lastActivityAt()?->diffForHumans() }}
-                        <span class="status ui-badge {{ $t->status }} {{ $t->status === 'resolved' ? 'ui-badge--success' : ($t->status === 'open' ? 'ui-badge--warning' : '') }}">{{ ucfirst($t->status) }}</span>
-                    </div>
-                </a>
-            @empty
-                <div class="empty ui-empty-state">You haven't sent any messages yet.</div>
-            @endforelse
+            <div class="inbox-thread-scroll" data-user-thread-scroll>
+                @forelse ($threads as $t)
+                    <a class="thread {{ $selected && $selected->id === $t->id ? 'active' : '' }}"
+                       data-user-thread-item
+                       @if($selected && $selected->id === $t->id) aria-current="page" @endif
+                       href="{{ route($inboxIndexRoute, ['thread' => $t->id]) }}">
+                        <div class="thread-top">
+                            <span class="thread-subject">{{ $t->subject }}</span>
+                            @if ($t->unreadForStudent())<span class="dot" role="img" aria-label="Unread message" title="Unread message"></span>@endif
+                        </div>
+                        <div class="thread-meta">
+                            {{ $t->lastActivityAt()?->diffForHumans() }}
+                            <span class="status ui-badge {{ $t->status }} {{ $t->status === 'resolved' ? 'ui-badge--success' : ($t->status === 'open' ? 'ui-badge--warning' : '') }}">{{ ucfirst($t->status) }}</span>
+                        </div>
+                    </a>
+                @empty
+                    <div class="empty ui-empty-state">You haven't sent any messages yet.</div>
+                @endforelse
+            </div>
+            <div class="inbox-thread-pagination" data-user-thread-pagination
+                 role="group" aria-label="Message thread pages" hidden>
+                <button class="inbox-thread-page-button" type="button" data-user-thread-page-prev disabled>Previous</button>
+                <span data-user-thread-page-status aria-live="polite"></span>
+                <button class="inbox-thread-page-button" type="button" data-user-thread-page-next disabled>Next</button>
+            </div>
         </nav>
 
         {{-- â”€â”€ Conversation â”€â”€ --}}
@@ -100,7 +111,8 @@
                     </div>
                 </div>
 
-                <div class="msgs">
+                <div class="msgs" id="thread-messages" data-inbox-message-stream data-own-message-class="from-me"
+                     data-poll-url="{{ route($inboxPollRoute, $selected->id) }}">
                     <div class="msg from-me">
                         <div>
                             <div class="msg-who text-right">You</div>
@@ -122,7 +134,7 @@
                     </div>
 
                     @foreach ($selected->replies as $reply)
-                        <div class="msg {{ $reply->is_admin ? 'from-admin' : 'from-me' }}">
+                        <div class="msg {{ $reply->is_admin ? 'from-admin' : 'from-me' }}" data-message-id="{{ $reply->id }}">
                             <div>
                                 <div class="msg-who {{ $reply->is_admin ? '' : 'text-right' }}">
                                     {{ $reply->is_admin ? 'Administrator' : 'You' }}
@@ -149,6 +161,7 @@
                 <div class="reply-box">
                     <form class="inbox-reply-compose reply-field-compose" method="POST" enctype="multipart/form-data" action="{{ route($inboxReplyRoute, $selected->id) }}">
                         @csrf
+                        <input type="hidden" name="threadPage" value="{{ request()->query('threadPage', 1) }}">
                         <label for="inbox-reply-attachment" class="reply-attachment-picker" title="Attach an image" aria-label="Attach an image" role="button" tabindex="0">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.4 11.1 12.8 19.7a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
                         </label>

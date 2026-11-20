@@ -280,6 +280,10 @@ Route::middleware([PreventBackHistory::class, RoleBasedAccess::class.':admin', R
 
     // #4 — Complaint inbox from the Help Center
     Route::get('/Admin-complaints', [AdminController::class, 'complaints'])->name('admin.complaints');
+    Route::get('/Admin-complaints/{id}/replies', [AdminController::class, 'complaintRepliesSince'])
+        ->whereNumber('id')->middleware('throttle:30,1')->name('admin.complaints.replies');
+    Route::get('/Admin-complaints/updates', [AdminController::class, 'complaintInboxUpdates'])
+        ->middleware('throttle:30,1')->name('admin.complaints.updates');
     Route::post('/Admin-complaints/{id}/reply', [AdminController::class, 'replyComplaint'])
         ->whereNumber('id')->name('admin.complaints.reply');
     Route::post('/Admin-complaints/{id}/resolve', [AdminController::class, 'resolveComplaint'])
@@ -349,6 +353,8 @@ Route::middleware([PreventBackHistory::class, RoleBasedAccess::class.':student',
 
     // #4 — Help Centre inbox (envelope beside the notification bell)
     Route::get('/inbox', [StudentController::class, 'inbox'])->name('inbox.index');
+    Route::get('/inbox/{id}/replies', [StudentController::class, 'complaintRepliesSince'])
+        ->whereNumber('id')->middleware('throttle:30,1')->name('inbox.replies');
     Route::post('/inbox', [StudentController::class, 'storeComplaint'])->name('inbox.store');
     Route::post('/inbox/{id}/reply', [StudentController::class, 'replyComplaint'])
         ->whereNumber('id')->name('inbox.reply');
@@ -375,6 +381,8 @@ Route::middleware([PreventBackHistory::class, RoleBasedAccess::class.':faculty',
 
     // Faculty inbox — private message threads between faculty and admins
     Route::get('/Faculty-inbox', [FacultyController::class, 'inbox'])->name('faculty.inbox');
+    Route::get('/Faculty-inbox/{id}/replies', [StudentController::class, 'complaintRepliesSince'])
+        ->whereNumber('id')->middleware('throttle:30,1')->name('faculty.inbox.replies');
     Route::post('/Faculty-inbox/{id}/reply', [StudentController::class, 'replyComplaint'])
         ->whereNumber('id')->name('faculty.inbox.reply');
 
