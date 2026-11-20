@@ -12,6 +12,7 @@
         'certificates.index',
         'certificates.view',
         'profile.show',
+        'settings.index',
         'pathways.index',
         'stacking.progress',
         'analytics.index',
@@ -78,6 +79,7 @@
                     <strong>{{ $user->name ?? 'Account' }}</strong>
                     <span>{{ $user->email ?? '' }}</span>
                 </div>
+                <a href="{{ route('settings.index') }}" role="menuitem">Settings</a>
                 @if (!$authUser?->isSubAdmin() || $authUser->canAccessAdminPage('profile'))
                     <a href="{{ route($profileRoute) }}" role="menuitem">Profile</a>
                 @endif

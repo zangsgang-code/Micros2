@@ -47,7 +47,23 @@ class LoginController extends Controller
                 ->onlyInput('email');
         }
 
-        if (! $user->is_active) {
+        $accountReactivated = false;
+
+        if ($user->isStudent() && $user->account_deletion_requested_at) {
+            $reactivationDeadline = $user->account_deletion_requested_at->copy()->addDays(30);
+
+            if ($user->account_anonymized_at || now()->greaterThanOrEqualTo($reactivationDeadline)) {
+                return back()
+                    ->withErrors(['email' => 'The 30-day reactivation period has ended. Please contact support.'])
+                    ->onlyInput('email');
+            }
+
+            $user->forceFill([
+                'account_deletion_requested_at' => null,
+                'is_active' => true,
+            ])->save();
+            $accountReactivated = true;
+        } elseif (! $user->is_active) {
             return back()
                 ->withErrors(['email' => 'Your account has been deactivated. Please contact an administrator.'])
                 ->onlyInput('email');
@@ -56,7 +72,13 @@ class LoginController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        return redirect()->intended(route($this->dashboardRouteFor($user)));
+        $redirect = redirect()->intended(route($this->dashboardRouteFor($user)));
+
+        if ($accountReactivated) {
+            $redirect->with('success', 'Your account is reactivated and the deletion request has been cancelled.');
+        }
+
+        return $redirect;
     }
 
     public function destroy(Request $request)

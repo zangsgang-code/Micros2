@@ -35,6 +35,14 @@ class User extends Authenticatable
         self::ROLE_SUPERADMIN,
     ];
 
+    public const NOTIFICATION_PREFERENCE_TYPES = [
+        'announcements' => ['announcement'],
+        'courses' => ['course'],
+        'progress' => ['enrollment'],
+        'assessments' => ['assessment'],
+        'achievements' => ['badge', 'certificate'],
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -75,6 +83,7 @@ class User extends Authenticatable
         'notifications_read_at',
         'announcements_read_at',
         'admin_page_access',
+        'notification_preferences',
     ];
 
     /**
@@ -85,6 +94,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'account_deletion_requested_at',
+        'account_anonymized_at',
     ];
 
     /**
@@ -108,6 +119,9 @@ class User extends Authenticatable
             'notifications_read_at' => 'datetime',
             'announcements_read_at' => 'datetime',
             'admin_page_access' => 'array',
+            'notification_preferences' => 'array',
+            'account_deletion_requested_at' => 'datetime',
+            'account_anonymized_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
             'profile_completed' => 'boolean',
@@ -141,6 +155,17 @@ class User extends Authenticatable
             self::ROLE_FACULTY => 'faculty',
             default => 'student',
         };
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    public function notificationPreferences(): array
+    {
+        return array_replace(
+            array_fill_keys(array_keys(self::NOTIFICATION_PREFERENCE_TYPES), true),
+            $this->notification_preferences ?? []
+        );
     }
 
     /**

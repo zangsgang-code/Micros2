@@ -75,13 +75,20 @@ class UserNotificationService
     /** @return Collection<int, object> */
     public function feed(?User $user, int $limit = 30): Collection
     {
-        $storedRecords = $user
-            ? Notification::query()
-                ->where('user_id', $user->id)
-                ->latest()
-                ->limit($limit)
-                ->get()
-            : collect();
+        $disabledTypes = $this->disabledNotificationTypes($user);
+        $storedRecords = collect();
+
+        if ($user) {
+            $storedQuery = Notification::query()
+                ->where('user_id', $user->id);
+
+            if ($disabledTypes !== []) {
+                $storedQuery->whereNotIn('type', $disabledTypes);
+            }
+
+            $storedRecords = $storedQuery->latest()->limit($limit)->get();
+        }
+
         $courseTargets = Course::query()
             ->whereIn('id', $storedRecords->where('entity_type', 'course')->pluck('entity_id')->filter()->all())
             ->get()
@@ -119,7 +126,11 @@ class UserNotificationService
             ])
             : collect();
 
-        return $this->announcementFeed($user)
+        $announcements = $user === null || ($user->notificationPreferences()['announcements'] ?? true)
+            ? $this->announcementFeed($user)
+            : collect();
+
+        return $announcements
             ->concat($stored)
             ->sort(function (object $first, object $second): int {
                 if ($first->unread !== $second->unread) {
@@ -134,16 +145,43 @@ class UserNotificationService
 
     public function unreadCount(User $user): int
     {
-        $storedUnreadCount = Notification::query()
+        $storedUnreadQuery = Notification::query()
             ->where('user_id', $user->id)
-            ->where('is_read', false)
-            ->count();
+            ->where('is_read', false);
+        $disabledTypes = $this->disabledNotificationTypes($user);
 
-        $unreadAnnouncementCount = $this->announcementFeed($user)
-            ->where('unread', true)
-            ->count();
+        if ($disabledTypes !== []) {
+            $storedUnreadQuery->whereNotIn('type', $disabledTypes);
+        }
+
+        $storedUnreadCount = $storedUnreadQuery->count();
+
+        $unreadAnnouncementCount = ($user->notificationPreferences()['announcements'] ?? true)
+            ? $this->announcementFeed($user)->where('unread', true)->count()
+            : 0;
 
         return $storedUnreadCount + $unreadAnnouncementCount;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function disabledNotificationTypes(?User $user): array
+    {
+        if ($user === null) {
+            return [];
+        }
+
+        $preferences = $user->notificationPreferences();
+        $disabledTypes = [];
+
+        foreach (User::NOTIFICATION_PREFERENCE_TYPES as $preference => $types) {
+            if (! ($preferences[$preference] ?? true)) {
+                $disabledTypes = array_merge($disabledTypes, $types);
+            }
+        }
+
+        return array_values(array_unique($disabledTypes));
     }
 
     /** @return Collection<int, object> */

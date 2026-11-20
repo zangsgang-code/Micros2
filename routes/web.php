@@ -8,6 +8,7 @@ use App\Http\Controllers\FacultyAnalyticsReportController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\OpenBadgeCredentialController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StudentController;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\RecordAuditActions;
@@ -72,6 +73,13 @@ Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'store'])
     ->middleware('throttle:6,1')->name('login.store');
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+Route::middleware(['auth', PreventBackHistory::class])->group(function () {
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.index');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::delete('/settings/account-deletion', [SettingsController::class, 'requestAccountDeletion'])
+        ->name('settings.account-deletion');
+});
 
 Route::get('/register', [RegisterController::class, 'show'])->name('register');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');

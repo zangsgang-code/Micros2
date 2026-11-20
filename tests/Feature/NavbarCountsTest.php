@@ -10,6 +10,7 @@ use App\Models\LessonActivitySubmission;
 use App\Models\Notification;
 use App\Models\User;
 use App\Services\MicrocredentialCompletionService;
+use App\Services\UserNotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
@@ -223,4 +224,65 @@ test('faculty learner progress alert updates through the live count poll', funct
 test('topbar counts require authentication', function () {
     $this->getJson(route('notifications.counts'))
         ->assertRedirect(route('login'));
+});
+
+test('notification preferences can be saved and filter the in-app feed and unread count', function () {
+    $student = User::factory()->create();
+
+    Notification::create([
+        'user_id' => $student->id,
+        'title' => 'New course',
+        'message' => 'A course is available.',
+        'type' => 'course',
+        'is_read' => false,
+    ]);
+    Notification::create([
+        'user_id' => $student->id,
+        'title' => 'Enrollment update',
+        'message' => 'Your course is complete.',
+        'type' => 'enrollment',
+        'is_read' => false,
+    ]);
+
+    $this->actingAs($student)
+        ->get(route('settings.index'))
+        ->assertOk()
+        ->assertSee('Assessment updates')
+        ->assertSee(route('settings.index'), false);
+
+    $this->put(route('settings.update'), [
+        'notifications' => [
+            'announcements' => '1',
+            'progress' => '1',
+        ],
+    ])->assertRedirect(route('settings.index'));
+
+    $updatedStudent = $student->fresh();
+    expect($updatedStudent->notificationPreferences()['courses'])->toBeFalse();
+    expect($updatedStudent->notificationPreferences()['progress'])->toBeTrue();
+    expect(app(UserNotificationService::class)->feed($updatedStudent)->pluck('type')->all())
+        ->toBe(['enrollment']);
+
+    $this->getJson(route('notifications.counts'))
+        ->assertOk()
+        ->assertJsonPath('unread_notifications', 1);
+});
+
+test('settings shows notification categories for the signed-in role', function () {
+    $faculty = User::factory()->faculty()->create();
+
+    $this->actingAs($faculty)
+        ->get(route('settings.index'))
+        ->assertOk()
+        ->assertSee('Assessment activity')
+        ->assertDontSee('Badges and certificates');
+
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('settings.index'))
+        ->assertOk()
+        ->assertSee('Course reviews')
+        ->assertSee('Completion verification')
+        ->assertDontSee('Assessment activity');
 });
