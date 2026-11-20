@@ -165,7 +165,7 @@
             height: 52px;
             border-radius: 50%;
             background: transparent;
-            border: 2px solid rgba(255,255,255,0.25);
+            border: 3px solid #fff;
             overflow: hidden;
         }
         .slider__seal img { width: 100%; height: 100%; object-fit: cover; padding: 0; display: block; }

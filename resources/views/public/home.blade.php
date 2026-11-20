@@ -19,10 +19,31 @@
 
     .hero {
         position: relative;
+        isolation: isolate;
         overflow: visible;
         background: url("{{ asset('Images/Legacy_bldg.jpg') }}") right center / cover no-repeat;
         color: var(--landing-navy);
         padding: 6rem 0 5rem;
+    }
+
+    html.js .scroll-reveal {
+        opacity: 0;
+        transition: opacity .7s ease;
+    }
+
+    html.js .scroll-reveal.is-visible {
+        opacity: 1;
+    }
+
+    html.js .scroll-reveal:focus-within {
+        opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html.js .scroll-reveal {
+            opacity: 1;
+            transition: none;
+        }
     }
 
     .hero::before,
@@ -36,8 +57,8 @@
     .hero::before {
         inset: 0;
         border-radius: 0;
-        background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,.96) 35%, rgba(255,255,255,.78) 45%, rgba(255,255,255,0) 58%);
-        z-index: 0;
+        background: linear-gradient(90deg, rgba(242,247,255,.98) 0%, rgba(242,247,255,.95) 30%, rgba(242,247,255,.82) 45%, rgba(242,247,255,.22) 63%, rgba(7,20,63,.08) 100%);
+        z-index: 1;
     }
 
     .hero::after {
@@ -46,6 +67,7 @@
         background: radial-gradient(circle, rgba(9,39,216,.08) 0%, rgba(9,39,216,0) 62%);
         bottom: -120px;
         left: -120px;
+        z-index: 2;
     }
 
     .hero__inner {
@@ -276,15 +298,23 @@
         align-items: center;
         flex-wrap: wrap;
         gap: .65rem;
-        margin-bottom: .75rem;
-        color: var(--landing-royal-blue);
+        margin: 0;
         font-size: .72rem;
         font-weight: 700;
-        letter-spacing: .04em;
-        text-transform: uppercase;
+        letter-spacing: 0;
+    }
+
+    .hero-course-tags span {
+        display: inline-flex;
+        align-items: center;
+        padding: .35rem .7rem;
+        border-radius: 999px;
+        background: #00bcd4;
+        color: #fff;
     }
 
     .hero-course-tags span + span {
+        background: var(--landing-gold);
         color: var(--landing-navy);
     }
 
@@ -341,6 +371,16 @@
         font-size: .86rem;
         font-weight: 800;
         text-decoration: none;
+    }
+
+    .hero-course-link svg {
+        width: .9rem;
+        height: .9rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
     }
 
     .hero-course-link:hover {
@@ -524,9 +564,10 @@
 
     .course-card__thumb {
         display: block;
+        position: relative;
         width: 100%;
         height: 200px;
-        background: var(--landing-gold);
+        background: #e3e6f0;
         overflow: hidden;
     }
 
@@ -534,6 +575,38 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+
+    .course-card__thumb-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #e3e6f0, #cfd4ea);
+    }
+
+    .course-card__thumb .course-card__tags--overlay {
+        position: absolute;
+        right: 18px;
+        bottom: 16px;
+        left: 18px;
+        z-index: 1;
+        margin: 0;
+    }
+
+    .course-card__tags--overlay .tag {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.72rem;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .course-card__tags--overlay .tag-teal {
+        background: #00bcd4;
+        color: #fff;
+    }
+
+    .course-card__tags--overlay .tag-gold {
+        background: var(--landing-gold);
+        color: var(--landing-navy);
     }
 
     .course-card__body {
@@ -636,11 +709,13 @@
 
     .why__grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        grid-template-rows: repeat(2, minmax(150px, auto));
+        gap: 1.25rem;
     }
 
     .why__card {
+        min-width: 0;
         background: linear-gradient(180deg, #fff, #f7f9fe);
         border: 1px solid var(--line);
         border-radius: 22px;
@@ -648,31 +723,76 @@
         padding: 1.5rem;
     }
 
+    .why__card--featured {
+        display: flex;
+        grid-row: 1 / span 2;
+        flex-direction: column;
+        justify-content: center;
+        padding: clamp(2rem, 4vw, 3rem);
+        border-color: rgba(9,39,216,.2);
+        background: linear-gradient(145deg, var(--landing-royal-blue), var(--landing-navy));
+        box-shadow: 0 22px 40px rgba(7,20,63,.16);
+    }
+
     .why__icon {
-        display: block;
+        display: grid;
+        width: 48px;
+        height: 48px;
+        place-items: center;
         margin-bottom: 1rem;
-        line-height: 0;
+        border-radius: 14px;
+        background: rgba(9,39,216,.08);
     }
 
     .why__icon svg {
         display: block;
-        width: 40px;
-        height: 40px;
-        color: #3155d9;
+        width: 28px;
+        height: 28px;
+        color: var(--landing-royal-blue);
     }
 
-    .why__card:nth-child(2) .why__icon svg {
-        color: #159a78;
+    .why__card--featured .why__icon {
+        width: 56px;
+        height: 56px;
+        background: var(--landing-gold);
+    }
+
+    .why__card--featured .why__icon svg {
+        width: 32px;
+        height: 32px;
+        color: var(--landing-navy);
+    }
+
+    .why__card:not(.why__card--featured) {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr);
+        align-content: center;
+        column-gap: 1rem;
+    }
+
+    .why__card:not(.why__card--featured) .why__icon {
+        grid-row: 1 / span 2;
+        margin-bottom: 0;
+    }
+
+    .why__card:nth-child(3) .why__icon {
+        background: rgba(246,203,59,.28);
     }
 
     .why__card:nth-child(3) .why__icon svg {
-        color: #e28c16;
+        color: var(--landing-navy);
     }
+
     .why__card h3 {
         font-family: var(--font-display);
         font-size: 1.1rem;
         color: var(--navy);
         margin-bottom: 0.55rem;
+    }
+
+    .why__card--featured h3 {
+        color: var(--landing-white);
+        font-size: clamp(1.35rem, 2vw, 1.65rem);
     }
 
     .why__card p {
@@ -681,9 +801,15 @@
         font-size: 0.9rem;
     }
 
+    .why__card--featured p {
+        max-width: 40ch;
+        color: rgba(255,255,255,.84);
+        font-size: 1rem;
+    }
+
     .how-it-works {
         position: relative;
-        background: var(--navy) url('{{ asset('Images/Green_field_PSU.jpg') }}') center/cover no-repeat;
+        background: var(--navy);
         padding: 5rem 0;
     }
 
@@ -706,18 +832,27 @@
     }
 
     .steps-grid {
+        position: relative;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1.5rem;
     }
 
+    .steps-grid::before {
+        position: absolute;
+        top: 30px;
+        right: 16.6667%;
+        left: 16.6667%;
+        height: 2px;
+        background: linear-gradient(90deg, var(--landing-gold), rgba(255,255,255,.45), var(--landing-gold));
+        content: "";
+    }
+
     .step-card {
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 24px;
-        padding: 2rem 1.5rem;
+        position: relative;
+        z-index: 1;
+        padding: 0 1.25rem;
         text-align: center;
-        backdrop-filter: blur(4px);
     }
 
     .step-card__num {
@@ -728,6 +863,8 @@
         display: grid;
         place-items: center;
         margin: 0 auto 1.2rem;
+        background: var(--navy);
+        box-shadow: 0 0 0 7px var(--navy);
         font-family: var(--font-display);
         font-size: 1.5rem;
         color: #fff;
@@ -782,7 +919,7 @@
     .announcements-list.has-featured {
         display: grid;
         grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-        align-items: stretch;
+        align-items: start;
         gap: 1.25rem;
     }
 
@@ -794,13 +931,8 @@
         display: flex;
         flex-direction: column;
         gap: 0.85rem;
-        min-height: 390px;
-        min-width: 0;
-    }
-
-    .announcements-side-list > .ann-card {
-        flex: 1;
         min-height: 0;
+        min-width: 0;
     }
 
     .ann-card {
@@ -822,7 +954,7 @@
     }
 
     .ann-card--featured {
-        min-height: 390px;
+        min-height: 0;
         flex-direction: column;
         align-items: stretch;
         gap: 1.2rem;
@@ -1000,10 +1132,10 @@
             padding: 3.5rem 0 3rem;
         }
 
-        /* In one column the copy spans the full width, so the white fade
+        /* In one column the copy spans the full width, so the cool-tinted fade
            must cover the whole photo or the text sits on the building. */
         .hero::before {
-            background: linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.9) 60%, rgba(255,255,255,.82) 100%);
+            background: linear-gradient(180deg, rgba(242,247,255,.92) 0%, rgba(242,247,255,.86) 58%, rgba(242,247,255,.76) 100%);
         }
 
         .hero__inner {
@@ -1036,6 +1168,10 @@
 
         .announcements-list.has-featured {
             grid-template-columns: minmax(0, 1fr);
+        }
+
+        .why__grid {
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
         }
 
         .announcements-side-list {
@@ -1128,8 +1264,7 @@
         }
 
         .hero-course-tags {
-            gap: .2rem .65rem;
-            margin-bottom: .55rem;
+            gap: .4rem;
         }
 
         .hero-course-title {
@@ -1150,6 +1285,70 @@
             margin-bottom: 1.5rem;
         }
 
+        .announcements__view-all {
+            margin-left: auto;
+        }
+
+        .why__grid {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: auto;
+        }
+
+        .why__card--featured {
+            grid-row: auto;
+        }
+
+        .steps-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .steps-grid::before {
+            display: none;
+        }
+
+        .step-card {
+            display: grid;
+            grid-template-columns: 62px minmax(0, 1fr);
+            column-gap: 1.15rem;
+            padding: 0 0 2rem;
+            text-align: left;
+        }
+
+        .step-card:not(:last-child)::after {
+            position: absolute;
+            top: 31px;
+            right: auto;
+            bottom: -31px;
+            left: 30px;
+            width: 2px;
+            background: linear-gradient(180deg, var(--landing-gold), rgba(255,255,255,.45), var(--landing-gold));
+            content: "";
+        }
+
+        .step-card:last-child {
+            padding-bottom: 0;
+        }
+
+        .step-card__num {
+            position: relative;
+            z-index: 1;
+            grid-column: 1;
+            grid-row: 1 / span 2;
+            margin: 0;
+        }
+
+        .step-card__title {
+            grid-column: 2;
+            margin: .55rem 0 .45rem;
+        }
+
+        .step-card__desc {
+            grid-column: 2;
+        }
+
         .featured,
         .why,
         .how-it-works,
@@ -1168,6 +1367,7 @@
     $featuredCourses = $featuredCourses ?? [];
     $heroCourses = $featuredCourses;
 @endphp
+<script>document.documentElement.classList.add('js');</script>
 <section class="hero">
     <div class="container hero__inner {{ count($heroCourses) === 0 ? 'hero__inner--no-featured' : '' }}">
         <div>
@@ -1207,17 +1407,18 @@
                     <div class="hero__carousel" data-carousel role="region" aria-label="Course highlights" aria-roledescription="carousel">
                         @foreach ($heroCourses as $course)
                             <a class="hero__slide {{ $loop->first ? 'is-active' : '' }}" href="{{ $course['slug'] ?? route('explore') }}" aria-label="View course: {{ $course['title'] ?? 'Explore our courses' }}" aria-hidden="{{ $loop->first ? 'false' : 'true' }}">
-                                <div class="hero-course-visual" @if(!empty($course['image'])) style="background-image: url('{{ $course['image'] }}')" @endif></div>
-                                <div class="hero-course-content">
+                                <div class="hero-course-visual" @if(!empty($course['image'])) style="background-image: url('{{ $course['image'] }}')" @endif>
                                     <div class="hero-course-tags">
                                         <span>{{ $course['category'] ?? 'Microcredential' }}</span>
                                         @if(!empty($course['level']))<span>{{ $course['level'] }}</span>@endif
                                     </div>
+                                </div>
+                                <div class="hero-course-content">
                                     <h2 class="hero-course-title">{{ $course['title'] ?? 'Explore our courses' }}</h2>
                                     <p class="hero-course-description">{{ $course['description'] ?? 'Build practical skills with flexible microcredentials from PSU.' }}</p>
                                     <div class="hero-course-footer">
                                         <span class="hero-course-meta">{{ $course['professor'] ?? 'PSU Faculty' }}@if(!empty($course['hours'])) · {{ $course['hours'] }} {{ (int) $course['hours'] === 1 ? 'hour' : 'hours' }}@endif</span>
-                                        <span class="hero-course-link">View course <span aria-hidden="true">→</span></span>
+                                        <span class="hero-course-link">View course <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
                                     </div>
                                 </div>
                             </a>
@@ -1245,7 +1446,7 @@
 
 <div class="hero-divider" aria-hidden="true"></div>
 
-<section class="featured" id="featured">
+<section class="featured scroll-reveal" id="featured">
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Featured programs</h2>
@@ -1254,7 +1455,7 @@
 
         <div class="courses-grid {{ count($featuredCourses) === 1 ? 'courses-grid--single' : '' }}">
             @forelse($featuredCourses as $course)
-                @include('components.course-card', ['course' => $course])
+                @include('components.course-card', ['course' => $course, 'tagsOnImage' => true])
             @empty
                 <p style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:2rem 0 0;">No featured courses right now — check out the latest courses below.</p>
             @endforelse
@@ -1266,7 +1467,7 @@
     </div>
 </section>
 
-<section class="why">
+<section class="why scroll-reveal">
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Why choose UpSkill?</h2>
@@ -1274,7 +1475,7 @@
         </div>
 
         <div class="why__grid">
-            <article class="why__card">
+            <article class="why__card why__card--featured">
                 <div class="why__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M8 5V3.5A2.5 2.5 0 0 1 10.5 1h3A2.5 2.5 0 0 1 16 3.5V5h3a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h3Zm2.5 0h3V3.5h-3V5ZM5 7a1 1 0 0 0-1 1v2h16V8a1 1 0 0 0-1-1H5Zm15 5H4v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6Zm-9 0h2v2h-2v-2Z"/>
@@ -1308,7 +1509,7 @@
     </div>
 </section>
 
-<section class="how-it-works" id="how-it-works">
+<section class="how-it-works scroll-reveal" id="how-it-works">
     <div class="container">
         <h2 class="section-title">How it works</h2>
         <div class="steps-grid">
@@ -1331,7 +1532,7 @@
     </div>
 </section>
 
-<section class="announcements" id="announcements">
+<section class="announcements scroll-reveal" id="announcements">
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Announcements</h2>
@@ -1370,7 +1571,7 @@
     </div>
 </section>
 
-<section class="latest" id="latest-courses">
+<section class="latest scroll-reveal" id="latest-courses">
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Latest courses</h2>
@@ -1380,13 +1581,13 @@
         <div class="courses-grid">
             @php $latestCourses = $latestCourses ?? []; @endphp
             @foreach($latestCourses as $course)
-                @include('components.course-card', ['course' => $course])
+                @include('components.course-card', ['course' => $course, 'tagsOnImage' => true])
             @endforeach
         </div>
     </div>
 </section>
 
-<section class="cta-banner">
+<section class="cta-banner scroll-reveal">
     <div class="container">
         <h2 class="cta-banner__title">Ready to grow with PSU?</h2>
         <p class="cta-banner__sub">Join the UpSkill community and build the next step in your learning journey.</p>
@@ -1400,7 +1601,7 @@
         if (e) e.preventDefault();
         const target = document.getElementById(id);
         if (!target) return;
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -1409,8 +1610,20 @@
                 const target = document.getElementById('announcements');
                 if (target) {
                     e.preventDefault();
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     history.replaceState({}, '', '#announcements');
+                    window.dispatchEvent(new Event('hashchange'));
+                }
+            });
+        });
+
+        document.querySelectorAll('a.navbar__link[data-nav-target="how-it-works"]').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                const target = document.getElementById('how-it-works');
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    history.replaceState({}, '', '#how-it-works');
                     window.dispatchEvent(new Event('hashchange'));
                 }
             });
@@ -1428,6 +1641,24 @@
             });
         });
     });
+
+    (function () {
+        const sections = document.querySelectorAll('.scroll-reveal');
+        if (sections.length === 0) return;
+
+        if (!('IntersectionObserver' in window)) {
+            sections.forEach((section) => section.classList.add('is-visible'));
+            return;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                entry.target.classList.toggle('is-visible', entry.isIntersecting);
+            });
+        }, { threshold: 0.12 });
+
+        sections.forEach((section) => observer.observe(section));
+    })();
 
     (function () {
         const nums = document.querySelectorAll('.hero__stat-num[data-count]');

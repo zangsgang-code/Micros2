@@ -3,8 +3,7 @@
 
         <div class="footer__brand-col">
             <a href="{{ url('/') }}" class="footer__brand">
-                
-                <span>UPSKILL</span>
+                <span><span class="footer__brand-up">UP</span><span class="footer__brand-skill">SKILL</span></span>
             </a>
             <p class="footer__tagline">The Official Platform for PSU Microcredentials</p>
             <p class="footer__copy">&copy; {{ date('Y') }} Pangasinan State University. All rights reserved.</p>
@@ -58,10 +57,12 @@
     color: var(--white);
     font-family: var(--font-display);
     font-weight: 900;
-    font-size: 1.1rem;
+    font-size: 1.5rem;
     letter-spacing: 0.04em;
     margin-bottom: 0.75rem;
 }
+.footer__brand-up { color: var(--white); }
+.footer__brand-skill { color: var(--gold-light); }
 .footer__tagline { color: rgba(255,255,255,0.55); line-height: 1.5; margin-bottom: 1rem; max-width: 260px; }
 .footer__copy    { color: rgba(255,255,255,0.35); font-size: 0.78rem; }
 .footer__heading { color: var(--gold); font-weight: 700; margin-bottom: 0.85rem; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; }
