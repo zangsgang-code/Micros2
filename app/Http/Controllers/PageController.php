@@ -12,6 +12,7 @@ use App\Models\Enrollment;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\UserBadge;
+use App\Services\InboxUnreadCountService;
 use App\Services\MicrocredentialCompletionService;
 use App\Services\UserNotificationService;
 use App\Support\CertificateBuilder;
@@ -464,6 +465,19 @@ class PageController extends Controller
                 ])
                 ->take(8)
                 ->values(),
+        ]);
+    }
+
+    /** Return the live unread counts shown in the authenticated topbar. */
+    public function notificationCounts(
+        UserNotificationService $userNotifications,
+        InboxUnreadCountService $inboxUnreadCounts,
+    ): JsonResponse {
+        $user = Auth::user();
+
+        return response()->json([
+            'unread_notifications' => $userNotifications->unreadCount($user),
+            'unread_inbox' => $inboxUnreadCounts->countFor($user),
         ]);
     }
 

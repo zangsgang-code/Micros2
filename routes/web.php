@@ -119,6 +119,9 @@ Route::middleware(['auth', PreventBackHistory::class])
     ->get('/notifications/preview', [PageController::class, 'notificationPreview'])
     ->name('notifications.preview');
 Route::middleware(['auth', PreventBackHistory::class])
+    ->get('/notifications/counts', [PageController::class, 'notificationCounts'])
+    ->name('notifications.counts');
+Route::middleware(['auth', PreventBackHistory::class])
     ->post('/notifications/{notification}/read', [PageController::class, 'markNotificationRead'])
     ->whereNumber('notification')->name('notifications.read');
 Route::middleware(['auth', PreventBackHistory::class])

@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use App\Models\Complaint;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\LessonActivitySubmission;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
+use App\Services\InboxUnreadCountService;
 use App\Services\MicrocredentialCompletionService;
 use App\Services\QuizAttemptService;
 use App\Services\UserNotificationService;
@@ -85,15 +85,9 @@ class AppServiceProvider extends ServiceProvider
                     $user = Auth::user();
 
                     $counts['notifications'] = app(UserNotificationService::class)->unreadCount($user);
+                    $counts['inbox'] = app(InboxUnreadCountService::class)->countFor($user);
 
                     if ($user->isAdmin()) {
-                        $counts['inbox'] = Complaint::query()
-                            ->where(function ($query) {
-                                $query->whereNull('admin_read_at')
-                                    ->orWhereRaw('COALESCE(last_reply_at, created_at) > admin_read_at');
-                            })
-                            ->count();
-
                         $counts['admin_course_reviews'] = Course::query()
                             ->where('approval_status', 'pending')
                             ->count();
@@ -101,15 +95,6 @@ class AppServiceProvider extends ServiceProvider
                             ->where('completion_status', MicrocredentialCompletionService::STATUS_AWAITING_FACULTY_VERIFICATION)
                             ->where('academic_unit_confirmation_status', 'pending')
                             ->whereHas('course.reviews', fn ($query) => $query->whereColumn('course_reviews.user_id', 'enrollments.user_id'))
-                            ->count();
-                    }
-
-                    if ($user->isFaculty() || $user->isStudent()) {
-                        // Inbox = the signed-in user's admin message threads.
-                        $counts['inbox'] = Complaint::where('user_id', $user->id)
-                            ->get()
-                            ->filter
-                            ->unreadForSender()
                             ->count();
                     }
 

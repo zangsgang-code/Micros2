@@ -22,7 +22,7 @@
 @endphp
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
-<header class="auth-topbar {{ $isFaculty ? 'faculty-auth-topbar' : '' }} {{ $isStudent ? 'student-auth-topbar' : '' }} {{ $isAdmin ? 'admin-auth-topbar' : '' }}">
+<header class="auth-topbar {{ $isFaculty ? 'faculty-auth-topbar' : '' }} {{ $isStudent ? 'student-auth-topbar' : '' }} {{ $isAdmin ? 'admin-auth-topbar' : '' }}" @if($authUser) data-counts-url="{{ route('notifications.counts') }}" @endif>
     <div class="auth-topbar-brand">
         @if ($isFaculty)
             <button class="faculty-sidebar-toggle" id="faculty-sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">
@@ -39,7 +39,7 @@
 
     <div class="auth-topbar-actions">
         <div class="auth-notifications" id="auth-notifications">
-        <button type="button" class="auth-topbar-icon" id="auth-notifications-trigger" title="Notifications" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
+        <button type="button" class="auth-topbar-icon" id="auth-notifications-trigger" data-topbar-count-target="notifications" title="Notifications" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
             <span class="material-symbols-rounded" aria-hidden="true">notifications</span>
             @if (($unreadNotificationCount ?? 0) > 0)
                 <span class="auth-topbar-badge">{{ $unreadNotificationCount }}</span>
@@ -52,7 +52,7 @@
         </div>
         </div>
         @if (!$authUser?->isSubAdmin() || $authUser->canAccessAdminPage('complaints'))
-            <a href="{{ route($inboxRoute) }}" class="auth-topbar-icon auth-topbar-inbox {{ request()->routeIs('admin.complaints*', 'faculty.inbox', 'inbox.index') ? 'is-active' : '' }}" title="Inbox" aria-label="Inbox">
+            <a href="{{ route($inboxRoute) }}" class="auth-topbar-icon auth-topbar-inbox {{ request()->routeIs('admin.complaints*', 'faculty.inbox', 'inbox.index') ? 'is-active' : '' }}" data-topbar-count-target="inbox" title="Inbox" aria-label="Inbox">
                 <span class="material-symbols-rounded" aria-hidden="true">mail</span>
                 @if (($unreadInboxCount ?? 0) > 0)
                     <span class="auth-topbar-badge">{{ $unreadInboxCount }}</span>
@@ -225,6 +225,121 @@
         var notificationsTrigger = document.getElementById('auth-notifications-trigger');
         var notificationsPanel = document.getElementById('auth-notifications-panel');
         var notificationsList = document.getElementById('auth-notifications-list');
+        var topbar = document.querySelector('.auth-topbar[data-counts-url]');
+
+        function updateTopbarBadge(target, count) {
+            if (!target || !Number.isSafeInteger(count) || count < 0) return;
+
+            var badge = target.querySelector('.auth-topbar-badge');
+            if (count > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'auth-topbar-badge';
+                    target.appendChild(badge);
+                }
+                badge.textContent = String(count);
+                return;
+            }
+
+            if (badge) badge.remove();
+        }
+
+        if (topbar) {
+            var topbarPollIntervalMs = 5000;
+            var topbarMaxBackoffMs = 60000;
+            var topbarNextDelayMs = topbarPollIntervalMs;
+            var topbarTimerId = null;
+            var topbarRequestInFlight = false;
+            var topbarResumeAfterRequest = false;
+            var topbarDisposed = false;
+            var topbarHasReportedError = false;
+            var topbarRequest = null;
+
+            function clearTopbarTimer() {
+                if (topbarTimerId === null) return;
+                window.clearTimeout(topbarTimerId);
+                topbarTimerId = null;
+            }
+
+            function scheduleTopbarPoll(delayMs) {
+                clearTopbarTimer();
+                topbarTimerId = window.setTimeout(function () {
+                    topbarTimerId = null;
+                    pollTopbarCounts();
+                }, delayMs);
+            }
+
+            function pollTopbarCounts() {
+                if (topbarDisposed || document.hidden || topbarRequestInFlight) return;
+                topbarRequestInFlight = true;
+                topbarRequest = new AbortController();
+
+                fetch(topbar.dataset.countsUrl, {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                    signal: topbarRequest.signal,
+                })
+                    .then(function (response) {
+                        if (!response.ok) throw new Error('Topbar count poll returned HTTP ' + response.status);
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        var notificationCount = Number(data.unread_notifications);
+                        var inboxCount = Number(data.unread_inbox);
+                        if (!Number.isSafeInteger(notificationCount) || notificationCount < 0
+                            || !Number.isSafeInteger(inboxCount) || inboxCount < 0) {
+                            throw new Error('Topbar count poll returned invalid counts.');
+                        }
+
+                        updateTopbarBadge(notificationsTrigger, notificationCount);
+                        updateTopbarBadge(document.querySelector('[data-topbar-count-target="inbox"]'), inboxCount);
+                        topbarNextDelayMs = topbarPollIntervalMs;
+                        topbarHasReportedError = false;
+                    })
+                    .catch(function (error) {
+                        if (error.name === 'AbortError') return;
+                        if (!topbarHasReportedError) {
+                            console.error('Unable to poll topbar counts.', error);
+                            topbarHasReportedError = true;
+                        }
+                        topbarNextDelayMs = Math.min(topbarNextDelayMs * 2, topbarMaxBackoffMs);
+                    })
+                    .finally(function () {
+                        topbarRequestInFlight = false;
+                        topbarRequest = null;
+                        if (topbarDisposed || document.hidden) return;
+
+                        var delayMs = topbarResumeAfterRequest ? 0 : topbarNextDelayMs;
+                        topbarResumeAfterRequest = false;
+                        scheduleTopbarPoll(delayMs);
+                    });
+            }
+
+            function onTopbarVisibilityChange() {
+                if (document.hidden) {
+                    clearTopbarTimer();
+                    return;
+                }
+                if (topbarRequestInFlight) {
+                    topbarResumeAfterRequest = true;
+                    return;
+                }
+                scheduleTopbarPoll(0);
+            }
+
+            function cleanupTopbarPolling() {
+                topbarDisposed = true;
+                clearTopbarTimer();
+                if (topbarRequest) topbarRequest.abort();
+                document.removeEventListener('visibilitychange', onTopbarVisibilityChange);
+                window.removeEventListener('pagehide', cleanupTopbarPolling);
+            }
+
+            document.addEventListener('visibilitychange', onTopbarVisibilityChange);
+            window.addEventListener('pagehide', cleanupTopbarPolling);
+            pollTopbarCounts();
+        }
+
         if (notifications && notificationsTrigger && notificationsPanel) {
             var loaded = false;
             function closeNotifications() {
@@ -274,17 +389,7 @@
                     })
                     .then(function (data) {
                         link.classList.remove('is-unread');
-                        var badge = notificationsTrigger.querySelector('.auth-topbar-badge');
-                        if (data.unread_count > 0) {
-                            if (!badge) {
-                                badge = document.createElement('span');
-                                badge.className = 'auth-topbar-badge';
-                                notificationsTrigger.appendChild(badge);
-                            }
-                            badge.textContent = data.unread_count;
-                        } else if (badge) {
-                            badge.remove();
-                        }
+                        updateTopbarBadge(notificationsTrigger, Number(data.unread_count));
                         window.location.assign(link.href);
                     })
                     .catch(function () {
