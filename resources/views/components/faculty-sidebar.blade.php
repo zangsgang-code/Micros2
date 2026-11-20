@@ -16,6 +16,31 @@
     aside.faculty-sidebar .side-link:not(.active):hover .side-icon-svg {
         color: #2447d4 !important;
     }
+
+    html[data-faculty-page] .faculty-sidebar-layout > .main :is(.page-head.faculty-page-heading, .page-header.faculty-page-heading) :where(.faculty-page-title, .ui-page-title, h1, h2) {
+        margin: 0 0 7px;
+        color: #0e1a3a;
+        font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -.04em;
+        line-height: 1.2;
+    }
+
+    html[data-faculty-page] .faculty-sidebar-layout > .main :is(.page-head.faculty-page-heading, .page-header.faculty-page-heading) .faculty-page-subtitle {
+        margin: 0;
+        color: #64748b;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.55;
+    }
+
+    @media (max-width: 640px) {
+        html[data-faculty-page] .faculty-sidebar-layout > .main :is(.page-head.faculty-page-heading, .page-header.faculty-page-heading) :where(.faculty-page-title, .ui-page-title, h1, h2) {
+            font-size: 24px;
+        }
+    }
 </style>
 
 <aside class="faculty-sidebar" id="faculty-sidebar">

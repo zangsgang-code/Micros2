@@ -365,6 +365,21 @@
             align-content: start;
         }
     }
+
+    body.app-shell--student .student-sidebar-layout > .main.app-main .ui-page-header :where(.ui-page-title, h1, h2) {
+        color: #0e1a3a;
+        font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -.04em;
+        line-height: 1.2;
+    }
+
+    @media (max-width: 640px) {
+        body.app-shell--student .student-sidebar-layout > .main.app-main .ui-page-header :where(.ui-page-title, h1, h2) {
+            font-size: 24px;
+        }
+    }
 </style>
 
 <aside class="student-sidebar" id="student-sidebar">

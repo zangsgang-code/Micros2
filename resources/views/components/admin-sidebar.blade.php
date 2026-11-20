@@ -342,59 +342,69 @@
         }
     }
 
-    /* Shared page heading scale, matched to Stacking Frameworks. */
-    main.main .framework-header h1,
-    main.main .recognition-head h1,
-    main.main .cert-heading h1,
-    main.main .page-head > div > h1,
-    main.main .page-head > div > h2,
-    main.main .page-header .page-title,
-    main.main .admin-dashboard .page-heading,
-    main.main .user-detail-wrap .profile-main h1,
-    .page-wrap .page-head > div > .page-heading,
-    .wrap > .page-heading {
-        margin: 0 0 6px;
-        color: #000;
-        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-        font-size: 32px;
-        font-weight: 700;
-        line-height: 1.15;
+    /* Admin page headings match the shared Settings heading scale. */
+    :is(body[data-admin-page], body.app-shell--admin) main.main .framework-header h1,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .recognition-head h1,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .cert-heading h1,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .page-head > div > :is(h1, h2, .page-title, .page-heading),
+    :is(body[data-admin-page], body.app-shell--admin) main.main .page-header :is(.page-title, h1, h2),
+    :is(body[data-admin-page], body.app-shell--admin) main.main.admin-dashboard .page-top > div > .page-heading,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .user-detail-wrap .profile-main h1,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .audit-heading > div > h1,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .enrollment-heading > div > h1,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .record-header .record-identity h1,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .wrap > .page-heading,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .page-wrap .page-head > div > .page-heading,
+    body[data-admin-page] .wrap .page-intro > .page-heading {
+        margin: 0 0 7px;
+        color: #0e1a3a;
+        font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1.2;
+        letter-spacing: -.04em;
     }
 
-    main.main .framework-header > div > p,
-    main.main .recognition-head > p,
-    main.main .cert-heading > p,
-    main.main .page-head > div > p,
-    main.main .page-head > div > .lead,
-    main.main .page-header > div > .page-subtitle,
-    main.main .admin-dashboard > .page-sub,
-    main.main .user-detail-wrap .profile-main .profile-role,
-    .page-wrap .page-head > div > .page-sub,
-    .wrap > .page-sub {
+    :is(body[data-admin-page], body.app-shell--admin) main.main .framework-header > div > p,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .recognition-head > p,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .cert-heading > p,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .page-head > div > p,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .page-head > div > .lead,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .page-header > div > .page-subtitle,
+    :is(body[data-admin-page], body.app-shell--admin) main.main.admin-dashboard .page-top > div > .page-sub,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .user-detail-wrap .profile-main .profile-role,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .audit-heading > div > p,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .enrollment-heading > div > p,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .record-header .record-identity > p,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .page-wrap .page-head > div > .page-sub,
+    :is(body[data-admin-page], body.app-shell--admin) main.main .wrap > .page-sub,
+    body[data-admin-page] .wrap .page-intro > .page-sub {
         margin: 0;
-        color: #68758c;
-        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        color: #64748b;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
         font-size: 14px;
         font-weight: 400;
-        line-height: 1.5;
+        line-height: 1.55;
     }
 
     main.main.admin-dashboard .page-heading {
         margin-bottom: 6px;
     }
 
-    /* 32px page titles took two or three lines on a phone. */
-    @media (max-width: 600px) {
-        main.main .framework-header h1,
-        main.main .recognition-head h1,
-        main.main .cert-heading h1,
-        main.main .page-head > div > h1,
-        main.main .page-head > div > h2,
-        main.main .page-header .page-title,
-        main.main .admin-dashboard .page-heading,
-        main.main.admin-dashboard .page-heading,
-        .page-wrap .page-head > div > .page-heading,
-        .wrap > .page-heading {
+    @media (max-width: 640px) {
+        :is(body[data-admin-page], body.app-shell--admin) main.main .framework-header h1,
+        :is(body[data-admin-page], body.app-shell--admin) main.main .recognition-head h1,
+        :is(body[data-admin-page], body.app-shell--admin) main.main .cert-heading h1,
+        :is(body[data-admin-page], body.app-shell--admin) main.main .page-head > div > :is(h1, h2, .page-title, .page-heading),
+        :is(body[data-admin-page], body.app-shell--admin) main.main .page-header :is(.page-title, h1, h2),
+        :is(body[data-admin-page], body.app-shell--admin) main.main.admin-dashboard .page-top > div > .page-heading,
+        :is(body[data-admin-page], body.app-shell--admin) main.main .user-detail-wrap .profile-main h1,
+        :is(body[data-admin-page], body.app-shell--admin) main.main .audit-heading > div > h1,
+        :is(body[data-admin-page], body.app-shell--admin) main.main .enrollment-heading > div > h1,
+        :is(body[data-admin-page], body.app-shell--admin) main.main .record-header .record-identity h1,
+        :is(body[data-admin-page], body.app-shell--admin) main.main .wrap > .page-heading,
+        :is(body[data-admin-page], body.app-shell--admin) main.main .page-wrap .page-head > div > .page-heading,
+        body[data-admin-page] .wrap .page-intro > .page-heading {
             font-size: 24px;
             line-height: 1.2;
         }
