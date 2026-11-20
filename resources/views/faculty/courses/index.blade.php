@@ -1716,5 +1716,44 @@
         if (open) open.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 </script>
+    @if ($mode === 'manage')
+        <script>
+            (function () {
+                var storageKey = 'faculty-course-manage-scroll:' + window.location.pathname;
+                var savedScrollPosition = null;
+
+                try {
+                    var savedPosition = window.sessionStorage.getItem(storageKey);
+                    window.sessionStorage.removeItem(storageKey);
+                    if (savedPosition !== null) {
+                        var parsedPosition = Number(savedPosition);
+                        if (Number.isFinite(parsedPosition) && parsedPosition >= 0) {
+                            savedScrollPosition = parsedPosition;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Unable to restore the course content scroll position.', error);
+                }
+
+                if (savedScrollPosition !== null) {
+                    window.scrollTo({ top: savedScrollPosition, left: 0, behavior: 'instant' });
+                }
+
+                document.querySelectorAll('.modules-section form').forEach(function (form) {
+                    if (form.method.toUpperCase() !== 'POST') return;
+
+                    form.addEventListener('submit', function (event) {
+                        if (event.defaultPrevented) return;
+
+                        try {
+                            window.sessionStorage.setItem(storageKey, String(window.scrollY));
+                        } catch (error) {
+                            console.error('Unable to save the course content scroll position.', error);
+                        }
+                    });
+                });
+            })();
+        </script>
+    @endif
     </x-slot:scripts>
 </x-faculty.layout>
