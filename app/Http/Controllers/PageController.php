@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UserBadge;
 use App\Services\InboxUnreadCountService;
 use App\Services\MicrocredentialCompletionService;
+use App\Services\SidebarAttentionService;
 use App\Services\UserNotificationService;
 use App\Support\CertificateBuilder;
 use App\Support\RichTextSanitizer;
@@ -472,12 +473,14 @@ class PageController extends Controller
     public function notificationCounts(
         UserNotificationService $userNotifications,
         InboxUnreadCountService $inboxUnreadCounts,
+        SidebarAttentionService $sidebarAttention,
     ): JsonResponse {
         $user = Auth::user();
 
         return response()->json([
             'unread_notifications' => $userNotifications->unreadCount($user),
             'unread_inbox' => $inboxUnreadCounts->countFor($user),
+            'sidebar_alerts' => $sidebarAttention->forUser($user),
         ]);
     }
 

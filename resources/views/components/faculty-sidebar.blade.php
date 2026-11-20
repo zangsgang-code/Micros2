@@ -26,11 +26,11 @@
         <span class="side-label">Dashboard</span>
     </a>
     <span class="sidebar-section-label">Courses</span>
-    <a href="{{ route('faculty.courses') }}" class="side-link {{ request()->routeIs('faculty.courses') ? 'active' : '' }}">
+    <a href="{{ route('faculty.courses') }}" class="side-link {{ request()->routeIs('faculty.courses') ? 'active' : '' }}" data-sidebar-alert-target="faculty_my_courses" data-sidebar-alert-label="Assignments awaiting review">
         <span class="side-icon-box"><span class="material-symbols-rounded" aria-hidden="true">menu_book</span></span>
         <span class="side-label">My Courses</span>
         @if ($facultyMyCoursesNeedsAttention ?? false)
-            <span class="side-alert-dot" role="img" aria-label="Assignments awaiting review"></span>
+            <span class="side-alert-dot" data-sidebar-alert-dot role="img" aria-label="Assignments awaiting review"></span>
         @endif
     </a>
     <a href="{{ route('faculty.create') }}" class="side-link {{ request()->routeIs('faculty.create') ? 'active' : '' }}">
@@ -38,10 +38,10 @@
         <span class="side-label">Create Courses</span>
     </a>
     <span class="sidebar-section-label">People</span>
-    <a href="{{ route('faculty.students') }}" class="side-link {{ request()->routeIs('faculty.students*') ? 'active' : '' }}">
+    <a href="{{ route('faculty.students') }}" class="side-link {{ request()->routeIs('faculty.students*') ? 'active' : '' }}" data-sidebar-alert-target="faculty_learner_progress" data-sidebar-alert-label="Learner progress needs attention">
         <span class="side-icon-box"><span class="material-symbols-rounded" aria-hidden="true">groups</span></span><span class="side-label">Learner Progress</span>
         @if ($facultyLearnerProgressNeedsAttention ?? false)
-            <span class="side-alert-dot" role="img" aria-label="Learner progress needs attention"></span>
+            <span class="side-alert-dot" data-sidebar-alert-dot role="img" aria-label="Learner progress needs attention"></span>
         @endif
     </a>
     <span class="sidebar-section-label">Insights</span>

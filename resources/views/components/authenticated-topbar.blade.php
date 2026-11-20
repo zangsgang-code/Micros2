@@ -244,6 +244,26 @@
             if (badge) badge.remove();
         }
 
+        function updateSidebarAlerts(alerts) {
+            document.querySelectorAll('[data-sidebar-alert-target]').forEach(function (target) {
+                var value = alerts[target.dataset.sidebarAlertTarget];
+                if (typeof value === 'undefined') return;
+
+                var shouldShow = typeof value === 'boolean' ? value : Number(value) > 0;
+                var dot = target.querySelector('[data-sidebar-alert-dot]');
+                if (shouldShow && !dot) {
+                    dot = document.createElement('span');
+                    dot.className = target.classList.contains('side-link') ? 'side-alert-dot' : 'sb-item-alert-dot';
+                    dot.dataset.sidebarAlertDot = '';
+                    dot.setAttribute('role', 'img');
+                    dot.setAttribute('aria-label', target.dataset.sidebarAlertLabel || 'Needs attention');
+                    target.appendChild(dot);
+                } else if (!shouldShow && dot) {
+                    dot.remove();
+                }
+            });
+        }
+
         if (topbar) {
             var topbarPollIntervalMs = 5000;
             var topbarMaxBackoffMs = 60000;
@@ -287,12 +307,14 @@
                         var notificationCount = Number(data.unread_notifications);
                         var inboxCount = Number(data.unread_inbox);
                         if (!Number.isSafeInteger(notificationCount) || notificationCount < 0
-                            || !Number.isSafeInteger(inboxCount) || inboxCount < 0) {
+                            || !Number.isSafeInteger(inboxCount) || inboxCount < 0
+                            || !data.sidebar_alerts || typeof data.sidebar_alerts !== 'object') {
                             throw new Error('Topbar count poll returned invalid counts.');
                         }
 
                         updateTopbarBadge(notificationsTrigger, notificationCount);
                         updateTopbarBadge(document.querySelector('[data-topbar-count-target="inbox"]'), inboxCount);
+                        updateSidebarAlerts(data.sidebar_alerts);
                         topbarNextDelayMs = topbarPollIntervalMs;
                         topbarHasReportedError = false;
                     })

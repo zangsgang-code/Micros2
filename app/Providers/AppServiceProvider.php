@@ -3,13 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Course;
-use App\Models\Enrollment;
-use App\Models\LessonActivitySubmission;
-use App\Models\Quiz;
-use App\Models\QuizAttempt;
 use App\Services\InboxUnreadCountService;
-use App\Services\MicrocredentialCompletionService;
-use App\Services\QuizAttemptService;
+use App\Services\SidebarAttentionService;
 use App\Services\UserNotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -86,74 +81,7 @@ class AppServiceProvider extends ServiceProvider
 
                     $counts['notifications'] = app(UserNotificationService::class)->unreadCount($user);
                     $counts['inbox'] = app(InboxUnreadCountService::class)->countFor($user);
-
-                    if ($user->isAdmin()) {
-                        $counts['admin_course_reviews'] = Course::query()
-                            ->where('approval_status', 'pending')
-                            ->count();
-                        $counts['admin_completion_reviews'] = Enrollment::query()
-                            ->where('completion_status', MicrocredentialCompletionService::STATUS_AWAITING_FACULTY_VERIFICATION)
-                            ->where('academic_unit_confirmation_status', 'pending')
-                            ->whereHas('course.reviews', fn ($query) => $query->whereColumn('course_reviews.user_id', 'enrollments.user_id'))
-                            ->count();
-                    }
-
-                    if ($user->isFaculty()) {
-                        $courseIds = Course::query()
-                            ->where('created_by', $user->id)
-                            ->pluck('id');
-
-                        if ($courseIds->isNotEmpty()) {
-                            $counts['faculty_my_courses'] = LessonActivitySubmission::query()
-                                ->where('status', 'submitted')
-                                ->whereHas('activity', function ($query) use ($courseIds): void {
-                                    $query->where('is_active', true)
-                                        ->where('activity_type', 'assignment')
-                                        ->where(function ($scope) use ($courseIds): void {
-                                            $scope->whereHas('lesson', fn ($lesson) => $lesson->whereIn('course_id', $courseIds))
-                                                ->orWhereHas('module', fn ($module) => $module->whereIn('course_id', $courseIds));
-                                        });
-                                })
-                                ->exists();
-
-                            $hasPendingReview = Enrollment::query()
-                                ->whereIn('course_id', $courseIds)
-                                ->whereIn('faculty_verification_status', ['pending', 'not_required'])
-                                ->where('completion_status', MicrocredentialCompletionService::STATUS_AWAITING_FACULTY_VERIFICATION)
-                                ->whereHas('course', fn ($query) => $query->where('requires_faculty_verification', true))
-                                ->exists();
-
-                            $counts['faculty_learner_progress'] = $hasPendingReview;
-
-                            if (! $hasPendingReview) {
-                                $studentIds = Enrollment::query()
-                                    ->whereIn('course_id', $courseIds)
-                                    ->distinct()
-                                    ->pluck('user_id');
-                                $attemptPairs = QuizAttempt::query()
-                                    ->whereIn('user_id', $studentIds)
-                                    ->whereHas('quiz', fn ($query) => $query->whereIn('course_id', $courseIds)->whereHas('questions'))
-                                    ->whereHas('answers')
-                                    ->select(['user_id', 'quiz_id'])
-                                    ->distinct()
-                                    ->get();
-
-                                if ($attemptPairs->isNotEmpty()) {
-                                    $quizzes = Quiz::query()
-                                        ->with('questions')
-                                        ->whereIn('id', $attemptPairs->pluck('quiz_id')->unique())
-                                        ->get()
-                                        ->keyBy('id');
-                                    $attemptService = app(QuizAttemptService::class);
-
-                                    $counts['faculty_learner_progress'] = $attemptPairs->contains(
-                                        fn (QuizAttempt $attempt): bool => isset($quizzes[$attempt->quiz_id])
-                                            && $attemptService->retakeStatus($quizzes[$attempt->quiz_id], (int) $attempt->user_id)['exhausted']
-                                    );
-                                }
-                            }
-                        }
-                    }
+                    $counts = array_merge($counts, app(SidebarAttentionService::class)->forUser($user));
                 }
 
                 $request->attributes->set('upskill.unread', $counts);
