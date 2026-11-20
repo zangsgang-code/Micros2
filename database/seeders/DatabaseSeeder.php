@@ -66,8 +66,9 @@ class DatabaseSeeder extends Seeder
     private function seedAdmin(): User
     {
         return User::updateOrCreate(
-            ['email' => 'ramon.aquino@upskill.test'],
+            ['user_code' => '26-AD-0001'],
             [
+                'email' => 'admin@upskill.test',
                 'first_name' => 'Ramon',
                 'last_name' => 'Aquino',
                 'username' => 'raquino',
@@ -84,8 +85,9 @@ class DatabaseSeeder extends Seeder
     private function seedFaculty(): User
     {
         return User::updateOrCreate(
-            ['email' => 'liza.ferrer@upskill.test'],
+            ['user_code' => '26-FC-0001'],
             [
+                'email' => 'faculty@upskill.test',
                 'first_name' => 'Liza',
                 'last_name' => 'Ferrer',
                 'username' => 'lferrer',

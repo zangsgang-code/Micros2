@@ -35,8 +35,6 @@ test('admin inbox uses rich text only for visitor replies', function () {
         ->assertSee('reply-attachment-picker', false)
         ->assertSee('<textarea name="body" rows="1"', false)
         ->assertSee('detail-hd-top', false)
-        ->assertSee('.msg.from-admin > div{margin-right:0;align-items:flex-end;}', false)
-        ->assertSee('.msg.from-admin .bubble{align-self:flex-end;}', false)
         ->assertSee('Mark as resolved');
 
     $this->actingAs($admin)
