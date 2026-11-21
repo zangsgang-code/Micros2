@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Hash;
 
 /**
  * LoginController — signs users in with either their USERNAME or EMAIL
- * (the login Blade labels the field "Username" but accepts both), then
+ * (the login Blade labels the field "Username or Email"), then
  * routes each role to its own dashboard:
  *
  *   admin → admin.dashboard · faculty → faculty.dashboard · student → dashboard

@@ -410,7 +410,7 @@
                 @csrf
 
                 <div class="field">
-                    <label for="email">Username</label>
+                    <label for="email">Username or Email</label>
                     <input type="text" id="email" name="email"
                         value="{{ old('email') }}"
                         placeholder="Enter your username or email"
