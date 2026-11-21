@@ -64,12 +64,8 @@
         <div class="psucert__for">for successfully completing the Microcredential</div>
         <div class="psucert__course">{{ $credentialLine }}</div>
         <div class="psucert__desc">
-          @if (!empty($c['course_description']))
-            {{ \Illuminate\Support\Str::limit($c['course_description'], 200) }}
-          @else
-            This certificate acknowledges that the above-named individual has demonstrated
-            proficiency in the competencies covered by this micro-credential.
-          @endif
+          This certificate acknowledges that the above-named individual has demonstrated
+          proficiency in the competencies covered by this micro-credential.
         </div>
       </div>
 

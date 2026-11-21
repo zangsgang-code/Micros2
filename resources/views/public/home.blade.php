@@ -278,9 +278,6 @@
 
     .hero-course-visual {
         position: relative;
-        display: flex;
-        align-items: flex-end;
-        padding: 1.35rem 1.5rem;
         background: linear-gradient(135deg, #0927d8, #07143f);
         background-position: center;
         background-size: cover;
@@ -296,10 +293,10 @@
     .hero-course-tags {
         display: flex;
         align-items: center;
-        flex-wrap: wrap;
-        gap: .65rem;
-        margin: 0;
-        font-size: .72rem;
+        flex-wrap: nowrap;
+        gap: .4rem;
+        margin: 0 0 .8rem;
+        font-size: .75rem;
         font-weight: 700;
         letter-spacing: 0;
     }
@@ -307,10 +304,18 @@
     .hero-course-tags span {
         display: inline-flex;
         align-items: center;
+        min-width: 0;
         padding: .35rem .7rem;
         border-radius: 999px;
         background: #00bcd4;
         color: #fff;
+        line-height: 1.15;
+        white-space: nowrap;
+    }
+
+    .hero-course-tags span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .hero-course-tags span + span {
@@ -1329,16 +1334,17 @@
             justify-self: end;
         }
 
-        .hero-course-visual {
-            padding: 1rem 1.1rem;
-        }
-
         .hero-course-content {
             padding: 1rem 1.1rem 1.1rem;
         }
 
         .hero-course-tags {
-            gap: .4rem;
+            gap: .3rem;
+            font-size: .68rem;
+        }
+
+        .hero-course-tags span {
+            padding: .3rem .55rem;
         }
 
         .hero-course-title {
@@ -1482,12 +1488,12 @@
                         @foreach ($heroCourses as $course)
                             <a class="hero__slide {{ $loop->first ? 'is-active' : '' }}" href="{{ $course['slug'] ?? route('explore') }}" aria-label="View course: {{ $course['title'] ?? 'Explore our courses' }}" aria-hidden="{{ $loop->first ? 'false' : 'true' }}">
                                 <div class="hero-course-visual" @if(!empty($course['image'])) style="background-image: url('{{ $course['image'] }}')" @endif>
+                                </div>
+                                <div class="hero-course-content">
                                     <div class="hero-course-tags">
                                         <span>{{ $course['category'] ?? 'Microcredential' }}</span>
                                         @if(!empty($course['level']))<span>{{ $course['level'] }}</span>@endif
                                     </div>
-                                </div>
-                                <div class="hero-course-content">
                                     <h2 class="hero-course-title">{{ $course['title'] ?? 'Explore our courses' }}</h2>
                                     <p class="hero-course-description">{{ $course['description'] ?? 'Build practical skills with flexible microcredentials from PSU.' }}</p>
                                     <div class="hero-course-footer">

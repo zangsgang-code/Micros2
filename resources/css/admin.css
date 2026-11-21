@@ -837,7 +837,10 @@
            Reading order: status → title → people/stats → details
            → progress → one action.
         ========================================================= */
-        :where(body[data-admin-page="admin-courses-index"]) .course-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); align-items: stretch; gap: 18px; }
+        :where(body[data-admin-page="admin-courses-index"]) .course-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 18px; }
+        @media (max-width: 980px) {
+            :where(body[data-admin-page="admin-courses-index"]) .course-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
 
         :where(body[data-admin-page="admin-courses-index"]) .course-card {
             display: flex; flex-direction: column; min-width: 0;
@@ -996,6 +999,20 @@
         :where(body[data-admin-page="admin-courses-show"]) .card-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: .95rem; font-weight: 700; color: #101010; }
         :where(body[data-admin-page="admin-courses-show"]) .card-title .ico { color: var(--blue); }
         :where(body[data-admin-page="admin-courses-show"]) .card-title small { margin-left: auto; font-size: .74rem; font-weight: 400; color: var(--muted); }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-heading { justify-content: space-between; }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-label { display: inline-flex; align-items: center; gap: 10px; }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-fullscreen { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex: 0 0 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--white); color: var(--blue); cursor: pointer; }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-fullscreen[hidden] { display: none; }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-fullscreen:hover { background: var(--soft); }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-fullscreen:focus-visible { outline: 3px solid rgba(11,78,162,.25); outline-offset: 2px; }
+        :where(body[data-admin-page="admin-courses-show"]) .fullscreen-exit-icon { display: none; }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-fullscreen[aria-pressed="true"] .fullscreen-enter-icon { display: none; }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-fullscreen[aria-pressed="true"] .fullscreen-exit-icon { display: block; }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-fullscreen-error { margin: -4px 0 12px; color: var(--danger); font-size: .8rem; }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-fullscreen-error[hidden] { display: none; }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-card:fullscreen { width: 100%; height: 100%; max-height: 100vh; overflow-y: auto; border: 0; border-radius: 0; padding: 24px; background: var(--surface); }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-card:fullscreen .course-content-heading { position: sticky; top: -24px; z-index: 1; margin: -24px -24px 14px; padding: 16px 24px; border-bottom: 1px solid var(--line); background: var(--white); }
+        :where(body[data-admin-page="admin-courses-show"]) .course-content-card:fullscreen .module-block { background: var(--white); }
         :where(body[data-admin-page="admin-courses-show"]) .card p { font-size: .88rem; line-height: 1.7; color: #4b5563; }
         :where(body[data-admin-page="admin-courses-show"]) .stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 

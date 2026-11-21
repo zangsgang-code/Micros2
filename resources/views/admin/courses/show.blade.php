@@ -240,8 +240,17 @@
                     </section>
                 </div>
 
-                <section class="card">
-                    <div class="card-title"><svg class="ico"><use href="#i-file"/></svg>Course content</div>
+                <section class="card course-content-card" id="admin-course-content">
+                    <div class="card-title course-content-heading">
+                        <span class="course-content-label"><svg class="ico"><use href="#i-file"/></svg>Course content</span>
+                        <button type="button" class="course-content-fullscreen" id="course-content-fullscreen"
+                                aria-label="View course content full screen" title="View course content full screen"
+                                aria-pressed="false" hidden>
+                            <svg class="ico fullscreen-enter-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5M3 3l7 7M21 3l-7 7M3 21l7-7M21 21l-7-7"/></svg>
+                            <svg class="ico fullscreen-exit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v5H3M16 3v5h5M3 16h5v5M21 16h-5v5M3 3l7 7M21 3l-7 7M3 21l7-7M21 21l-7-7"/></svg>
+                        </button>
+                    </div>
+                    <p class="course-content-fullscreen-error" id="course-content-fullscreen-error" role="status" hidden></p>
                     @forelse ($modules as $module)
                         @php
                             $lCount = count($module->lessons);
@@ -471,7 +480,7 @@
             {{-- ── RIGHT ── --}}
             <div class="stack">
 
-                <section class="card">
+                <section class="card" id="completion-award">
                     <div class="card-title"><svg class="ico"><use href="#i-award"/></svg>Completion award</div>
 
                     @if ($course->badge_icon)
@@ -588,6 +597,44 @@
             var name = el.getAttribute('data-file-name');
             if (name) el.textContent = 'Open attached file (' + name + ')';
         });
+    })();
+</script>
+
+<script>
+    (function () {
+        var content = document.getElementById('admin-course-content');
+        var button = document.getElementById('course-content-fullscreen');
+        var errorMessage = document.getElementById('course-content-fullscreen-error');
+        if (!content || !button || typeof content.requestFullscreen !== 'function') return;
+
+        button.hidden = false;
+
+        function updateFullscreenState() {
+            var isFullscreen = document.fullscreenElement === content;
+            button.setAttribute('aria-pressed', String(isFullscreen));
+            button.setAttribute('aria-label', isFullscreen ? 'Exit full screen' : 'View course content full screen');
+            button.title = isFullscreen ? 'Exit full screen' : 'View course content full screen';
+        }
+
+        button.addEventListener('click', async function () {
+            errorMessage.hidden = true;
+            errorMessage.textContent = '';
+
+            try {
+                if (document.fullscreenElement === content) {
+                    await document.exitFullscreen();
+                } else {
+                    await content.requestFullscreen();
+                }
+            } catch (error) {
+                console.error('Unable to change course content fullscreen mode.', error);
+                errorMessage.textContent = 'Full screen mode could not be changed. Please check your browser permissions and try again.';
+                errorMessage.hidden = false;
+            }
+        });
+
+        document.addEventListener('fullscreenchange', updateFullscreenState);
+        updateFullscreenState();
     })();
 </script>
 

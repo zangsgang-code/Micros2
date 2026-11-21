@@ -105,13 +105,6 @@ class CertificateBuilder
      */
     public static function data(Course $course, ?User $student = null, ?Certificate $certificate = null): array
     {
-        $courseDescription = preg_replace('/<\s*br\b[^>]*>|<\/[^>]+>/i', ' ', (string) $course->description);
-        $courseDescription = html_entity_decode(
-            strip_tags($courseDescription ?? ''),
-            ENT_QUOTES | ENT_HTML5,
-            'UTF-8'
-        );
-        $courseDescription = trim(preg_replace('/\s+/', ' ', $courseDescription) ?? '');
         $qrContent = $certificate?->serial
             ? self::verifyUrl($certificate->serial)
             : url('/explore');
@@ -129,7 +122,6 @@ class CertificateBuilder
             // "date were created" in the brief: the course's creation date,
             // not the date the student finished.
             'course_created' => optional($course->created_at)->format('F j, Y'),
-            'course_description' => $courseDescription,
             // "Learning Hours" — like Date Completed, only meaningful once
             // the student has actually finished, so it stays NULL while
             // previewing rather than advertising a figure for an award

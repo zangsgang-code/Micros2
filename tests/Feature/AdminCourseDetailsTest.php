@@ -18,6 +18,8 @@ test('admin course details use the short description and avoid repeating level a
         'category' => 'Information Technology',
         'level' => 'Intermediate',
         'duration' => '4h',
+        'certificate_enabled' => true,
+        'certificate_mode' => 'auto',
         'is_published' => true,
         'created_by' => $faculty->id,
     ]);
@@ -40,6 +42,9 @@ test('admin course details use the short description and avoid repeating level a
         ->assertSee('Module overview heading')
         ->assertSee('Configured module details.')
         ->assertSee('No module description provided.')
+        ->assertSee('id="admin-course-content"', false)
+        ->assertSee('id="course-content-fullscreen"', false)
+        ->assertSee('View course content full screen')
         ->assertSeeText('Intermediate')
         ->assertSeeText('4h');
 
@@ -48,4 +53,11 @@ test('admin course details use the short description and avoid repeating level a
     expect($metaRow)->not->toBeEmpty()
         ->and($metaRow[1])->not->toContain('Intermediate')
         ->and($metaRow[1])->not->toContain('4h');
+
+    preg_match('/<section class="card" id="completion-award">(.*?)<\/section>/s', $response->getContent(), $completionAward);
+
+    expect($completionAward)->not->toBeEmpty()
+        ->and($completionAward[1])->toContain('This certificate acknowledges that the above-named individual has demonstrated')
+        ->and($completionAward[1])->toContain('proficiency in the competencies covered by this micro-credential.')
+        ->and($completionAward[1])->not->toContain('Rich-text editor content.');
 });
