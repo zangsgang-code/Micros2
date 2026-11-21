@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 /**
  * RegisterController — creates STUDENT accounts (the public sign-up form
@@ -104,6 +105,9 @@ class RegisterController extends Controller
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'faculty_code' => ['required', 'string', 'max:20'],
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'terms' => ['accepted'],
+        ], [
+            'terms.accepted' => 'Please read and agree to the Terms and Conditions and the Privacy Policy before signing up.',
         ]);
 
         $facultyCodeValue = strtoupper(trim($validated['faculty_code']));

@@ -18,14 +18,6 @@
 
             <h1 class="register-form-panel__heading">Faculty Registration</h1>
 
-            @if ($errors->any())
-                <div class="alert-error">
-                    @foreach ($errors->all() as $error)
-                        <div>{{ $error }}</div>
-                    @endforeach
-                </div>
-            @endif
-
             <form class="register-form" method="POST" action="{{ route('faculty.register.store') }}">
                 @csrf
 
@@ -156,7 +148,24 @@
                     <li data-password-rule="symbol">At least 1 special character</li>
                 </ul>
 
-                <button type="submit" class="register-submit">Sign Up</button>
+                <div class="terms-agree">
+                    <input type="checkbox" id="faculty-terms" name="terms" value="1"
+                        class="terms-agree__box"
+                        data-terms-checkbox
+                        @checked(old('terms'))
+                        required>
+                    <label for="faculty-terms" class="terms-agree__label">
+                        I agree to the
+                        <a href="{{ route('terms') }}" class="terms-agree__link" target="_blank" rel="noopener">Terms and Conditions</a>
+                        and have read and understood the
+                        <a href="{{ route('privacy') }}" class="terms-agree__link" target="_blank" rel="noopener">Privacy Policy</a>
+                        of UPSKILL.
+                    </label>
+                </div>
+                @error('terms')<p class="form-error">{{ $message }}</p>@enderror
+
+                <button type="submit" class="register-submit" data-register-submit
+                    @disabled(! old('terms'))>Sign Up</button>
 
             </form>
 
@@ -245,6 +254,19 @@
     });
 
     startTimer();
+
+    (function () {
+        const checkbox = document.querySelector('[data-terms-checkbox]');
+        const submit = document.querySelector('[data-register-submit]');
+        if (!checkbox || !submit) return;
+
+        const syncSubmit = () => {
+            submit.disabled = !checkbox.checked;
+        };
+
+        checkbox.addEventListener('change', syncSubmit);
+        syncSubmit();
+    })();
 
     const passwordInput = document.querySelector('[data-password-strength]');
     const passwordRules = document.querySelectorAll('[data-password-rule]');
