@@ -60,7 +60,17 @@
 
         {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• MANAGE MODE â€” "Managing Course" screen â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
 
-        <section class="course-banner">
+        @php
+            $courseManagementGuide = [
+                ['target' => 'faculty-course-banner', 'title' => 'Manage this course', 'description' => 'This page is the course workspace. Add learning content, assessments, then check readiness before submitting it for review.'],
+                ['target' => 'faculty-add-module', 'title' => 'Add a module', 'description' => 'Modules organize your course into sections. Start here, then add lessons and activities inside each module.'],
+                ['target' => 'faculty-module-content', 'fallback' => 'faculty-add-module', 'prepare' => '[data-tour-first-module-toggle]', 'title' => 'Add lessons, activities, and quizzes', 'description' => 'Expand a module and open + Add to choose a Lesson, Activity, or Quiz. Lessons hold learning content; quizzes here are learning checks.'],
+                ['target' => 'faculty-summative', 'fallback' => 'faculty-add-module', 'prepare' => '[data-tour-first-module-toggle]', 'title' => 'Add the summative assessment', 'description' => 'Each module has a separate Summative Assessment area below its learning items. Use Add Summative Quiz to assess the module as a whole.'],
+                ['target' => 'faculty-final-exam', 'title' => 'Set up the final exam', 'description' => 'The final exam is a separate course-completion assessment. Add it here, then edit it to create questions and configure its settings.'],
+                ['target' => 'faculty-course-readiness', 'allow_click' => true, 'title' => 'Check readiness and submit', 'description' => 'Review the readiness checklist. When every requirement is complete, submit the course for administrator approval.'],
+            ];
+        @endphp
+        <section class="course-banner" data-tour-target="faculty-course-banner">
             <div class="banner-info faculty-page-heading faculty-page-heading--inverse">
                 <div class="kicker">Managing Course</div>
                 <h2 class="faculty-page-title">{{ $course->title ?? 'Course Title' }}</h2>
@@ -74,6 +84,12 @@
                 <div class="row">
                     <span class="course-status-badge status-{{ Illuminate\Support\Str::slug($course->status ?? 'Draft') }}" aria-label="Course status: {{ $course->status ?? 'Draft' }}"><span class="course-status-indicator" aria-hidden="true"></span>{{ $course->status ?? 'Draft' }}</span>
                     <a href="{{ route('faculty.courses.edit', $course->id) }}" class="btn-pill">Edit Course Details</a>
+                    <x-guided-tour
+                        tour-id="faculty-course-guide"
+                        label="Course management guide"
+                        launcher-label="Course guide"
+                        :steps="$courseManagementGuide"
+                    />
                 </div>
             </div>
         </section>
@@ -89,7 +105,7 @@
             </section>
         @endif
 
-        <section class="readiness-panel" aria-labelledby="readiness-title">
+        <section class="readiness-panel" aria-labelledby="readiness-title" data-tour-target="faculty-course-readiness">
             <div class="readiness-heading">
                 <h3 id="readiness-title">Course readiness</h3>
                 <p>Complete these checks before submitting. Draft courses remain private to you.</p>
@@ -245,7 +261,7 @@
                                 || (int) session('open_lesson_form') === (int) $module->idx
                                 || (int) session('open_module_content') === (int) $module->idx;
                         @endphp
-                        <button class="module-collapse-toggle" type="button" aria-expanded="{{ $moduleHasOpenForm ? 'true' : 'false' }}" aria-controls="module-body-{{ $module->idx }}" aria-label="{{ $moduleHasOpenForm ? 'Collapse' : 'Expand' }} module" onclick="toggleModuleCollapse({{ $module->idx }}, this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+                        <button class="module-collapse-toggle" type="button" @if($loop->first) data-tour-first-module-toggle @endif aria-expanded="{{ $moduleHasOpenForm ? 'true' : 'false' }}" aria-controls="module-body-{{ $module->idx }}" aria-label="{{ $moduleHasOpenForm ? 'Collapse' : 'Expand' }} module" onclick="toggleModuleCollapse({{ $module->idx }}, this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
                         <div id="module-body-{{ $module->idx }}" @if(! $moduleHasOpenForm) hidden @endif>
 
                         {{-- ── Inline module editor — title + rich-text description ── --}}
@@ -379,7 +395,7 @@
                             @endforelse
                         </div>
 
-                        <div class="module-add-lesson">
+                        <div class="module-add-lesson" @if($loop->first) data-tour-target="faculty-module-content" @endif>
                             <details class="module-add-menu">
                                 <summary class="btn-primary-action module-authoring-add-button">+ Add</summary>
                                 <div class="module-add-options">
@@ -391,7 +407,7 @@
                         </div>
 
                         {{-- The module quiz is the summative assessment for all lessons in this module. --}}
-                        <section class="quiz-row summative-assessment course-outline-target" id="quiz-row-{{ $module->idx }}" aria-label="Summative assessment">
+                        <section class="quiz-row summative-assessment course-outline-target" id="quiz-row-{{ $module->idx }}" aria-label="Summative assessment" @if($loop->first) data-tour-target="faculty-summative" @endif>
                             <div class="summative-label">Summative Assessment</div>
                             <div class="summative-content">
                             @if($module->quiz ?? null)
@@ -437,11 +453,11 @@
                     </div>
                 </form>
                 <div class="module-add-module-footer">
-                    <button class="btn-primary-action module-authoring-add-button" type="button" id="toggle-module-create" aria-expanded="{{ $errors->has('module_title') || $errors->has('module_description') ? 'true' : 'false' }}" aria-controls="module-create-form" onclick="toggleModuleCreate()">+ Add Module</button>
+                    <button class="btn-primary-action module-authoring-add-button" type="button" id="toggle-module-create" data-tour-target="faculty-add-module" aria-expanded="{{ $errors->has('module_title') || $errors->has('module_description') ? 'true' : 'false' }}" aria-controls="module-create-form" onclick="toggleModuleCreate()">+ Add Module</button>
                 </div>
                 <div id="reorder-status" aria-live="polite"></div>
 
-                <section id="course-outline-final-exam" class="panel fac-final-exam-panel{{ $finalModule ? '' : ' fac-final-exam-panel--add' }} course-outline-target" aria-labelledby="course-completion-title">
+                <section id="course-outline-final-exam" class="panel fac-final-exam-panel{{ $finalModule ? '' : ' fac-final-exam-panel--add' }} course-outline-target" aria-labelledby="course-completion-title" data-tour-target="faculty-final-exam">
                     @if($finalModule)
                         <div class="fac-final-exam-header">
                             <div>
@@ -498,8 +514,32 @@
         {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â• QUIZ BUILDER MODE â€” "Add Quiz : <module>" â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
 
         {{-- âœ… Back to the Managing Course screen --}}
+        @php
+            $isNewQuiz = empty($quiz->id);
+            $quizBuilderGuide = $isNewQuiz
+                ? [
+                    ['target' => 'faculty-quiz-title', 'title' => 'Name the assessment', 'description' => 'Give the quiz or exam a clear title. You can also set a passing score and add instructions for students.'],
+                    ['target' => 'faculty-quiz-save', 'allow_click' => true, 'title' => 'Create it before adding questions', 'description' => 'Save this assessment first. Then return to its editor to add questions and configure attempts. Enter a number in Questions shown per attempt, or the whole question pool will be shown to students.'],
+                ]
+                : [
+                    ['target' => 'faculty-question-bank', 'prepare' => '[data-tour-quiz-questions-tab]', 'title' => 'Build the question pool', 'description' => 'Use Add to create questions manually or upload a file. The pool is the source students receive questions from.'],
+                    ['target' => 'faculty-quiz-settings-tab', 'title' => 'Open quiz settings', 'description' => 'Use Settings to configure scoring, attempts, timing, question draws, and shuffling.'],
+                    ['target' => 'faculty-questions-per-attempt', 'prepare' => '[data-tour-quiz-settings-tab]', 'title' => 'Choose how many questions students see', 'description' => 'Enter a number in Questions shown per attempt. If you leave it blank, the whole question pool will be shown to students on each attempt.'],
+                    ['target' => 'faculty-quiz-attempt-settings', 'prepare' => '[data-tour-quiz-settings-tab]', 'title' => 'Configure the attempt', 'description' => 'Set a passing score, optional attempt limit and time limit, and choose whether to shuffle questions or answer choices.'],
+                    ['target' => 'faculty-quiz-save', 'allow_click' => true, 'title' => 'Save your changes', 'description' => 'Save after editing questions or settings. Changes to question content can affect learners’ attempt counting.'],
+                ];
+        @endphp
         <a class="back-link" href="{{ route('faculty.courses.manage', $course->id ?? 1) }}">&larr; Back to Modules</a>
-        <div class="faculty-page-heading"><h2 class="quiz-head faculty-page-title">@if($mode === 'final-exam'){{ ($quiz ?? null) ? 'Edit' : 'Create' }} Final Exam: {{ $course->title }}@elseif(!empty($lessonId)){{ ($quiz ?? null) ? 'Edit' : 'Add' }} Lesson Quiz: {{ $moduleTitle }}@else{{ ($quiz ?? null) ? 'Edit' : 'Add' }} Quiz: {{ $moduleTitle }}@endif</h2></div>
+        <div class="faculty-page-heading quiz-builder-header">
+            <h2 class="quiz-head faculty-page-title">@if($mode === 'final-exam'){{ ($quiz ?? null) ? 'Edit' : 'Create' }} Final Exam: {{ $course->title }}@elseif(!empty($lessonId)){{ ($quiz ?? null) ? 'Edit' : 'Add' }} Lesson Quiz: {{ $moduleTitle }}@else{{ ($quiz ?? null) ? 'Edit' : 'Add' }} Quiz: {{ $moduleTitle }}@endif</h2>
+            <x-guided-tour
+                tour-id="faculty-quiz-builder-guide"
+                :label="$mode === 'final-exam' ? 'Final exam guide' : 'Quiz builder guide'"
+                :launcher-label="$mode === 'final-exam' ? 'Exam guide' : 'Quiz guide'"
+                :steps="$quizBuilderGuide"
+                finish-label="Got it"
+            />
+        </div>
         <x-flash-toast :message="session('success')" />
         {{-- âœ… Real form â€” Save Quiz stores everything (session for now) and
              returns to the Managing Course screen with the quiz in the module --}}
@@ -553,7 +593,6 @@
                         ->all();
                 }
                 $builderSets = [$builderSet];
-                $isNewQuiz = empty($quiz->id);
                 $quizHasAttempts = (bool) ($quiz->has_attempts ?? false);
                 $questionCount = collect($builderSet['questions'])
                     ->filter(fn ($question) => trim((string) ($question['text'] ?? '')) !== '')
@@ -575,7 +614,7 @@
                 <div class="quiz-card">
                     <div>
                         <label class="q-label" for="quiz-title">{{ $mode === 'final-exam' ? 'Final exam title' : 'Quiz title' }} <span class="req">*</span></label>
-                        <input class="input-outline fac-width-full" id="quiz-title" type="text" name="quiz_title" placeholder="{{ $mode === 'final-exam' ? 'e.g. Data Structures & Algorithms Final Exam' : 'MySQL Fundamentals Quiz' }}" value="{{ old('quiz_title', $quiz->title ?? '') }}" required>
+                        <input class="input-outline fac-width-full" id="quiz-title" data-tour-target="faculty-quiz-title" type="text" name="quiz_title" placeholder="{{ $mode === 'final-exam' ? 'e.g. Data Structures & Algorithms Final Exam' : 'MySQL Fundamentals Quiz' }}" value="{{ old('quiz_title', $quiz->title ?? '') }}" required>
                         @error('quiz_title')<small class="field-help" role="alert">{{ $message }}</small>@enderror
                     </div>
                     <div style="margin-top:14px;">
@@ -588,13 +627,13 @@
                         @include('components.rich-text-editor', ['name' => 'instructions', 'id' => 'assessment-instructions', 'value' => old('instructions', $quiz->instructions ?? ''), 'placeholder' => 'Add instructions for students...'])
                     </div>
                 </div>
-                <div class="save-quiz-row">
+                <div class="save-quiz-row" data-tour-target="faculty-quiz-save">
                     <button class="btn-save-lesson" type="submit">{{ $mode === 'final-exam' ? 'Create Final Exam' : (!empty($lessonId) ? 'Create lesson quiz' : 'Create quiz') }}</button>
                 </div>
             @else
                 <div class="quiz-builder-tabs" role="tablist" aria-label="Quiz editor tabs">
-                    <button class="quiz-builder-tab" id="quiz-tab-questions" type="button" role="tab" aria-controls="quiz-panel-questions" aria-selected="{{ $initialQuizTab === 'questions' ? 'true' : 'false' }}" onclick="switchQuizTab('questions')">Questions</button>
-                    <button class="quiz-builder-tab" id="quiz-tab-settings" type="button" role="tab" aria-controls="quiz-panel-settings" aria-selected="{{ $initialQuizTab === 'settings' ? 'true' : 'false' }}" onclick="switchQuizTab('settings')">Settings</button>
+                    <button class="quiz-builder-tab" id="quiz-tab-questions" type="button" role="tab" aria-controls="quiz-panel-questions" aria-selected="{{ $initialQuizTab === 'questions' ? 'true' : 'false' }}" data-tour-quiz-questions-tab onclick="switchQuizTab('questions')">Questions</button>
+                    <button class="quiz-builder-tab" id="quiz-tab-settings" type="button" role="tab" aria-controls="quiz-panel-settings" aria-selected="{{ $initialQuizTab === 'settings' ? 'true' : 'false' }}" data-tour-quiz-settings-tab onclick="switchQuizTab('settings')">Settings</button>
                 </div>
 
                 <section class="quiz-builder-panel" id="quiz-panel-questions" role="tabpanel" aria-labelledby="quiz-tab-questions" data-quiz-tab-panel="questions" @if($initialQuizTab !== 'questions') hidden @endif>
@@ -607,7 +646,7 @@
                         </div>
                     @endif
 
-                    <div class="quiz-bank-toolbar">
+                    <div class="quiz-bank-toolbar" data-tour-target="faculty-question-bank">
                         <h3>Questions in pool: <span id="question-bank-count">{{ $questionCount }}</span></h3>
                         <div class="quiz-question-actions">
                             <button type="button" id="toggle-question-cards" aria-expanded="false" onclick="toggleAllQuestionCards(this)">Expand All</button>
@@ -637,10 +676,10 @@
                     <div class="quiz-card">
                         <div>
                             <label class="q-label" for="quiz-title">{{ $mode === 'final-exam' ? 'Final exam title' : 'Quiz title' }} <span class="req">*</span></label>
-                            <input class="input-outline fac-width-full" id="quiz-title" type="text" name="quiz_title" placeholder="{{ $mode === 'final-exam' ? 'e.g. Data Structures & Algorithms Final Exam' : 'MySQL Fundamentals Quiz' }}" value="{{ old('quiz_title', $quiz->title ?? '') }}" required>
+                            <input class="input-outline fac-width-full" id="quiz-title" data-tour-target="faculty-quiz-title" type="text" name="quiz_title" placeholder="{{ $mode === 'final-exam' ? 'e.g. Data Structures & Algorithms Final Exam' : 'MySQL Fundamentals Quiz' }}" value="{{ old('quiz_title', $quiz->title ?? '') }}" required>
                             @error('quiz_title')<small class="field-help" role="alert">{{ $message }}</small>@enderror
                         </div>
-                        <div class="grid3" style="margin-top:14px;">
+                        <div class="grid3" style="margin-top:14px;" data-tour-target="faculty-quiz-attempt-settings">
                             <div>
                                 <label class="q-label" for="passing-score">Passing score (%)</label>
                                 <input class="input-outline fac-width-full" id="passing-score" type="number" name="passing_score" min="0" max="100" value="{{ old('passing_score', $quiz->passing_score ?? 75) }}">
@@ -651,7 +690,7 @@
                                     <label class="q-label" for="questions-per-attempt">Questions shown per attempt (blank = all)</label>
                                     <button class="quiz-help-icon" type="button" aria-label="Help: questions shown per attempt" aria-describedby="questions-per-attempt-help">?<span class="quiz-help-tooltip" id="questions-per-attempt-help" role="tooltip">Questions in pool: <span id="question-pool-size">{{ $questionCount }}</span>. Add more questions than you show, so learners get different sets.</span></button>
                                 </div>
-                                <input class="input-outline fac-width-full" type="number" name="questions_per_attempt" id="questions-per-attempt" min="1" value="{{ old('questions_per_attempt', $quiz->questions_per_attempt ?? '') }}" oninput="updateDrawSetting()">
+                                <input class="input-outline fac-width-full" type="number" name="questions_per_attempt" id="questions-per-attempt" data-tour-target="faculty-questions-per-attempt" min="1" value="{{ old('questions_per_attempt', $quiz->questions_per_attempt ?? '') }}" oninput="updateDrawSetting()">
                                 <small class="field-help" id="draw-setting-warning" role="status" hidden></small>
                                 @error('questions_per_attempt')<small class="field-help" role="alert">{{ $message }}</small>@enderror
                             </div>
@@ -696,7 +735,7 @@
                     </div>
                 </section>
 
-                <div class="save-quiz-row" id="save-quiz-row">
+                <div class="save-quiz-row" id="save-quiz-row" data-tour-target="faculty-quiz-save">
                     <button class="btn-save-lesson" type="submit">{{ $mode === 'final-exam' ? 'Save Final Exam' : 'Save Quiz' }}</button>
                 </div>
             @endif

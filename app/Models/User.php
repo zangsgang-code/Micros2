@@ -122,6 +122,7 @@ class User extends Authenticatable
             'notification_preferences' => 'array',
             'account_deletion_requested_at' => 'datetime',
             'account_anonymized_at' => 'datetime',
+            'walkthrough_completed_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
             'profile_completed' => 'boolean',

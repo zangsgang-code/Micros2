@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\FacultyAnalyticsReportController;
 use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\FirstLoginWalkthroughController;
 use App\Http\Controllers\OpenBadgeCredentialController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SettingsController;
@@ -75,6 +76,8 @@ Route::post('/login', [LoginController::class, 'store'])
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
 Route::middleware(['auth', PreventBackHistory::class])->group(function () {
+    Route::post('/walkthrough/complete', [FirstLoginWalkthroughController::class, 'complete'])
+        ->name('walkthrough.complete');
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::delete('/settings/account-deletion', [SettingsController::class, 'requestAccountDeletion'])

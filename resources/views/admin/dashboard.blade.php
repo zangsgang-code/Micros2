@@ -10,19 +10,22 @@
 <div class="layout">
         <main class="main admin-dashboard">
 
-            <div class="page-top">
+            <div class="page-top" data-tour-target="admin-welcome">
                 <div>
                     <h1 class="page-heading">Welcome back, Admin</h1>
                     <p class="page-sub">Here's what's happening on your platform today.</p>
                 </div>
-                <span class="today-chip">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
-                    {{ now()->format('l, F j') }}
-                </span>
+                <div class="page-top-actions">
+                    <span class="today-chip">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+                        {{ now()->format('l, F j') }}
+                    </span>
+                    <x-first-login-walkthrough />
+                </div>
             </div>
 
             {{-- STAT CARDS --}}
-            <div class="stats-grid">
+            <div class="stats-grid" data-tour-target="admin-summary">
                 @if ($dashboardAccess['user-management'])
                 <div class="stat-card">
                     <div class="stat-heading">
@@ -74,7 +77,7 @@
 
             @php($pendingReviews = $stats['pending_reviews'])
             @if ($dashboardAccess['courses'] || $dashboardAccess['completion-verification'])
-            <section class="attention-strip {{ $pendingReviews === 0 ? 'is-clear' : '' }}" aria-labelledby="attention-title">
+            <section class="attention-strip {{ $pendingReviews === 0 ? 'is-clear' : '' }}" aria-labelledby="attention-title" data-tour-target="admin-attention">
                 <div class="attention-copy">
                     <span class="attention-indicator" aria-hidden="true"></span>
                     <div>
@@ -104,7 +107,7 @@
 
             {{-- QUICK ACCESS --}}
             @if (count($quickModules) > 0)
-            <section class="quick-modules" aria-labelledby="quick-modules-title">
+            <section class="quick-modules" aria-labelledby="quick-modules-title" data-tour-target="admin-quick-access">
                 <header class="section-hd">
                     <h2 id="quick-modules-title">Quick access</h2>
                     <p>Common administration tasks, with current counts to help you decide where to go next.</p>

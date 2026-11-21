@@ -41,18 +41,21 @@
     {{-- Main content --}}
     <main class="main faculty-dashboard">
 
-        <div class="page-head faculty-page-heading">
+        <div class="page-head faculty-page-heading" data-tour-target="faculty-welcome">
             <div>
                 <h2 class="faculty-page-title">Faculty Dashboard</h2>
                 <p class="faculty-page-subtitle">Manage your Courses and Track student Performance</p>
                 <p class="fac-user-code">User Code: {{ $user->user_code ?? '-' }}</p>
             </div>
             {{-- âœ… Connected â€” goes to Faculty â€º Create Courses only --}}
-            <a href="{{ route('faculty.create') }}"><button class="btn-outline" type="button">Create Courses</button></a>
+            <div class="faculty-dashboard__heading-actions">
+                <a href="{{ route('faculty.create') }}" data-tour-target="faculty-create-course"><button class="btn-outline" type="button">Create Courses</button></a>
+                <x-first-login-walkthrough />
+            </div>
         </div>
 
         {{-- Stat cards --}}
-        <section class="stats">
+        <section class="stats" data-tour-target="faculty-course-summary">
             <div class="stat-card c-navy">
                 <div class="stat-top">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4H5a2 2 0 0 0-2 2v14h18V6a2 2 0 0 0-2-2h-3"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="m8 13 2.5 2.5L16 10"/></svg>
@@ -86,7 +89,7 @@
         {{-- Courses + side panels --}}
         <div class="content-grid">
 
-            <section class="courses-col">
+            <section class="courses-col" data-tour-target="faculty-my-courses">
                 <div class="courses-head">
                     <h3>My Courses</h3>
                 </div>

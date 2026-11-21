@@ -1072,6 +1072,8 @@
         :where(body[data-admin-page="admin-courses-show"]) .rich code { font-family: ui-monospace, Consolas, monospace; font-size: .92em; }
 
         :where(body[data-admin-page="admin-courses-show"]) .hero-actions { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 4px 24px; border-left: 1px solid var(--line); }
+        :where(body[data-admin-page="admin-courses-show"]) .hero-actions-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        :where(body[data-admin-page="admin-courses-show"]) .hero-actions-toolbar .status-pill { align-self: center; }
         :where(body[data-admin-page="admin-courses-show"]) .hero-actions form { display: flex; }
         :where(body[data-admin-page="admin-courses-show"]) .hero-actions form .btn { flex: 1; }
         :where(body[data-admin-page="admin-courses-show"]) .status-pill { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
@@ -1243,7 +1245,9 @@
             :where(body[data-admin-page="admin-courses-show"]) .hero { grid-template-columns: 1fr; gap: 16px; }
             :where(body[data-admin-page="admin-courses-show"]) .thumb { width: 100%; height: 190px; }
             :where(body[data-admin-page="admin-courses-show"]) .hero-actions { flex-direction: row; flex-wrap: wrap; padding: 16px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+            :where(body[data-admin-page="admin-courses-show"]) .hero-actions-toolbar { flex: 1 1 100%; }
             :where(body[data-admin-page="admin-courses-show"]) .hero-actions .status-pill { flex-basis: 100%; }
+            :where(body[data-admin-page="admin-courses-show"]) .hero-actions-toolbar .status-pill { flex-basis: auto; }
             :where(body[data-admin-page="admin-courses-show"]) .hero-actions form, :where(body[data-admin-page="admin-courses-show"]) .hero-actions > .btn { flex: 1 1 140px; }
             :where(body[data-admin-page="admin-courses-show"]) .two { grid-template-columns: 1fr; }
         }
@@ -1317,6 +1321,7 @@
         :where(body[data-admin-page="admin-dashboard"]) .page-sub { margin: 4px 0 0; font-size: .9rem; color: var(--muted); }
         :where(body[data-admin-page="admin-dashboard"]) .today-chip { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: var(--muted); }
         :where(body[data-admin-page="admin-dashboard"]) .today-chip svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+        :where(body[data-admin-page="admin-dashboard"]) .page-top-actions { display: flex; align-items: center; gap: 12px; }
 
         /* STAT CARDS */
         :where(body[data-admin-page="admin-dashboard"]) .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }

@@ -33,16 +33,19 @@
                 ? 'Good morning'
                 : ($greetingHour < 17 ? 'Good afternoon' : 'Good evening');
         @endphp
-        <header class="page-header ui-page-header student-page-heading">
+        <header class="page-header ui-page-header student-page-heading" data-tour-target="student-welcome">
             <div class="ui-page-header__content">
                 <h2 class="ui-page-title">{{ $timeGreeting }}, {{ $user->username ?: ($user->name ?? 'Student') }}!</h2>
                 <p class="ui-page-subtitle">Build in-demand skills, earn microcredentials, and take the next step in your Microcredential journey.</p>
                 <p class="student-dashboard__student-id">Student ID: {{ $user->student_id ?? '—' }}</p>
             </div>
-            <a href="{{ route('courses.browse') }}" class="ui-button ui-button--primary">Explore courses</a>
+            <div class="student-dashboard__header-actions">
+                <a href="{{ route('courses.browse') }}" class="ui-button ui-button--primary" data-tour-target="student-browse-courses">Explore courses</a>
+                <x-first-login-walkthrough />
+            </div>
         </header>
 
-        <section class="stats" aria-label="Learning summary">
+        <section class="stats" aria-label="Learning summary" data-tour-target="student-learning-summary">
             <!-- <div class="stat-card c-navy"><div class="stat-top"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12v20l-6-4-6 4V2z"/></svg><span class="num">{{ $stats['active_courses'] ?? 0 }}</span></div><div class="label">Courses in progress</div></div>
             <div class="stat-card c-gold"><div class="stat-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg><span class="num">{{ $stats['completed'] ?? 0 }}</span></div><div class="label">Completed credentials</div></div>
             <div class="stat-card c-cyan"><div class="stat-top"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5" stroke="currentColor" fill="none" stroke-width="2"/></svg><span class="num">{{ $stats['badges_earned'] ?? 0 }}</span></div><div class="label">Skills and badges</div></div>
@@ -54,7 +57,7 @@
         </section>
 
         <div class="content-grid">
-            <section class="courses-col">
+            <section class="courses-col" data-tour-target="student-course-progress">
                 <div class="courses-head"><h3>Your course progress</h3><a href="{{ route('courses.enrolled') }}" class="enroll-more">View all courses <span class="dashboard-chevron">&rsaquo;</span></a></div>
                 @php $inProgressCourses = $inProgressCourses ?? collect(); $completedCourses = $completedCourses ?? collect(); @endphp
                 @if ($inProgressCourses->isEmpty() && $completedCourses->isEmpty())

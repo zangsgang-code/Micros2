@@ -82,8 +82,42 @@
         {{-- ── Hero ── --}}
         @php
             $shortDesc = \Illuminate\Support\Str::limit(trim((string) ($course->short_description ?? '')), 170);
+            $adminCourseReviewGuide = [
+                ['target' => 'admin-course-review-overview', 'title' => 'Review the course overview', 'description' => 'Check the title, instructor, status, and summary before reviewing the course details and learning content.'],
+                ['target' => 'admin-course-review-status', 'title' => 'Check the review status', 'description' => 'This badge shows the current approval status of the course.'],
+            ];
+
+            if ($course->status_key === 'pending') {
+                $adminCourseReviewGuide[] = ['target' => 'admin-course-review-approve', 'title' => $course->can_approve ? 'Approve the course' : 'Approval is unavailable', 'description' => $course->can_approve ? 'Select Approve once the required course content is complete and the review is ready.' : 'This control is disabled because requirements are missing. Check Approval readiness below to see what the author needs to complete.'];
+                $adminCourseReviewGuide[] = ['target' => 'admin-course-review-deny', 'title' => 'Request changes', 'description' => 'Deny with feedback opens a required form. Explain what the author needs to change before resubmitting.'];
+            }
+
+            $adminCourseReviewGuide[] = ['target' => 'admin-course-review-delete', 'title' => 'Delete the course', 'description' => 'Delete permanently removes this course, its learning content, and enrollments. This cannot be undone.'];
+
+            if ($course->can_toggle_publish && $course->is_published) {
+                $adminCourseReviewGuide[] = ['target' => 'admin-course-review-unpublish', 'title' => 'Unpublish the course', 'description' => 'Unpublish removes the course from the learner catalog without deleting its content.'];
+            }
+
+            if ($course->status_key === 'pending') {
+                $adminCourseReviewGuide[] = ['target' => 'admin-course-review-readiness', 'title' => 'Check approval readiness', 'description' => 'These checks show whether required course details, outcomes, modules, lessons, and assessments are in place.'];
+            }
+
+            $adminCourseReviewGuide = array_merge($adminCourseReviewGuide, [
+                ['target' => 'admin-course-review-stats', 'title' => 'Review course metrics', 'description' => 'See the course level and duration, plus enrollment, module, and lesson counts.'],
+                ['target' => 'admin-course-review-description', 'placement' => 'viewport-bottom-right', 'title' => 'Read the course description', 'description' => 'Review the description learners see to understand the course and its goals.'],
+                ['target' => 'admin-course-review-syllabus', 'placement' => 'viewport-bottom-right', 'title' => 'Review syllabus details', 'description' => 'Check intended learners, delivery, learning outcomes, assessment strategy, and mastery criteria.'],
+                ['target' => 'admin-course-review-skills', 'title' => 'Review the skills', 'description' => 'These skills describe what learners will develop and can help match the course to learner interests.'],
+                ['target' => 'admin-course-review-content', 'placement' => 'viewport-bottom-right', 'title' => 'Inspect the course content', 'description' => 'Review modules, lessons, activities, quizzes, and assessments. Expand module headings to inspect their content.'],
+            ]);
+
+            $adminCourseReviewGuide = array_merge($adminCourseReviewGuide, [
+                ['target' => 'admin-course-review-award', 'placement' => 'viewport-bottom-right', 'title' => 'Check the completion award', 'description' => 'Review the badge and certificate students receive when they complete the course.'],
+                ['target' => 'admin-course-review-progress', 'title' => 'Review learner progress', 'description' => 'This card shows average completion across enrolled learners.'],
+                ['target' => 'admin-course-review-verification', 'title' => 'Review completion verification', 'description' => 'Open the verification queue to inspect learner completion requirements and record decisions.'],
+                ['target' => 'admin-course-review-fullscreen', 'fallback' => 'admin-course-review-content', 'placement' => 'viewport-bottom-right', 'allow_click' => true, 'title' => 'Expand course content', 'description' => 'Use this control to view the course outline in full screen. Use it again or press Escape to exit.'],
+            ]);
         @endphp
-        <section class="card hero">
+        <section class="card hero" data-tour-target="admin-course-review-overview">
             <div class="thumb">
                 @if (! empty($thumb))
                     <img src="{{ $thumb }}" alt="">
@@ -108,23 +142,33 @@
             </div>
 
             <div class="hero-actions">
-                <span class="status-pill status-{{ $course->status_key }}"><span class="dot"></span>{{ $course->status }}</span>
+                <div class="hero-actions-toolbar">
+                    <span class="status-pill status-{{ $course->status_key }}" data-tour-target="admin-course-review-status"><span class="dot"></span>{{ $course->status }}</span>
+                    <x-guided-tour
+                        tour-id="admin-course-review-guide"
+                        label="Course review guide"
+                        launcher-label="Course review guide"
+                        :steps="$adminCourseReviewGuide"
+                        finish-label="Got it"
+                        skip-label="Close guide"
+                    />
+                </div>
 
                 @if ($course->status_key === 'pending')
                     @if ($course->can_approve)
                         <form method="POST" action="{{ route('admin.courses.approve', $course->id) }}">
                             @csrf
-                            <button type="submit" class="btn btn-approve"><svg class="ico"><use href="#i-check"/></svg>Approve</button>
+                            <button type="submit" class="btn btn-approve" data-tour-target="admin-course-review-approve"><svg class="ico"><use href="#i-check"/></svg>Approve</button>
                         </form>
                     @else
-                        <button type="button" class="btn btn-approve approval-disabled" disabled title="The course is missing required content">Incomplete course</button>
+                        <button type="button" class="btn btn-approve approval-disabled" data-tour-target="admin-course-review-approve" disabled title="The course is missing required content">Incomplete course</button>
                     @endif
-                    <button type="button" class="btn btn-outline" id="deny-open"><svg class="ico"><use href="#i-msg"/></svg>Deny with feedback</button>
+                    <button type="button" class="btn btn-outline" id="deny-open" data-tour-target="admin-course-review-deny"><svg class="ico"><use href="#i-msg"/></svg>Deny with feedback</button>
                 @endif
 
                 <form method="POST" action="{{ route('admin.courses.destroy', $course->id) }}">
                     @csrf
-                    <button type="submit" class="btn btn-delete"
+                    <button type="submit" class="btn btn-delete" data-tour-target="admin-course-review-delete"
                             onclick="return confirm('Permanently delete \'{{ addslashes($course->title) }}\'? Its modules, lessons, quizzes and enrollments will also be removed. This cannot be undone.');">
                         <svg class="ico"><use href="#i-trash"/></svg>Delete course
                     </button>
@@ -133,7 +177,7 @@
                 @if ($course->can_toggle_publish && $course->is_published)
                     <form method="POST" action="{{ route('admin.courses.publish', $course->id) }}">
                         @csrf
-                        <button type="submit" class="btn btn-outline">Unpublish course</button>
+                        <button type="submit" class="btn btn-outline" data-tour-target="admin-course-review-unpublish">Unpublish course</button>
                     </form>
                 @endif
             </div>
@@ -158,7 +202,7 @@
         </section>
 
         @if ($course->status_key === 'pending')
-            <section class="card approval-readiness" aria-labelledby="approval-readiness-title">
+            <section class="card approval-readiness" aria-labelledby="approval-readiness-title" data-tour-target="admin-course-review-readiness">
                 <h2 id="approval-readiness-title">Approval readiness</h2>
                 <p>{{ $course->can_approve ? 'Required course content is in place.' : 'Approval is unavailable until the missing requirements are completed.' }}</p>
                 <div class="approval-checks">
@@ -177,7 +221,7 @@
             {{-- ── LEFT ── --}}
             <div class="stack">
 
-                <section class="card stats">
+                <section class="card stats" data-tour-target="admin-course-review-stats">
                     <div class="stat"><span class="stat-ico"><svg class="ico"><use href="#i-bars"/></svg></span><div><small>Level</small><b>{{ $course->level ?? '—' }}</b></div></div>
                     <div class="stat"><span class="stat-ico"><svg class="ico"><use href="#i-clock"/></svg></span><div><small>Duration</small><b>{{ $course->duration ?? '—' }}</b></div></div>
                     <div class="stat"><span class="stat-ico"><svg class="ico"><use href="#i-users"/></svg></span><div><small>Students</small><b>{{ $course->students }}</b></div></div>
@@ -185,7 +229,7 @@
                     <div class="stat"><span class="stat-ico"><svg class="ico"><use href="#i-play"/></svg></span><div><small>Lessons</small><b>{{ $course->lessons_count }}</b></div></div>
                 </section>
 
-                <section class="card">
+                <section class="card" data-tour-target="admin-course-review-description">
                     <div class="card-title"><svg class="ico"><use href="#i-file"/></svg>Description</div>
                     @php
                         $descHtml = $tidy($course->description);
@@ -194,7 +238,7 @@
                     <div class="rich rich-content">{!! $descBlank ? 'No description provided.' : \App\Support\RichTextSanitizer::wrapTables($descHtml) !!}</div>
                 </section>
 
-                <section class="card syllabus-details">
+                <section class="card syllabus-details" data-tour-target="admin-course-review-syllabus">
                     <div class="card-title"><svg class="ico"><use href="#i-file"/></svg>Micro-credential syllabus details</div>
                     <div class="chip-row"><span class="chip">PQF {{ $course->pqf_level ? 'Level '.$course->pqf_level : 'not specified' }}</span><span class="chip">{{ $course->learning_hours ? $course->learning_hours.' learning hours' : 'Learning hours not specified' }}</span><span class="chip">{{ $course->delivery_mode ? Illuminate\Support\Str::headline($course->delivery_mode) : 'Delivery mode not specified' }}</span></div>
                     <div class="rich rich-content"><strong>Intended learners:</strong> {!! $course->target_learners ? \App\Support\RichTextSanitizer::toHtml($course->target_learners) : 'Not specified' !!}</div>
@@ -215,7 +259,7 @@
                 </section>
 
                 <div class="stack">
-                    <section class="card">
+                    <section class="card" data-tour-target="admin-course-review-skills">
                         <div class="card-title"><svg class="ico"><use href="#i-tag"/></svg>Skills covered</div>
                         @if (! empty($course->skills))
                             <div class="chip-row">
@@ -240,10 +284,10 @@
                     </section>
                 </div>
 
-                <section class="card course-content-card" id="admin-course-content">
+                <section class="card course-content-card" id="admin-course-content" data-tour-target="admin-course-review-content">
                     <div class="card-title course-content-heading">
                         <span class="course-content-label"><svg class="ico"><use href="#i-file"/></svg>Course content</span>
-                        <button type="button" class="course-content-fullscreen" id="course-content-fullscreen"
+                        <button type="button" class="course-content-fullscreen" id="course-content-fullscreen" data-tour-target="admin-course-review-fullscreen"
                                 aria-label="View course content full screen" title="View course content full screen"
                                 aria-pressed="false" hidden>
                             <svg class="ico fullscreen-enter-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5M3 3l7 7M21 3l-7 7M3 21l7-7M21 21l-7-7"/></svg>
@@ -480,7 +524,7 @@
             {{-- ── RIGHT ── --}}
             <div class="stack">
 
-                <section class="card" id="completion-award">
+                <section class="card" id="completion-award" data-tour-target="admin-course-review-award">
                     <div class="card-title"><svg class="ico"><use href="#i-award"/></svg>Completion award</div>
 
                     @if ($course->badge_icon)
@@ -518,7 +562,7 @@
                     @endif
                 </section>
 
-                <section class="card">
+                <section class="card" data-tour-target="admin-course-review-progress">
                     <div class="card-title"><svg class="ico"><use href="#i-bars"/></svg>Course progress</div>
                     <div class="progress-line">
                         <div class="progress-track"><div class="progress-fill" style="width: {{ $course->percent }}%"></div></div>
@@ -527,7 +571,7 @@
                     <div class="pct-sub">Average completion · {{ $course->students }} enrolled</div>
                 </section>
 
-                <section class="card">
+                <section class="card" data-tour-target="admin-course-review-verification">
                     <div class="card-title"><svg class="ico"><use href="#i-users"/></svg>Completion verification</div>
                     <p>Verify completed course requirements and record the academic-unit decision for this course.</p>
                     <a class="btn btn-blue enrollment-review-link" href="{{ route('admin.courses.enrollments', $course->id) }}">

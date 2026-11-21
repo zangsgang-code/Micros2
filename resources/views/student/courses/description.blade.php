@@ -53,6 +53,8 @@
     body.app-shell.page-course-description .course-details-tabs:not(.has-js) .course-tabs { display: none; }
     body.app-shell.page-course-description .course-tab-panel[hidden] { display: none !important; }
     body.app-shell.page-course-description .course-details-tabs { padding: 0 32px; }
+    body.app-shell.page-course-description .enroll-progress-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    body.app-shell.page-course-description .enroll-progress-head .progress-label { flex: 1; margin-bottom: 0; }
     body.app-shell.page-course-description .course-public-section {
         margin: 0 0 2.25rem;
         padding: 0 0 2.25rem;
@@ -111,6 +113,16 @@
         @php
             $cameFromEnrollments = request()->query('from') === 'enrollments';
             $prerequisites = $prerequisites ?? collect();
+            $enrollmentGuideAction = match (true) {
+                $is_completed ?? false => 'You have completed this course. Use Review to revisit its content and assessments.',
+                $is_enrolled ?? false => 'You are already enrolled. Select Start course or Continue learning to open your lessons.',
+                ! ($prerequisites_met ?? true) => 'Review the prerequisite list first. Complete every listed course before enrolling here.',
+                default => 'Check the prerequisites, then select Enroll now to add this course to My Courses.',
+            };
+            $courseEnrollmentGuide = [
+                ['target' => 'student-course-overview', 'placement' => 'viewport-bottom-right', 'title' => 'Review the course', 'description' => 'Check the course summary, instructor, outcomes, and lesson outline so you know what you will learn.'],
+                ['target' => 'student-enrollment-action', 'fallback' => 'student-course-overview', 'allow_click' => true, 'title' => 'Enroll or continue learning', 'description' => $enrollmentGuideAction],
+            ];
         @endphp
         @include('components.breadcrumbs', ['breadcrumbClass' => 'student-breadcrumbs--detail', 'items' => [
             [
@@ -130,7 +142,7 @@
         <div class="course-shell">
 
             {{-- ── Hero: title, summary, skills, meta ── --}}
-            <section class="hero">
+            <section class="hero" data-tour-target="student-course-overview">
                 <div class="hero-tags">
                     @if($course->category)
                         <span class="tag tag-cat ui-badge">{{ $course->category }}</span>
@@ -202,9 +214,18 @@
                      @endif>
                 </div>
                 <div class="enroll-body">
-                    <div class="progress-label">
-                        <span>Your progress</span>
-                        <span>{{ $progress_percent ?? 0 }}%</span>
+                    <div class="enroll-progress-head">
+                        <div class="progress-label">
+                            <span>Your progress</span>
+                            <span>{{ $progress_percent ?? 0 }}%</span>
+                        </div>
+                        <x-guided-tour
+                            tour-id="student-course-enrollment-guide"
+                            label="Course enrollment guide"
+                            launcher-label="Course guide"
+                            :steps="$courseEnrollmentGuide"
+                            finish-label="Got it"
+                        />
                     </div>
                     <div class="progress-track ui-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $progress_percent ?? 0 }}">
                         <div class="progress-fill ui-progress-fill" style="width:{{ $progress_percent ?? 0 }}%"></div>
@@ -228,17 +249,17 @@
                     @endif
 
                     @if($is_completed ?? false)
-                        <div class="enroll-actions">
+                        <div class="enroll-actions" data-tour-target="student-enrollment-action">
                             <a href="{{ route('courses.learn', $course->id) }}" class="btn-continue ui-button ui-button--primary">Review</a>
                         </div>
                     @elseif($is_enrolled ?? false)
-                        <div class="enroll-actions">
+                        <div class="enroll-actions" data-tour-target="student-enrollment-action">
                             <a href="{{ route('courses.learn', $course->id) }}" class="btn-continue ui-button ui-button--primary">
                                 {{ ($progress_percent ?? 0) > 0 ? 'Continue learning' : 'Start course' }}
                             </a>
                         </div>
                     @elseif(!($prerequisites_met ?? true))
-                        <div class="enroll-actions">
+                        <div class="enroll-actions" data-tour-target="student-enrollment-action">
                             <button type="button" class="btn-enroll ui-button ui-button--primary" disabled aria-disabled="true">
                                 Complete prerequisites first
                             </button>
@@ -247,7 +268,7 @@
                             </small>
                         </div>
                     @else
-                        <div class="enroll-actions">
+                        <div class="enroll-actions" data-tour-target="student-enrollment-action">
                             <form action="{{ route('courses.enroll', $course->id) }}" method="POST" class="enroll-form">
                                 @csrf
                                 <button type="submit" class="btn-enroll ui-button ui-button--primary">Enroll now</button>

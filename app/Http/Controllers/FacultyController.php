@@ -1213,7 +1213,7 @@ class FacultyController extends Controller
         // Modules — idx/key carry the real ids so every Blade form
         // (add lesson, add quiz, delete) targets the right records.
         $modules = $course->modules->reject(fn (CourseModule $module): bool => $module->is_final)->map(function (CourseModule $m) {
-            $outlineItems = $m->lessons->map(fn (CourseLesson $lesson) => (object) [
+            $outlineItems = $m->lessons->toBase()->map(fn (CourseLesson $lesson) => (object) [
                 'type' => 'lesson',
                 'id' => $lesson->id,
                 'title' => $lesson->title,

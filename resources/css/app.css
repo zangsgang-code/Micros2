@@ -2784,6 +2784,7 @@ body.app-shell.page-dashboard .student-dashboard .panel-body, body.app-shell.pag
   body.app-shell.page-dashboard .student-dashboard .content-grid{grid-template-columns:minmax(0,1fr);gap:18px}
 }
 
+body.app-shell.page-dashboard .student-dashboard .student-dashboard__header-actions{display:flex;align-items:center;gap:12px}
 @media(max-width:700px){
   body.app-shell.page-dashboard .main.app-main{padding:24px 16px 36px}
   body.app-shell.page-dashboard .student-dashboard{padding:0}
@@ -2791,7 +2792,7 @@ body.app-shell.page-dashboard .student-dashboard .panel-body, body.app-shell.pag
   body.app-shell.page-dashboard .student-dashboard .ui-page-header__content{width:100%}
   body.app-shell.page-dashboard .student-dashboard .ui-page-title{font-size:clamp(1.5rem,6vw,2rem);line-height:1.2;overflow-wrap:anywhere}
   body.app-shell.page-dashboard .student-dashboard .ui-page-subtitle{max-width:65ch;line-height:1.5}
-  body.app-shell.page-dashboard .student-dashboard .ui-page-header > .ui-button{align-self:flex-start}
+  body.app-shell.page-dashboard .student-dashboard .ui-page-header > .student-dashboard__header-actions{align-self:flex-start}
   body.app-shell.page-dashboard .student-dashboard .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 22px}
   body.app-shell.page-dashboard .student-dashboard .stat-card{min-width:0;min-height:132px;padding:14px}
   body.app-shell.page-dashboard .student-dashboard .stat-card .label{line-height:1.35}
@@ -2879,7 +2880,7 @@ body.app-shell.page-courses-browse{
     /* Main */
 
     body.app-shell.page-courses-browse .page-head h2{font-size:var(--text-2xl);margin:0 0 6px;color:var(--navy);}
-    body.app-shell.page-courses-browse .page-head p{margin:0 0 24px;color:var(--muted);font-size:var(--text-sm);}
+    body.app-shell.page-courses-browse .page-head p{margin:0;color:var(--muted);font-size:var(--text-sm);}
 
     /* Filters bar */
     body.app-shell.page-courses-browse .filters-bar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:32px;}

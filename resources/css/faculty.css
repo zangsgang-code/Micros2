@@ -28,6 +28,7 @@
     /* Main */
     :where(html[data-faculty-page="faculty-dashboard"]) .main{padding:32px 36px 60px;}
     :where(html[data-faculty-page="faculty-dashboard"]) .page-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:28px;}
+    :where(html[data-faculty-page="faculty-dashboard"]) .page-head .faculty-dashboard__heading-actions{display:flex;align-items:center;gap:12px;}
     :where(html[data-faculty-page="faculty-dashboard"]) .page-head h2{font-size:30px;margin:0 0 6px;color:var(--navy);}
     :where(html[data-faculty-page="faculty-dashboard"]) .page-head p{margin:0;color:var(--muted);font-size:15px;}
     :where(html[data-faculty-page="faculty-dashboard"]) .btn-outline{background:#fff;border:1.5px solid #c9ccdb;color:#9aa0b4;font-weight:600;padding:12px 24px;border-radius:999px;font-size:15px;}
@@ -1746,6 +1747,8 @@
     body:where([data-faculty-page="faculty-courses-index"]).inline-quiz .layout.faculty-sidebar-layout{display:block;min-height:0;}
     body:where([data-faculty-page="faculty-courses-index"]).inline-quiz .layout.faculty-sidebar-layout>.main{width:100%;max-width:none;margin:0;padding:18px 20px 24px;}
     body:where([data-faculty-page="faculty-courses-index"]).inline-quiz .faculty-page-heading .quiz-head{margin:0 0 14px;font-size:19px!important;line-height:1.35;}
+    body:where([data-faculty-page="faculty-courses-index"]) .quiz-builder-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+    body:where([data-faculty-page="faculty-courses-index"]) .quiz-builder-header .quiz-head{min-width:0;flex:1;}
     body:where([data-faculty-page="faculty-courses-index"]).inline-quiz .quiz-card{margin-bottom:12px;padding:16px;}
     body:where([data-faculty-page="faculty-courses-index"]).inline-quiz .save-quiz-row{gap:8px;}
 

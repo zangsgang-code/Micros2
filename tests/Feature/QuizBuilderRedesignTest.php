@@ -99,6 +99,8 @@ test('shared builder creates empty quizzes, authors questions, imports CSV, and 
     [$course, $faculty, $createUrl, $storeUrl, $editUrlFor] = quizBuilderRedesignContext($type);
     Storage::fake('local');
     $this->actingAs($faculty)->get($createUrl)->assertOk()
+        ->assertSee($type === 'final' ? 'Final exam guide' : 'Quiz builder guide')
+        ->assertSee('Enter a number in Questions shown per attempt, or the whole question pool will be shown to students.')
         ->assertSee('name="quiz_title"', false)
         ->assertSee('name="passing_score"', false)
         ->assertSee('name="instructions"', false)
@@ -186,6 +188,8 @@ test('shared builder creates empty quizzes, authors questions, imports CSV, and 
     $this->assertSame(2, $quiz->fresh()->questions()->count());
     $this->get($editUrl)->assertOk()
         ->assertSee('id="quiz-tab-questions" type="button" role="tab" aria-controls="quiz-panel-questions" aria-selected="true"', false)
+        ->assertSee('data-tour-target="faculty-question-bank"', false)
+        ->assertSee('If you leave it blank, the whole question pool will be shown to students on each attempt.')
         ->assertSee('Questions in pool:', false)
         ->assertSee('question-card-toggle')
         ->assertSee('+ Add alternative answer', false)

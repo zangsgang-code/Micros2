@@ -3,6 +3,7 @@
 use App\Models\Course;
 use App\Models\CourseLesson;
 use App\Models\CourseModule;
+use App\Models\Quiz;
 use App\Models\User;
 use App\Services\CourseReadinessService;
 use App\Services\LearningOutcomeService;
@@ -84,6 +85,46 @@ test('course creation stores separately entered learning outcomes', function () 
         ->assertOk()
         ->assertSee('Build a responsive page.')
         ->assertSee('Apply accessible labels to form controls.');
+});
+
+test('course manager includes a guide for modules and assessments', function () {
+    $faculty = User::factory()->faculty()->create();
+    $course = Course::create([
+        'title' => 'Course guide example',
+        'slug' => 'course-guide-example',
+        'created_by' => $faculty->id,
+        'approval_status' => 'draft',
+        'is_approved' => false,
+        'is_published' => false,
+    ]);
+    $module = CourseModule::create([
+        'course_id' => $course->id,
+        'title' => 'First module',
+        'order' => 1,
+    ]);
+    Quiz::create([
+        'course_id' => $course->id,
+        'module_id' => $module->id,
+        'title' => 'First module quiz',
+        'passing_score' => 70,
+        'attempts' => '3 Attempts',
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($faculty)
+        ->get(route('faculty.courses.manage', $course->id))
+        ->assertOk()
+        ->assertSee('Course guide')
+        ->assertSee('Add lessons, activities, and quizzes')
+        ->assertSee('First module quiz')
+        ->assertSee('data-tour-target="faculty-module-content"', false)
+        ->assertSee('data-tour-prepare="[data-tour-first-module-toggle]"', false)
+        ->assertSee('data-tour-target="faculty-summative"', false)
+        ->assertSee('data-tour-target="faculty-final-exam"', false)
+        ->assertSee('data-tour-step-target="faculty-add-module"', false);
+
+    expect(substr_count($response->getContent(), 'data-tour-target="faculty-add-module"'))
+        ->toBe(1);
 });
 
 test('editing a course preserves legacy fields and its certificate signature name', function () {

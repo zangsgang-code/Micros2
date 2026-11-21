@@ -25,13 +25,30 @@
 {{-- Main content --}}
     <div class="page-content">
 
-        <div class="page-head student-page-heading page-header ui-page-header">
-            <h2 class="ui-page-title">Browse All Courses</h2>
-            <p class="ui-page-subtitle">{{ count($courses) }} {{ count($courses) === 1 ? 'course' : 'courses' }} available</p>
+        @php
+            $courseBrowseGuide = [
+                ['target' => 'student-browse-heading', 'title' => 'Browse the course catalog', 'description' => 'Explore approved courses here. You can search by name or narrow the list with filters.'],
+                ['target' => 'student-course-filters', 'title' => 'Find a good match', 'description' => 'Search by keyword, filter by category or level, or use Recommended to match courses to skills on your profile. Select Filter to apply your choices.'],
+                ['target' => 'student-first-course', 'fallback' => 'student-course-filters', 'allow_click' => true, 'title' => 'Review a course and enroll', 'description' => 'Choose a course card to see its details. On the course page, check the overview and prerequisites, then select Enroll now.'],
+            ];
+        @endphp
+        <div class="page-head student-page-heading page-header ui-page-header" data-tour-target="student-browse-heading">
+            <div class="ui-page-header__content">
+                <h2 class="ui-page-title">Browse All Courses</h2>
+                <p class="ui-page-subtitle">{{ count($courses) }} {{ count($courses) === 1 ? 'course' : 'courses' }} available</p>
+            </div>
+            <x-guided-tour
+                tour-id="student-course-browse-guide"
+                label="Course browsing guide"
+                launcher-label="Browse guide"
+                :steps="$courseBrowseGuide"
+                :auto-start="request()->boolean('guide')"
+                finish-label="Got it"
+            />
         </div>
 
         {{-- Search + filters --}}
-        <form action="{{ route('courses.browse') }}" method="GET" class="filters-bar">
+        <form action="{{ route('courses.browse') }}" method="GET" class="filters-bar" data-tour-target="student-course-filters">
             <div class="search-outline">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
                 <input type="text" name="q" placeholder="Search" value="{{ $filters['q'] ?? '' }}">
@@ -76,9 +93,9 @@
         </form>
 
         {{-- Course cards --}}
-        <div class="courses-grid">
+        <div class="courses-grid" data-tour-target="student-course-results">
             @forelse ($courses as $course)
-                <a href="{{ route('courses.show', $course->id) }}" class="browse-card ui-card-surface">
+                <a href="{{ route('courses.show', $course->id) }}" class="browse-card ui-card-surface" @if($loop->first) data-tour-target="student-first-course" @endif>
                     <div class="card-thumb" @if($course->thumbnail_url) style="background-image:url('{{ $course->thumbnail_url }}')" @endif>
                         @if($course->category || $course->level)
                             <div class="tags">
@@ -169,6 +186,13 @@
         toggleBackToTop();
     })();
 </script>
+@if(request()->boolean('guide'))
+    <script>
+        var browseGuideUrl = new URL(window.location.href);
+        browseGuideUrl.searchParams.delete('guide');
+        window.history.replaceState({}, '', browseGuideUrl);
+    </script>
+@endif
 
     {{-- Shared responsiveness layer (drawer nav + grid stacking) --}}
 </x-layout>
