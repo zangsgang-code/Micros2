@@ -484,6 +484,10 @@
         justify-content: center;
     }
 
+    .latest .courses-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 360px));
+    }
+
     .hero-divider {
         position: relative;
         z-index: 40;
